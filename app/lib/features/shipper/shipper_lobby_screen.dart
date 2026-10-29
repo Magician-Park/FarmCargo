@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'order.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/widgets/async_value_view.dart';
+import '../auth/auth_provider.dart';
+import '../orders/shipment.dart';
+import '../orders/orders_providers.dart';
 
 /// 화주 로그인 후 표시하는 목업 기반 홈. 운송 현황은 샘플 데이터다.
-class ShipperLobbyScreen extends StatelessWidget {
-  const ShipperLobbyScreen({super.key, required this.onLogout});
-
-  final VoidCallback onLogout;
+class ShipperLobbyScreen extends ConsumerWidget {
+  const ShipperLobbyScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final shipments = ref.watch(shipperShipmentsProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('화주 홈'),
         actions: [
           TextButton.icon(
-            onPressed: onLogout,
+            onPressed: () => ref.read(authProvider.notifier).logout(),
             icon: const Icon(Icons.logout, size: 18),
             label: const Text('로그아웃'),
           ),
@@ -28,19 +33,19 @@ class ShipperLobbyScreen extends StatelessWidget {
             const Text('박농부님,',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-            const Text('전북 김제시 죽산면 ○○농장',
-                style: TextStyle(color: Colors.grey)),
+            const Text('전북 김제시 죽산면 ○○농장', style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xFF2563EB),
+                color: AppColors.primary,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.agriculture_rounded, color: Colors.white, size: 36),
+                  Icon(Icons.agriculture_rounded,
+                      color: Colors.white, size: 36),
                   SizedBox(height: 12),
                   Text('우리 농장 운송을 한눈에',
                       style: TextStyle(
@@ -53,23 +58,20 @@ class ShipperLobbyScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            const Text('지금 운송 중이에요',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            _TransportCard(
-              order: sampleOrders[0],
-              status: '운송 중',
-              description: '김기사님 · 도착 예정 17:30',
-            ),
-            const SizedBox(height: 24),
-            const Text('예정된 운송',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            _TransportCard(
-              order: sampleOrders[1],
-              status: '배차 대기',
-              description: '내일 07:00 상차',
+            AsyncValueView(
+              value: shipments,
+              onRetry: () => ref.invalidate(shipperShipmentsProvider),
+              builder: (list) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _section('지금 운송 중이에요',
+                      list.where((s) => s.status == ShipmentStatus.inTransit)),
+                  _section(
+                      '예정된 운송',
+                      list.where(
+                          (s) => s.status == ShipmentStatus.waitingDispatch)),
+                ],
+              ),
             ),
             const SizedBox(height: 20),
             const Text('운송 요청·연락·정산 기능은 추후 연결 예정이에요.',
@@ -79,21 +81,29 @@ class ShipperLobbyScreen extends StatelessWidget {
       ),
     );
   }
+
+  Widget _section(String title, Iterable<Shipment> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        Text(title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        for (final shipment in items) _TransportCard(shipment: shipment),
+      ],
+    );
+  }
 }
 
 class _TransportCard extends StatelessWidget {
-  const _TransportCard({
-    required this.order,
-    required this.status,
-    required this.description,
-  });
+  const _TransportCard({required this.shipment});
 
-  final Order order;
-  final String status;
-  final String description;
+  final Shipment shipment;
 
   @override
   Widget build(BuildContext context) {
+    final order = shipment.order;
     return Card(
       margin: EdgeInsets.zero,
       color: Colors.white,
@@ -106,7 +116,7 @@ class _TransportCard extends StatelessWidget {
               spacing: 8,
               children: [
                 Chip(label: Text(order.category)),
-                Chip(label: Text(status)),
+                Chip(label: Text(shipment.status.label)),
               ],
             ),
             const SizedBox(height: 12),
@@ -119,7 +129,7 @@ class _TransportCard extends StatelessWidget {
             Text('${order.cargoInfo} · ${order.vehicleInfo}',
                 style: const TextStyle(color: Colors.grey, fontSize: 12)),
             const SizedBox(height: 8),
-            Text(description, style: const TextStyle(fontSize: 13)),
+            Text(shipment.description, style: const TextStyle(fontSize: 13)),
           ],
         ),
       ),

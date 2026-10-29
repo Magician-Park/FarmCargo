@@ -1,30 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import 'detail_screen.dart';
-import 'order.dart';
+import '../../core/router/app_router.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/utils/format.dart';
+import '../../core/widgets/async_value_view.dart';
+import '../../core/widgets/info_chip.dart';
+import '../auth/auth_provider.dart';
+import '../orders/order.dart';
+import '../orders/orders_providers.dart';
 
 /// 차주 홈 로비. 오더 카드를 탭하면 상세 화면으로 Push 이동한다.
-class LobbyScreen extends StatelessWidget {
-  const LobbyScreen({super.key, required this.onLogout});
-
-  final VoidCallback onLogout;
-
-  // 2. 리스트의 오더 클릭 → 상세 화면으로 Push
-  void _openDetail(BuildContext context, Order order) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => DetailScreen(order: order)),
-    );
-  }
+class LobbyScreen extends ConsumerWidget {
+  const LobbyScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final orders = ref.watch(recommendedOrdersProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('차주 홈'),
         actions: [
           TextButton.icon(
-            onPressed: onLogout,
+            onPressed: () => ref.read(authProvider.notifier).logout(),
             icon: const Icon(Icons.logout, size: 18),
             label: const Text('로그아웃'),
           ),
@@ -41,14 +41,15 @@ class LobbyScreen extends StatelessWidget {
             const Text('11톤 윙바디 • 서울 88가 1234',
                 style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 10),
-            Wrap(
+            const Wrap(
               spacing: 6,
               runSpacing: 6,
-              children: const [
-                _Chip('퇴비 이력 없음 · 식용 곡물 가능',
-                    bg: Color(0xFFF0FDF4), fg: Color(0xFF15803D)),
-                _Chip('11톤 · 일반 카고 · 크레인'),
-                _Chip('LMO 승인', bg: Color(0xFFEFF6FF), fg: Color(0xFF2563EB)),
+              children: [
+                InfoChip('퇴비 이력 없음 · 식용 곡물 가능',
+                    bg: AppColors.successSoft, fg: AppColors.success),
+                InfoChip('11톤 · 일반 카고 · 크레인'),
+                InfoChip('LMO 승인',
+                    bg: AppColors.primarySoft, fg: AppColors.primary),
               ],
             ),
             const SizedBox(height: 20),
@@ -58,7 +59,7 @@ class LobbyScreen extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                    colors: [Color(0xFF2563EB), Color(0xFF3B82F6)]),
+                    colors: [AppColors.primary, AppColors.primaryLight]),
                 borderRadius: BorderRadius.circular(24),
               ),
               child: const Column(
@@ -85,10 +86,27 @@ class LobbyScreen extends StatelessWidget {
             const SizedBox(height: 12),
 
             // 오더 리스트
-            for (final order in sampleOrders) ...[
-              _OrderCard(order: order, onTap: () => _openDetail(context, order)),
-              const SizedBox(height: 12),
-            ],
+            AsyncValueView(
+              value: orders,
+              onRetry: () => ref.invalidate(recommendedOrdersProvider),
+              builder: (list) => list.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(child: Text('지금 맞는 오더가 없어요.')),
+                    )
+                  : Column(
+                      children: [
+                        for (final order in list) ...[
+                          _OrderCard(
+                            order: order,
+                            onTap: () =>
+                                context.push(AppRoutes.driverOrder(order.id)),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                      ],
+                    ),
+            ),
           ],
         ),
       ),
@@ -117,15 +135,15 @@ class _OrderCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  _Chip(order.category,
+                  InfoChip(order.category,
                       bg: order.isCompost
-                          ? const Color(0xFFFEF3C7)
-                          : const Color(0xFFEFF6FF),
+                          ? AppColors.warningSoft
+                          : AppColors.primarySoft,
                       fg: order.isCompost
-                          ? const Color(0xFF92400E)
-                          : const Color(0xFF2563EB)),
+                          ? AppColors.warningText
+                          : AppColors.primary),
                   const Spacer(),
-                  Text('${_won(order.price)}원',
+                  Text('${formatWon(order.price)}원',
                       style: const TextStyle(
                           fontSize: 17, fontWeight: FontWeight.bold)),
                 ],
@@ -138,7 +156,7 @@ class _OrderCard extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               Text(
-                '${order.cargoInfo}  |  ${order.vehicleInfo}  |  ${order.distance}',
+                '${order.cargoInfo}  |  ${order.vehicleInfo}  |  ${order.distanceLabel}',
                 style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],
@@ -148,27 +166,3 @@ class _OrderCard extends StatelessWidget {
     );
   }
 }
-
-class _Chip extends StatelessWidget {
-  const _Chip(this.label,
-      {this.bg = const Color(0xFFF3F4F6), this.fg = const Color(0xFF4B5563)});
-
-  final String label;
-  final Color bg;
-  final Color fg;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration:
-          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
-      child: Text(label,
-          style:
-              TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.bold)),
-    );
-  }
-}
-
-String _won(int n) => n.toString().replaceAllMapped(
-    RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},');

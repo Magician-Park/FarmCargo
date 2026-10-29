@@ -34,6 +34,26 @@ flutter analyze
 flutter test
 ```
 
+## 코드 구조
+
+상태관리는 Riverpod, 라우팅은 go_router를 사용합니다.
+
+```
+lib/
+  main.dart, app.dart          # 진입점 (ProviderScope + MaterialApp.router)
+  core/
+    router/app_router.dart     # 경로 정의, 로그인/역할 기반 redirect
+    theme/app_theme.dart       # AppColors, AppTheme
+    utils/, widgets/           # 공용 포맷터와 위젯 (InfoChip, SectionCard, AsyncValueView)
+  features/
+    auth/                      # 역할, 데모 로그인 상태, 로그인 화면
+    orders/                    # Order/Shipment 모델, OrderRepository(+Mock), providers
+    driver/                    # 차주 홈, 오더 상세
+    shipper/                   # 화주 홈
+```
+
+서버 연동 시 `OrderRepository`의 구현체만 만들어 `orderRepositoryProvider`에서 교체합니다.
+
 ## 현재 상태
 
 로그인(역할 선택, 데모 인증) → 차주 홈 → 오더 상세, 화주 홈까지 구현된 데모입니다.
