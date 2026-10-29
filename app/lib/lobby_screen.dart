@@ -5,7 +5,9 @@ import 'order.dart';
 
 /// 차주 홈 로비. 오더 카드를 탭하면 상세 화면으로 Push 이동한다.
 class LobbyScreen extends StatelessWidget {
-  const LobbyScreen({super.key});
+  const LobbyScreen({super.key, required this.onLogout});
+
+  final VoidCallback onLogout;
 
   // 2. 리스트의 오더 클릭 → 상세 화면으로 Push
   void _openDetail(BuildContext context, Order order) {
@@ -18,6 +20,16 @@ class LobbyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('차주 홈'),
+        actions: [
+          TextButton.icon(
+            onPressed: onLogout,
+            icon: const Icon(Icons.logout, size: 18),
+            label: const Text('로그아웃'),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
