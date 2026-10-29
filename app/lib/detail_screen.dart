@@ -98,8 +98,7 @@ class DetailScreen extends StatelessWidget {
             onPressed: () => Navigator.pop(context), // 수락 후 로비 복귀
             child: Text(
               order.isCompost ? '이력 기록 동의하고 수락하기' : '이 오더 수락하기',
-              style: const TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
         ),
@@ -127,5 +126,6 @@ class _Card extends StatelessWidget {
   }
 }
 
-String _won(int n) => n.toString().replaceAllMapped(
-    RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},');
+String _won(int n) => n
+    .toString()
+    .replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},');

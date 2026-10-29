@@ -1,0 +1,15 @@
+{
+  "name": "farm-cargo-development-workspace",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "팜카고 앱 개발 및 디자인 미리보기 워크스페이스",
+  "scripts": {
+    "start": "node scripts/dev-server.mjs",
+    "dev": "node scripts/dev-server.mjs",
+    "check": "node --check workspace.js && node --check scripts/dev-server.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

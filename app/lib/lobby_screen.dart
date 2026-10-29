@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'detail_screen.dart';
 import 'order.dart';
+import 'shipper_home_screen.dart';
 
 /// 차주 홈 로비. 오더 카드를 탭하면 상세 화면으로 Push 이동한다.
 class LobbyScreen extends StatelessWidget {
-  const LobbyScreen({super.key, required this.onLogout});
-
-  final VoidCallback onLogout;
+  const LobbyScreen({super.key});
 
   // 2. 리스트의 오더 클릭 → 상세 화면으로 Push
   void _openDetail(BuildContext context, Order order) {
@@ -20,23 +19,30 @@ class LobbyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('차주 홈'),
-        actions: [
-          TextButton.icon(
-            onPressed: onLogout,
-            icon: const Icon(Icons.logout, size: 18),
-            label: const Text('로그아웃'),
-          ),
-        ],
-      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
             // 인사 + 차량 상태
-            const Text('김기사님,',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Expanded(
+                  child: Text('김기사님,',
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                ),
+                TextButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const ShipperHomeScreen()),
+                  ),
+                  icon: const Icon(Icons.agriculture_outlined, size: 18),
+                  label: const Text('화주 모드'),
+                ),
+              ],
+            ),
             const SizedBox(height: 4),
             const Text('11톤 윙바디 • 서울 88가 1234',
                 style: TextStyle(color: Colors.grey)),
@@ -86,7 +92,8 @@ class LobbyScreen extends StatelessWidget {
 
             // 오더 리스트
             for (final order in sampleOrders) ...[
-              _OrderCard(order: order, onTap: () => _openDetail(context, order)),
+              _OrderCard(
+                  order: order, onTap: () => _openDetail(context, order)),
               const SizedBox(height: 12),
             ],
           ],
@@ -170,5 +177,6 @@ class _Chip extends StatelessWidget {
   }
 }
 
-String _won(int n) => n.toString().replaceAllMapped(
-    RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},');
+String _won(int n) => n
+    .toString()
+    .replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},');
