@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>팜카고 — 농업 화물 배차 데모</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; margin: 0; background: #111827;
+               display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .phone-frame { width: 390px; height: 800px; background: #f9fafb; border-radius: 40px;
+               border: 8px solid #1f2937; overflow: hidden; position: relative;
+               box-shadow: 0 25px 50px -12px rgba(0,0,0,.5); }
+        @media (max-width: 480px), (max-height: 830px) {
+            body { align-items: stretch; }
+            .phone-frame { width: 100vw; max-width: 480px; height: 100dvh; border: none; border-radius: 0; margin: 0 auto; }
+        }
+        .app-screen { display: none; position: absolute; inset: 0; background: #f9fafb; }
+        .app-screen.active { display: flex; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        #toast { position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%);
+                 background: rgba(31,41,55,.92); color: #fff; font-size: 12px; font-weight: 700;
+                 padding: 10px 18px; border-radius: 999px; opacity: 0; transition: opacity .25s;
+                 pointer-events: none; z-index: 50; white-space: nowrap; }
+    </style>
+    <script>
+        tailwind.config = { theme: { extend: { colors: { brand: {
+            50:'#eff6ff',100:'#dbeafe',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8' } } } } }
+    </script>
+</head>
+<body>
+<div class="phone-frame">
+<div class="app-screen flex-col" id="screen-onboarding">
+            <main class="flex-1 flex flex-col px-6 pt-16 pb-8">
+                <!-- 로고 -->
+                <div class="flex flex-col items-center mb-10">
+                    <div class="h-20 w-20 rounded-3xl bg-brand-600 flex items-center justify-center text-white shadow-lg mb-4">
+                        <i class="fa-solid fa-truck-fast text-3xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-800">팜카고</h1>
+                    <p class="text-sm text-gray-500 mt-1">농사짐, 이제 앱으로 부르세요</p>
+                </div>
+
+                <!-- 역할 선택 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">어떻게 이용하시나요?</p>
+                <button class="w-full bg-brand-50 border-2 border-brand-500 rounded-2xl p-4 mb-2.5 flex items-center gap-3 text-left">
+                    <div class="h-12 w-12 rounded-2xl bg-green-100 flex items-center justify-center text-green-700 flex-shrink-0">
+                        <i class="fa-solid fa-seedling text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-bold text-gray-800">짐을 보내요 <span class="text-xs font-medium text-gray-500">화주·농가</span></p>
+                        <p class="text-xs text-gray-500 mt-0.5">곡물·퇴비·비료 운송을 요청해요</p>
+                    </div>
+                    <i class="fa-solid fa-circle-check text-brand-600 text-xl"></i>
+                </button>
+                <button class="w-full bg-white border border-gray-200 rounded-2xl p-4 mb-2.5 flex items-center gap-3 text-left">
+                    <div class="h-12 w-12 rounded-2xl bg-brand-100 flex items-center justify-center text-brand-600 flex-shrink-0">
+                        <i class="fa-solid fa-truck text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-bold text-gray-800">화물차로 운송해요 <span class="text-xs font-medium text-gray-500">차주</span></p>
+                        <p class="text-xs text-gray-500 mt-0.5">오더 받고 다음 날 바로 정산받아요</p>
+                    </div>
+                    <div class="w-5 h-5 rounded-full border-2 border-gray-200"></div>
+                </button>
+
+                <!-- 시작 버튼 -->
+                <div class="mt-auto flex flex-col gap-2">
+                    <button class="w-full bg-[#FEE500] text-[#191919] rounded-2xl py-4 font-bold text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-comment"></i>카카오로 3초 만에 시작
+                    </button>
+                    <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-mobile-screen"></i>휴대폰 번호로 시작
+                    </button>
+                    <p class="text-[10px] text-gray-400 text-center mt-1 leading-relaxed">시작하면 이용약관 및 개인정보 처리방침에 동의하게 됩니다</p>
+                </div>
+            </main>
+        </div>
+
+<div class="app-screen flex-col" id="screen-signup-shipper">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">회원가입 <span class="text-sm font-medium text-gray-400">· 화주</span></h1>
+            </header>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28">
+
+                <!-- 휴대폰 인증 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">휴대폰 번호</p>
+                <div class="flex gap-2 mb-2">
+                    <div class="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium">010-1234-5678</div>
+                    <button class="px-4 bg-gray-100 text-gray-400 rounded-xl text-xs font-bold">재전송</button>
+                </div>
+                <div class="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl p-3 mb-5">
+                    <i class="fa-solid fa-circle-check text-green-600"></i>
+                    <span class="text-xs font-bold text-green-700">본인인증이 완료되었습니다</span>
+                </div>
+
+                <!-- 이름 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">성함</p>
+                <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium mb-5">박농부</div>
+
+                <!-- 농장 위치 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">우리 농장은 어디에 있나요?</p>
+                <div class="bg-white border-2 border-brand-500 rounded-xl px-4 py-3.5 text-sm font-bold text-gray-800 mb-1.5 flex justify-between items-center">
+                    전북 김제시 죽산면
+                    <i class="fa-solid fa-map-location-dot text-brand-500"></i>
+                </div>
+                <p class="text-xs text-gray-400 mb-5">시·군·면까지만 고르면 돼요 — 정확한 위치는 운송 요청할 때 지도에서 찍어요</p>
+
+                <!-- 농업경영체 (선택) -->
+                <div class="bg-white rounded-2xl border border-gray-200 p-4 mb-5">
+                    <div class="flex justify-between items-center mb-1">
+                        <p class="text-sm font-bold text-gray-700">농업경영체 등록번호 <span class="text-xs font-medium text-gray-400">선택</span></p>
+                        <span class="px-2 py-0.5 bg-gray-100 text-gray-400 rounded text-[10px] font-bold">나중에 하기</span>
+                    </div>
+                    <p class="text-xs text-gray-400 leading-relaxed">등록하면 면세 계산서가 자동 발행돼요. 지금 몰라도 가입할 수 있어요.</p>
+                </div>
+
+                <!-- 약관 동의 -->
+                <div class="bg-white rounded-2xl border border-gray-200 p-4 flex flex-col gap-2.5">
+                    <label class="flex items-center gap-2.5 pb-2.5 border-b border-gray-100">
+                        <div class="w-5 h-5 rounded-md bg-brand-600 flex items-center justify-center"><i class="fa-solid fa-check text-white text-[10px]"></i></div>
+                        <span class="text-sm font-bold text-gray-800">전체 동의</span>
+                    </label>
+                    <label class="flex items-center gap-2.5 text-xs text-gray-600">
+                        <i class="fa-solid fa-check text-brand-500"></i>[필수] 서비스 이용약관
+                        <span class="ml-auto text-gray-300">보기</span>
+                    </label>
+                    <label class="flex items-center gap-2.5 text-xs text-gray-600">
+                        <i class="fa-solid fa-check text-brand-500"></i>[필수] 개인정보 수집·이용 동의
+                        <span class="ml-auto text-gray-300">보기</span>
+                    </label>
+                    <label class="flex items-center gap-2.5 text-xs text-gray-600">
+                        <i class="fa-solid fa-check text-gray-300"></i>[선택] 운임 할인·혜택 알림 받기
+                        <span class="ml-auto text-gray-300">보기</span>
+                    </label>
+                </div>
+            </main>
+
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
+                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base mb-2">가입 완료하고 시작하기</button>
+                <p class="text-center text-[10px] text-gray-400">가입이 어려우시면 전화 주세요 — <b class="text-green-600">1588-0000</b> 대신 가입해 드려요</p>
+            </div>
+        </div>
+
+<div class="app-screen flex-col" id="screen-driver-identity">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">회원가입 <span class="text-sm font-medium text-gray-400">· 차주</span></h1>
+            </header>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28">
+
+                <!-- 단계 표시 -->
+                <div class="flex items-center justify-between mb-5 px-2">
+                    <div class="flex flex-col items-center gap-1 flex-1">
+                        <div class="w-7 h-7 rounded-full bg-brand-100 text-brand-600 border-2 border-brand-500 flex items-center justify-center text-[10px] font-bold">1</div>
+                        <span class="text-[10px] font-bold text-brand-600">본인인증</span>
+                    </div>
+                    <div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div>
+                    <div class="flex flex-col items-center gap-1 flex-1">
+                        <div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">2</div>
+                        <span class="text-[10px] text-gray-400">서류 제출</span>
+                    </div>
+                    <div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div>
+                    <div class="flex flex-col items-center gap-1 flex-1">
+                        <div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">3</div>
+                        <span class="text-[10px] text-gray-400">심사 완료</span>
+                    </div>
+                </div>
+
+                <!-- 인증 필요 안내 -->
+                <div class="bg-brand-50 border border-brand-100 rounded-2xl p-3.5 mb-5 text-xs text-brand-700 leading-relaxed">
+                    <i class="fa-solid fa-shield-halved mr-1"></i>
+                    실명 인증이 끝나면 <b>화물운송종사자격</b>을 자동으로 조회해요 — 자격증 사진을 따로 안 올려도 됩니다.
+                </div>
+
+                <!-- 이름 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">이름</p>
+                <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium mb-4">김기사</div>
+
+                <!-- 주민등록번호 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">주민등록번호</p>
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium">750315</div>
+                    <span class="text-gray-300">—</span>
+                    <div class="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium tracking-widest">1●●●●●●</div>
+                </div>
+
+                <!-- 통신사 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">통신사</p>
+                <div class="grid grid-cols-4 gap-1.5 mb-4">
+                    <button class="py-2.5 bg-brand-50 border-2 border-brand-500 rounded-xl text-xs font-bold text-brand-700">SKT</button>
+                    <button class="py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-500">KT</button>
+                    <button class="py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-500">LG U+</button>
+                    <button class="py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-500">알뜰폰</button>
+                </div>
+
+                <!-- 휴대폰 번호 + 인증번호 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">휴대폰 번호</p>
+                <div class="flex gap-2 mb-3">
+                    <div class="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium">010-5678-1234</div>
+                    <button class="px-4 bg-gray-800 text-white rounded-xl text-xs font-bold">인증번호<br>받기</button>
+                </div>
+                <div class="bg-white border-2 border-brand-500 rounded-xl p-4 mb-1.5">
+                    <div class="flex justify-between items-center mb-2.5">
+                        <p class="text-xs font-bold text-gray-700">인증번호 6자리</p>
+                        <span class="text-xs font-bold text-red-500"><i class="fa-regular fa-clock mr-1"></i>02:47</span>
+                    </div>
+                    <div class="flex gap-1.5 justify-between">
+                        <div class="w-11 h-12 bg-gray-50 rounded-lg flex items-center justify-center font-bold text-lg text-gray-800">4</div>
+                        <div class="w-11 h-12 bg-gray-50 rounded-lg flex items-center justify-center font-bold text-lg text-gray-800">7</div>
+                        <div class="w-11 h-12 bg-gray-50 rounded-lg flex items-center justify-center font-bold text-lg text-gray-800">2</div>
+                        <div class="w-11 h-12 bg-gray-50 rounded-lg flex items-center justify-center font-bold text-lg text-gray-800">9</div>
+                        <div class="w-11 h-12 bg-white border-2 border-brand-400 rounded-lg flex items-center justify-center font-bold text-lg text-brand-600 animate-pulse">|</div>
+                        <div class="w-11 h-12 bg-gray-50 rounded-lg"></div>
+                    </div>
+                </div>
+                <button class="text-xs text-gray-400 font-medium underline mb-5">인증번호가 안 와요 — 재전송</button>
+
+                <!-- PASS 대체 인증 -->
+                <button class="w-full py-3.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 mb-2">
+                    <i class="fa-solid fa-mobile-screen-button mr-1.5 text-red-500"></i>PASS 앱으로 한 번에 인증
+                </button>
+                <p class="text-[10px] text-gray-400 leading-relaxed">
+                    입력한 정보는 본인 확인과 화물운송종사자격 조회에만 사용되며 암호화되어 보관됩니다.
+                </p>
+            </main>
+
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 p-4 pb-6 z-20">
+                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base">인증 완료하고 서류 제출로</button>
+            </div>
+        </div>
+
+<div class="app-screen flex-col" id="screen-signup-driver">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">회원가입 <span class="text-sm font-medium text-gray-400">· 차주</span></h1>
+            </header>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28">
+
+                <!-- 단계 표시 -->
+                <div class="flex items-center justify-between mb-5 px-2">
+                    <div class="flex flex-col items-center gap-1 flex-1">
+                        <div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div>
+                        <span class="text-[10px] font-bold text-brand-600">본인인증</span>
+                    </div>
+                    <div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div>
+                    <div class="flex flex-col items-center gap-1 flex-1">
+                        <div class="w-7 h-7 rounded-full bg-brand-100 text-brand-600 border-2 border-brand-500 flex items-center justify-center text-[10px] font-bold">2</div>
+                        <span class="text-[10px] font-bold text-brand-600">서류 제출</span>
+                    </div>
+                    <div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div>
+                    <div class="flex flex-col items-center gap-1 flex-1">
+                        <div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">3</div>
+                        <span class="text-[10px] text-gray-400">심사 완료</span>
+                    </div>
+                </div>
+
+                <!-- 서류 체크리스트 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-3 flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 flex-shrink-0">
+                        <i class="fa-solid fa-id-card"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-bold text-gray-800">화물운송종사자격증</p>
+                        <p class="text-xs text-green-600 font-medium mt-0.5"><i class="fa-solid fa-circle-check mr-1"></i>업로드 완료 · 확인됨</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 flex-shrink-0">
+                            <i class="fa-solid fa-file-invoice"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-gray-800">차량등록증 <span class="text-xs font-medium text-gray-400">영업용 번호판</span></p>
+                            <p class="text-xs text-green-600 font-medium mt-0.5"><i class="fa-solid fa-circle-check mr-1"></i>업로드 완료 · 확인됨</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 bg-brand-50 rounded-xl p-3">
+                        <p class="text-xs font-bold text-brand-700 mb-1.5"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>등록증에서 자동 인식됐어요 — 맞는지 확인해주세요</p>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="px-2 py-1 bg-white text-gray-700 rounded-lg text-[10px] font-bold">서울 88가 1234</span>
+                            <span class="px-2 py-1 bg-white text-gray-700 rounded-lg text-[10px] font-bold">11톤</span>
+                            <span class="px-2 py-1 bg-white text-gray-700 rounded-lg text-[10px] font-bold">윙바디 · 일반 카고</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 shadow-sm border-2 border-brand-200 mb-3 flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-bold text-gray-800">적재물배상보험 증권</p>
+                        <p class="text-xs text-gray-400 mt-0.5">화물 파손·분실 보상에 필요해요</p>
+                    </div>
+                    <button class="px-3 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold flex-shrink-0"><i class="fa-solid fa-camera mr-1"></i>촬영</button>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-4 flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
+                        <i class="fa-solid fa-building-columns"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-bold text-gray-800">정산 계좌</p>
+                        <p class="text-xs text-gray-400 mt-0.5">운송비를 다음 날 받을 계좌예요</p>
+                    </div>
+                    <button class="px-3 py-2 border border-gray-200 text-gray-600 rounded-xl text-xs font-bold flex-shrink-0">등록</button>
+                </div>
+
+                <!-- 심사 안내 -->
+                <div class="bg-gray-100 rounded-2xl p-4 text-xs text-gray-500 leading-relaxed">
+                    <i class="fa-solid fa-circle-info mr-1"></i>
+                    심사는 보통 <b class="text-gray-700">1영업일 이내</b>에 끝나요. 심사 중에도 내 주변 오더를 미리 볼 수 있어요.
+                </div>
+            </main>
+
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 p-4 pb-6 z-20">
+                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base">서류 제출하고 심사 받기 (2/4 남음)</button>
+            </div>
+        </div>
+
+<div class="app-screen flex-col" id="screen0">
+            <!-- 상단 헤더 -->
+            <header class="bg-white px-6 pt-10 pb-4 rounded-b-3xl shadow-sm z-10">
+                <div class="flex justify-between items-center mb-3">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">김기사님,</h1>
+                        <p class="text-sm text-gray-500 mt-1">11톤 윙바디 • 서울 88가 1234</p>
+                    </div>
+                    <div class="h-12 w-12 rounded-full bg-brand-100 flex items-center justify-center text-brand-600">
+                        <i class="fa-solid fa-user text-xl"></i>
+                    </div>
+                </div>
+
+                <!-- 차량 오염 이력 상태 -->
+                <div class="flex flex-wrap items-center gap-1.5 mb-4">
+                    <span class="px-2.5 py-1 bg-green-50 text-green-700 rounded-lg text-xs font-bold"><i class="fa-solid fa-circle-check mr-1"></i>퇴비 이력 없음 · 식용 곡물 가능</span>
+                    <span class="px-2.5 py-1 bg-gray-100 text-gray-500 rounded-lg text-xs font-medium">11톤 · 일반 카고 · 크레인</span>
+                    <span class="px-2.5 py-1 bg-brand-50 text-brand-600 rounded-lg text-xs font-bold"><i class="fa-solid fa-dna mr-1"></i>LMO 승인</span>
+                </div>
+
+                <!-- 운행 상태 토글 -->
+                <div class="flex items-center justify-between bg-gray-50 p-1 rounded-2xl">
+                    <button class="w-1/2 py-3 bg-white text-brand-600 font-bold rounded-xl shadow-sm text-sm">
+                        <i class="fa-solid fa-truck-fast mr-2"></i>운행 대기
+                    </button>
+                    <button class="w-1/2 py-3 text-gray-400 font-medium rounded-xl text-sm">
+                        <i class="fa-solid fa-moon mr-2"></i>휴식 중
+                    </button>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-24">
+                <!-- 오늘의 요약 카드 -->
+                <div class="bg-gradient-to-r from-brand-600 to-brand-500 rounded-3xl p-5 text-white mb-4 shadow-md">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-brand-100 text-sm font-medium">오늘의 예상 수입</span>
+                        <i class="fa-solid fa-chevron-right text-brand-100 text-sm"></i>
+                    </div>
+                    <div class="flex items-end gap-1 mb-3">
+                        <span class="text-3xl font-bold">450,000</span>
+                        <span class="text-lg font-medium mb-0.5">원</span>
+                    </div>
+                    <div class="flex gap-4 border-t border-brand-400 pt-3">
+                        <div class="flex-1">
+                            <p class="text-brand-100 text-xs mb-0.5">완료 건수</p>
+                            <p class="font-semibold text-sm">2건</p>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-brand-100 text-xs mb-0.5">운행 거리</p>
+                            <p class="font-semibold text-sm">185km</p>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-brand-100 text-xs mb-0.5">공차 거리</p>
+                            <p class="font-semibold text-sm">12km</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 내 주변 오더 찾기 -->
+                <button class="w-full bg-gray-800 text-white rounded-2xl py-4 font-bold text-base mb-6 shadow-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-location-crosshairs text-brand-500"></i>
+                    내 주변 실시간 오더 찾기
+                </button>
+
+                <!-- 추천 오더 리스트 -->
+                <div class="flex justify-between items-end mb-3">
+                    <h2 class="text-lg font-bold text-gray-800">추천 맞춤 오더</h2>
+                    <span class="text-sm text-brand-600 font-medium">더보기</span>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <!-- 곡물 오더 -->
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex gap-1.5">
+                                <span class="px-2 py-1 bg-green-50 text-green-700 rounded-lg text-xs font-bold"><i class="fa-solid fa-bolt mr-0.5"></i>바로 상차</span>
+                                <span class="px-2 py-1 bg-brand-50 text-brand-600 rounded-lg text-xs font-bold"><i class="fa-solid fa-wheat-awn mr-0.5"></i>식용 곡물</span>
+                            </div>
+                            <span class="text-lg font-bold text-gray-800">256,500원</span>
+                        </div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="flex flex-col items-center">
+                                <div class="w-2.5 h-2.5 rounded-full bg-brand-500"></div>
+                                <div class="w-0.5 h-4 bg-gray-200 my-0.5"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-bold text-gray-800 text-sm">전북 김제시 죽산면</p>
+                                <p class="font-bold text-gray-800 text-sm mt-1.5">경기 이천시 ○○ RPC</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-xl">
+                            <span><i class="fa-solid fa-sack-xmark mr-1"></i>톤백 12개</span>
+                            <span class="text-gray-300">|</span>
+                            <span><i class="fa-solid fa-truck mr-1"></i>5톤 카고·크레인</span>
+                            <span class="text-gray-300">|</span>
+                            <span><i class="fa-solid fa-ruler-horizontal mr-1"></i>215km</span>
+                        </div>
+                    </div>
+
+                    <!-- 퇴비 오더 -->
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex gap-1.5">
+                                <span class="px-2 py-1 bg-amber-100 text-amber-800 rounded-lg text-xs font-bold"><i class="fa-solid fa-mound mr-0.5"></i>퇴비 벌크</span>
+                                <span class="px-2 py-1 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold"><i class="fa-solid fa-clock-rotate-left mr-0.5"></i>이력 기록됨</span>
+                            </div>
+                            <span class="text-lg font-bold text-gray-800">279,350원</span>
+                        </div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="flex flex-col items-center">
+                                <div class="w-2.5 h-2.5 rounded-full bg-brand-500"></div>
+                                <div class="w-0.5 h-4 bg-gray-200 my-0.5"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-bold text-gray-800 text-sm">충남 홍성군 ○○축산 퇴비사</p>
+                                <p class="font-bold text-gray-800 text-sm mt-1.5">전북 김제시 죽산면 논</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-xl">
+                            <span><i class="fa-solid fa-weight-hanging mr-1"></i>톤당 정산</span>
+                            <span class="text-gray-300">|</span>
+                            <span><i class="fa-solid fa-truck-monster mr-1"></i>25톤 덤프(특수)</span>
+                            <span class="text-gray-300">|</span>
+                            <span><i class="fa-solid fa-ruler-horizontal mr-1"></i>128km</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- 하단 네비게이션 -->
+            <nav class="absolute bottom-0 w-full bg-white border-t border-gray-100 flex justify-around items-center pt-3 pb-6 px-2 z-20">
+                <a href="#" class="flex flex-col items-center gap-1 text-brand-600 w-1/4">
+                    <i class="fa-solid fa-house text-xl"></i>
+                    <span class="text-[10px] font-bold">홈</span>
+                </a>
+                <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
+                    <i class="fa-solid fa-list-check text-xl"></i>
+                    <span class="text-[10px] font-medium">오더목록</span>
+                </a>
+                <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
+                    <i class="fa-regular fa-file-lines text-xl"></i>
+                    <span class="text-[10px] font-medium">정산내역</span>
+                </a>
+                <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
+                    <i class="fa-regular fa-user text-xl"></i>
+                    <span class="text-[10px] font-medium">내 정보</span>
+                </a>
+            </nav>
+        </div>
+
+<div class="app-screen flex-col" id="screen-shipper-lobby">
+            <!-- 상단 헤더 -->
+            <header class="bg-white px-6 pt-10 pb-5 rounded-b-3xl shadow-sm z-10">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">박농부님,</h1>
+                        <p class="text-sm text-gray-500 mt-1">전북 김제시 죽산면 ○○농장</p>
+                    </div>
+                    <div class="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center text-green-700">
+                        <i class="fa-solid fa-seedling text-xl"></i>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-24">
+
+                <!-- 큰 운송 요청 버튼 -->
+                <button class="w-full bg-brand-600 text-white rounded-3xl py-6 mb-3 shadow-md flex flex-col items-center gap-1">
+                    <i class="fa-solid fa-truck-arrow-right text-3xl mb-1"></i>
+                    <span class="text-xl font-bold">운송 요청하기</span>
+                    <span class="text-xs text-brand-100">3분이면 끝나요</span>
+                </button>
+
+                <!-- 카카오톡/전화 접수 -->
+                <div class="flex gap-2 mb-6">
+                    <button class="flex-1 bg-[#FEE500] text-[#191919] rounded-2xl py-3.5 font-bold text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-comment"></i>카카오톡으로 요청
+                    </button>
+                    <button class="flex-1 bg-green-600 text-white rounded-2xl py-3.5 font-bold text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-phone"></i>전화로 요청
+                    </button>
+                </div>
+
+                <!-- 진행 중인 오더 -->
+                <h2 class="text-lg font-bold text-gray-800 mb-3">지금 운송 중이에요</h2>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex gap-1.5">
+                            <span class="px-2 py-1 bg-brand-50 text-brand-600 rounded-lg text-xs font-bold"><i class="fa-solid fa-wheat-awn mr-0.5"></i>곡물 톤백 12개</span>
+                        </div>
+                        <span class="px-2 py-1 bg-green-50 text-green-700 rounded-lg text-xs font-bold animate-pulse"><i class="fa-solid fa-truck mr-0.5"></i>운송 중</span>
+                    </div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="flex flex-col items-center">
+                            <div class="w-2.5 h-2.5 rounded-full bg-brand-500"></div>
+                            <div class="w-0.5 h-4 bg-gray-200 my-0.5"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold text-gray-800 text-sm">우리 농장 (죽산면 앞 농로)</p>
+                            <p class="font-bold text-gray-800 text-sm mt-1.5">경기 이천시 ○○ RPC</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-gray-400">도착 예정</p>
+                            <p class="font-bold text-gray-800">17:30</p>
+                        </div>
+                    </div>
+                    <!-- 차주 정보 + 전화 -->
+                    <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+                        <div class="h-10 w-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 flex-shrink-0">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-gray-800">김기사님</p>
+                            <p class="text-xs text-gray-500">11톤 윙바디 · 크레인 · ⭐ 4.9</p>
+                        </div>
+                        <button class="h-10 w-10 rounded-full bg-green-600 text-white flex items-center justify-center">
+                            <i class="fa-solid fa-phone text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 예정된 오더 -->
+                <h2 class="text-lg font-bold text-gray-800 mb-3">예정된 운송</h2>
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-4 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-bold text-gray-800"><span class="text-amber-700"><i class="fa-solid fa-mound mr-1"></i>퇴비 벌크</span> · 홍성 → 우리 논</p>
+                        <p class="text-xs text-gray-500 mt-1">내일 07:00 상차 · 25톤 덤프(특수)</p>
+                    </div>
+                    <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold">배차 대기</span>
+                </div>
+
+                <!-- 이번 달 운송비 -->
+                <div class="bg-gray-800 rounded-2xl p-4 text-white flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-gray-400">이번 달 운송비 (3건)</p>
+                        <p class="text-xl font-bold mt-0.5">830,000<span class="text-sm font-medium">원</span></p>
+                    </div>
+                    <button class="text-xs font-bold text-gray-300 border border-gray-600 px-3 py-2 rounded-xl">계산서 보기</button>
+                </div>
+            </main>
+
+            <!-- 하단 네비게이션 -->
+            <nav class="absolute bottom-0 w-full bg-white border-t border-gray-100 flex justify-around items-center pt-3 pb-6 px-2 z-20">
+                <a href="#" class="flex flex-col items-center gap-1 text-brand-600 w-1/4">
+                    <i class="fa-solid fa-house text-xl"></i>
+                    <span class="text-[10px] font-bold">홈</span>
+                </a>
+                <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
+                    <i class="fa-solid fa-list-check text-xl"></i>
+                    <span class="text-[10px] font-medium">내 오더</span>
+                </a>
+                <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
+                    <i class="fa-regular fa-file-lines text-xl"></i>
+                    <span class="text-[10px] font-medium">운송비</span>
+                </a>
+                <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
+                    <i class="fa-regular fa-user text-xl"></i>
+                    <span class="text-[10px] font-medium">내 정보</span>
+                </a>
+            </nav>
+        </div>
+
+<div class="app-screen flex-col" id="screen-shipper-orders">
+            <header class="bg-white px-6 pt-10 pb-3 shadow-sm z-10">
+                <h1 class="text-lg font-bold text-gray-800 mb-3">내 오더</h1>
+                <!-- 상태 필터 탭 -->
+                <div class="flex gap-2 pb-1 overflow-x-auto hide-scrollbar">
+                    <button class="px-3.5 py-2 bg-gray-800 text-white rounded-xl text-xs font-bold flex-shrink-0">전체 4</button>
+                    <button class="px-3.5 py-2 bg-white border border-gray-200 text-gray-500 rounded-xl text-xs font-medium flex-shrink-0">배차 대기 1</button>
+                    <button class="px-3.5 py-2 bg-white border border-gray-200 text-gray-500 rounded-xl text-xs font-medium flex-shrink-0">진행 중 2</button>
+                    <button class="px-3.5 py-2 bg-white border border-gray-200 text-gray-500 rounded-xl text-xs font-medium flex-shrink-0">완료</button>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-4 pb-24">
+
+                <!-- 배차 대기 (지연 경고 + 액션) -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border-2 border-amber-300 mb-3">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="px-2 py-1 bg-amber-100 text-amber-800 rounded-lg text-xs font-bold"><i class="fa-solid fa-mound mr-0.5"></i>퇴비 벌크</span>
+                        <span class="px-2 py-1 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold animate-pulse"><i class="fa-solid fa-magnifying-glass mr-0.5"></i>차주 찾는 중</span>
+                    </div>
+                    <p class="text-sm font-bold text-gray-800">충남 홍성군 퇴비사 → 우리 논</p>
+                    <p class="text-xs text-gray-500 mt-1">내일 07:00 상차 · 25톤 덤프(특수) · 톤당 15,000원</p>
+                    <div class="bg-amber-50 rounded-xl p-3 mt-3 text-xs text-amber-800 leading-relaxed">
+                        <i class="fa-solid fa-circle-info mr-1"></i>주변 차주 12명에게 전달했지만 아직 수락이 없어요. 상차까지 <b>14시간</b> 남았습니다.
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <button class="flex-1 py-2.5 bg-brand-600 text-white rounded-xl text-xs font-bold">운임 +20,000원 올리기</button>
+                        <button class="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-xs font-bold">상차 시간 변경</button>
+                    </div>
+                </div>
+
+                <!-- 운송 중 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-3">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="px-2 py-1 bg-brand-50 text-brand-600 rounded-lg text-xs font-bold"><i class="fa-solid fa-wheat-awn mr-0.5"></i>곡물 톤백 12개</span>
+                        <span class="px-2 py-1 bg-green-50 text-green-700 rounded-lg text-xs font-bold"><i class="fa-solid fa-truck mr-0.5"></i>운송 중 · 17:30 도착</span>
+                    </div>
+                    <p class="text-sm font-bold text-gray-800">우리 농장 → 경기 이천시 ○○ RPC</p>
+                    <div class="flex items-center gap-2 mt-3 bg-gray-50 rounded-xl p-2.5">
+                        <div class="h-8 w-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 flex-shrink-0"><i class="fa-solid fa-user text-xs"></i></div>
+                        <p class="flex-1 text-xs text-gray-600"><b class="text-gray-800">김기사님</b> · 11톤 윙바디 · ⭐ 4.9</p>
+                        <button class="h-8 w-8 rounded-full bg-green-600 text-white flex items-center justify-center"><i class="fa-solid fa-phone text-xs"></i></button>
+                    </div>
+                </div>
+
+                <!-- 배차 확정 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-3">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold"><i class="fa-solid fa-flask mr-0.5"></i>비료 파렛트 8개</span>
+                        <span class="px-2 py-1 bg-brand-50 text-brand-600 rounded-lg text-xs font-bold"><i class="fa-solid fa-circle-check mr-0.5"></i>배차 확정</span>
+                    </div>
+                    <p class="text-sm font-bold text-gray-800">전주 ○○비료 → 우리 농장</p>
+                    <p class="text-xs text-gray-500 mt-1">모레(목) 09:00 상차 · 이차주님 배정됨</p>
+                </div>
+
+                <!-- 완료 -->
+                <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-3 opacity-80">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="px-2 py-1 bg-white text-gray-500 rounded-lg text-xs font-bold"><i class="fa-solid fa-wheat-awn mr-0.5"></i>곡물 톤백 10개</span>
+                        <span class="px-2 py-1 bg-white text-gray-500 rounded-lg text-xs font-bold">완료 · 7월 8일</span>
+                    </div>
+                    <p class="text-sm font-bold text-gray-600">우리 농장 → 김제 ○○ RPC</p>
+                    <div class="flex gap-2 mt-3">
+                        <button class="flex-1 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600"><i class="fa-regular fa-image mr-1"></i>인수증 보기</button>
+                        <button class="flex-1 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600"><i class="fa-regular fa-file-lines mr-1"></i>계산서</button>
+                        <button class="flex-1 py-2 bg-brand-50 border border-brand-100 rounded-xl text-xs font-bold text-brand-600"><i class="fa-solid fa-rotate-right mr-1"></i>같은 조건 재요청</button>
+                    </div>
+                </div>
+            </main>
+
+            <!-- 하단 네비게이션 -->
+            <nav class="absolute bottom-0 w-full bg-white border-t border-gray-100 flex justify-around items-center pt-3 pb-6 px-2 z-20">
+                <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
+                    <i class="fa-solid fa-house text-xl"></i>
+                    <span class="text-[10px] font-medium">홈</span>
+                </a>
+                <a href="#" class="flex flex-col items-center gap-1 text-brand-600 w-1/4">
+                    <i class="fa-solid fa-list-check text-xl"></i>
+                    <span class="text-[10px] font-bold">내 오더</span>
+                </a>
+                <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
+                    <i class="fa-regular fa-file-lines text-xl"></i>
+                    <span class="text-[10px] font-medium">운송비</span>
+                </a>
+                <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
+                    <i class="fa-regular fa-user text-xl"></i>
+                    <span class="text-[10px] font-medium">내 정보</span>
+                </a>
+            </nav>
+        </div>
+
+<div class="app-screen flex-col" id="screen1">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">운송 요청하기</h1>
+            </header>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-32">
+
+                <!-- 품목 선택 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">무엇을 보내시나요?</p>
+                <div class="flex flex-wrap gap-2 mb-2">
+                    <button class="px-4 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-bold">🌾 곡물(벼·쌀)</button>
+                    <button class="px-4 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm">💩 퇴비·축분</button>
+                    <button class="px-4 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm">🧪 비료</button>
+                    <button class="px-4 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm">🐄 사료</button>
+                    <button class="px-4 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm">📦 농자재</button>
+                </div>
+
+                <!-- 식용 여부 → 교차오염 필터 -->
+                <div class="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl p-3.5 mb-5">
+                    <div class="flex-1 pr-2">
+                        <p class="text-sm font-bold text-amber-800">식용 화물입니다</p>
+                        <p class="text-xs text-amber-700 mt-0.5">퇴비·축분 운반 이력 차량은 자동 제외됩니다</p>
+                    </div>
+                    <div class="w-11 h-6 bg-amber-500 rounded-full relative flex-shrink-0">
+                        <div class="absolute right-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow"></div>
+                    </div>
+                </div>
+
+                <!-- 곡물 구분 (일반/LMO/친환경) -->
+                <p class="text-sm font-bold text-gray-700 mb-2">곡물 구분</p>
+                <div class="flex gap-2 mb-1.5">
+                    <button class="flex-1 py-2.5 bg-brand-50 border-2 border-brand-500 rounded-xl text-xs font-bold text-brand-700">일반 곡물</button>
+                    <button class="flex-1 py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-500">LMO (유전자변형)</button>
+                    <button class="flex-1 py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-500">친환경 인증</button>
+                </div>
+                <p class="text-xs text-gray-400 mb-5"><i class="fa-solid fa-circle-info mr-1"></i>LMO 곡물은 운송 승인을 받은 차량만 매칭됩니다</p>
+
+                <!-- 적재 형태 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">어떻게 실려 있나요?</p>
+                <div class="grid grid-cols-4 gap-2 mb-5">
+                    <button class="flex flex-col items-center gap-1 py-3 bg-brand-50 border-2 border-brand-500 rounded-xl">
+                        <i class="fa-solid fa-sack-xmark text-brand-600"></i>
+                        <span class="text-xs font-bold text-brand-700">톤백</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-1 py-3 bg-white border border-gray-200 rounded-xl">
+                        <i class="fa-solid fa-mound text-gray-400"></i>
+                        <span class="text-xs text-gray-500">벌크</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-1 py-3 bg-white border border-gray-200 rounded-xl">
+                        <i class="fa-solid fa-pallet text-gray-400"></i>
+                        <span class="text-xs text-gray-500">파렛트</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-1 py-3 bg-white border border-gray-200 rounded-xl">
+                        <i class="fa-solid fa-bag-shopping text-gray-400"></i>
+                        <span class="text-xs text-gray-500">포대</span>
+                    </button>
+                </div>
+
+                <!-- 상차지: 지도 핀 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">상차지 (주소가 없어도 괜찮아요)</p>
+                <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-3">
+                    <div class="h-28 bg-gradient-to-br from-green-100 to-green-200 relative flex items-center justify-center">
+                        <div class="absolute inset-0 opacity-30" style="background-image: repeating-linear-gradient(45deg, #86efac 0 2px, transparent 2px 20px);"></div>
+                        <i class="fa-solid fa-location-dot text-red-500 text-3xl drop-shadow"></i>
+                        <span class="absolute bottom-2 right-3 text-[10px] bg-white/80 px-2 py-0.5 rounded-full text-gray-600">지도에서 핀으로 지정됨</span>
+                    </div>
+                    <div class="p-3.5">
+                        <p class="text-sm font-bold text-gray-800">전북 김제시 죽산면 ○○리 앞 농로</p>
+                        <!-- 지역 진입 톤수 제한 -->
+                        <div class="mt-2.5 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-xs font-bold text-amber-800"><i class="fa-solid fa-road-barrier mr-1"></i>이 지역 진입 가능 톤수</p>
+                                <span class="text-[10px] text-amber-600">도로폭·교량 기준 자동 분석</span>
+                            </div>
+                            <div class="flex gap-1.5">
+                                <button class="flex-1 py-2 bg-white border border-amber-200 rounded-lg text-xs text-gray-500">3.5톤</button>
+                                <button class="flex-1 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold">5톤까지</button>
+                                <button class="flex-1 py-2 bg-white border border-amber-200 rounded-lg text-xs text-gray-400">8톤</button>
+                                <button class="flex-1 py-2 bg-white border border-amber-200 rounded-lg text-xs text-gray-400">제한 없음</button>
+                            </div>
+                            <p class="text-[10px] text-amber-700 mt-1.5">길을 잘 아시면 직접 바꿀 수 있어요 — 아래 차량 톤수 선택에 자동 반영됩니다</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 상하차 장비 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">상차 장비가 있나요?</p>
+                <div class="flex gap-2 mb-5">
+                    <button class="flex-1 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-500">지게차 있음</button>
+                    <button class="flex-1 py-3 bg-brand-50 border-2 border-brand-500 rounded-xl text-sm font-bold text-brand-700">없음·크레인</button>
+                    <button class="flex-1 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-500">수작업</button>
+                </div>
+
+                <!-- 차량 구분 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">어떤 차량이 필요한가요?</p>
+                <div class="flex gap-2 mb-3">
+                    <button class="flex-1 py-3 bg-brand-50 border-2 border-brand-500 rounded-xl text-sm font-bold text-brand-700"><i class="fa-solid fa-truck mr-1"></i>일반 카고·윙바디</button>
+                    <button class="flex-1 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-500"><i class="fa-solid fa-truck-monster mr-1"></i>특수 (덤프·탱크)</button>
+                </div>
+                <!-- 톤수 선택 -->
+                <div class="grid grid-cols-5 gap-1.5 mb-2">
+                    <button class="py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-500">1톤</button>
+                    <button class="py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-500">2.5톤</button>
+                    <button class="py-2.5 bg-brand-50 border-2 border-brand-500 rounded-xl text-xs font-bold text-brand-700">5톤</button>
+                    <button class="py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-400 line-through">11톤</button>
+                    <button class="py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-400 line-through">25톤</button>
+                </div>
+                <p class="text-xs text-brand-600 font-medium mb-5"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>톤백 12개(약 4.8톤) + 농로 5톤 제한 → 5톤 카고를 추천해요</p>
+
+                <!-- 예상 운임 -->
+                <div class="bg-gray-800 rounded-2xl p-4 text-white flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-gray-400">예상 운임 (크레인 작업비 포함)</p>
+                        <p class="text-2xl font-bold mt-0.5">280,000<span class="text-sm font-medium">원</span></p>
+                    </div>
+                    <button class="bg-brand-500 px-5 py-3 rounded-xl font-bold text-sm">요청하기</button>
+                </div>
+            </main>
+
+            <!-- 전화/카카오톡 접수 안내 -->
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
+                <p class="text-center text-xs text-gray-500 mb-2 font-medium">앱이 어려우시면 편한 방법으로 문의하세요</p>
+                <div class="flex gap-2">
+                    <button class="flex-1 bg-[#FEE500] text-[#191919] rounded-xl py-3.5 font-bold text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-comment"></i>카카오톡 문의
+                    </button>
+                    <button class="flex-1 bg-green-600 text-white rounded-xl py-3.5 font-bold text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-phone"></i>전화 1588-0000
+                    </button>
+                </div>
+            </div>
+        </div>
+
+<div class="app-screen flex-col" id="screen2">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">오더 상세</h1>
+            </header>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28">
+
+                <!-- 교차오염 + 요구 차량 배지 -->
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <span class="px-2.5 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-bold"><i class="fa-solid fa-wheat-awn mr-1"></i>식용 · 일반 곡물</span>
+                    <span class="px-2.5 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold"><i class="fa-solid fa-ban mr-1"></i>퇴비 이력 차량 배차 불가</span>
+                    <span class="px-2.5 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold"><i class="fa-solid fa-truck mr-1"></i>5톤 이하 · 일반 카고</span>
+                </div>
+
+                <!-- 경로 -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="flex flex-col items-center">
+                            <div class="w-3 h-3 rounded-full bg-brand-500"></div>
+                            <div class="w-0.5 h-10 bg-gray-200 my-1"></div>
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold text-gray-800">전북 김제시 죽산면 (농로·지도핀)</p>
+                            <p class="text-xs text-gray-400 mb-3">오늘 14:00 상차 · 지게차 없음 · 크레인 필요</p>
+                            <p class="font-bold text-gray-800">경기 이천시 ○○ RPC</p>
+                            <p class="text-xs text-gray-400">당일 하차 · 지게차 있음</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 운임 상세 (breakdown) -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-3">운임 상세</p>
+                    <div class="flex flex-col gap-2 text-sm">
+                        <div class="flex justify-between"><span class="text-gray-500">기본 운임 (215km)</span><span class="font-medium text-gray-800">230,000원</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">크레인 상차 작업비</span><span class="font-medium text-gray-800">+40,000원</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">대기 보상 (30분 초과 시)</span><span class="font-medium text-gray-800">+10,000원/30분</span></div>
+                        <div class="flex justify-between text-brand-600"><span>중개 수수료 (정찰 5%)</span><span class="font-medium">-13,500원</span></div>
+                        <div class="border-t border-gray-100 pt-2 mt-1 flex justify-between items-center">
+                            <span class="font-bold text-gray-800">내가 받는 금액</span>
+                            <span class="text-2xl font-bold text-gray-900">256,500원</span>
+                        </div>
+                        <p class="text-xs text-green-600 font-medium"><i class="fa-solid fa-bolt mr-1"></i>운송 완료 다음 날 지급</p>
+                    </div>
+                </div>
+
+                <!-- 회차 오더 추천 -->
+                <div class="bg-brand-50 border border-brand-100 rounded-2xl p-4 mb-4">
+                    <p class="text-sm font-bold text-brand-700 mb-2"><i class="fa-solid fa-rotate-left mr-1"></i>빈 차로 안 돌아가요 — 회차 오더 2건</p>
+                    <div class="bg-white rounded-xl p-3 flex justify-between items-center mb-2">
+                        <div>
+                            <p class="text-sm font-bold text-gray-800">이천 → 전주 (비료 파렛트)</p>
+                            <p class="text-xs text-gray-400">하차지에서 12km · 내일 09:00</p>
+                        </div>
+                        <span class="font-bold text-gray-800">190,000원</span>
+                    </div>
+                    <div class="bg-white rounded-xl p-3 flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-bold text-gray-800">여주 → 익산 (사료 포대)</p>
+                            <p class="text-xs text-gray-400">하차지에서 21km · 내일 08:00</p>
+                        </div>
+                        <span class="font-bold text-gray-800">210,000원</span>
+                    </div>
+                </div>
+            </main>
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 p-4 pb-6 z-20">
+                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-lg">이 오더 수락하기</button>
+            </div>
+        </div>
+
+<div class="app-screen flex-col" id="screen3">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">운송 진행 중</h1>
+            </header>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-10">
+
+                <!-- 상태 스텝 -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex flex-col items-center gap-1 flex-1">
+                            <div class="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-xs"></i></div>
+                            <span class="text-[10px] font-bold text-brand-600">배차확정</span>
+                        </div>
+                        <div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div>
+                        <div class="flex flex-col items-center gap-1 flex-1">
+                            <div class="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-xs"></i></div>
+                            <span class="text-[10px] font-bold text-brand-600">상차완료</span>
+                        </div>
+                        <div class="h-0.5 flex-1 bg-brand-200 -mt-4"></div>
+                        <div class="flex flex-col items-center gap-1 flex-1">
+                            <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center animate-pulse"><i class="fa-solid fa-truck text-xs"></i></div>
+                            <span class="text-[10px] font-bold text-brand-600">운송중</span>
+                        </div>
+                        <div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div>
+                        <div class="flex flex-col items-center gap-1 flex-1">
+                            <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center"><i class="fa-solid fa-flag-checkered text-xs"></i></div>
+                            <span class="text-[10px] text-gray-400">하차완료</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 상차 인수증 (사진) -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="text-sm font-bold text-gray-700">상차 확인 사진</p>
+                        <span class="text-xs text-green-600 font-bold"><i class="fa-solid fa-circle-check mr-1"></i>14:12 업로드됨</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="aspect-square bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl flex items-center justify-center"><i class="fa-solid fa-sack-xmark text-yellow-600 text-2xl"></i></div>
+                        <div class="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center"><i class="fa-solid fa-truck-ramp-box text-gray-500 text-2xl"></i></div>
+                        <div class="aspect-square bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center"><i class="fa-solid fa-camera text-gray-300 text-xl"></i></div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">톤백 12개 · 상차 시 파손 없음 확인</p>
+                </div>
+
+                <!-- 대기시간 기록 -->
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-4 flex justify-between items-center">
+                    <div>
+                        <p class="text-sm font-bold text-amber-800">상차지 대기 42분 기록됨</p>
+                        <p class="text-xs text-amber-700 mt-0.5">30분 초과분 대기 보상 +10,000원 자동 반영</p>
+                    </div>
+                    <i class="fa-solid fa-stopwatch text-amber-500 text-2xl"></i>
+                </div>
+
+                <!-- 연락 -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="bg-white border border-gray-200 rounded-2xl py-4 flex flex-col items-center gap-1">
+                        <i class="fa-solid fa-phone text-green-600 text-xl"></i>
+                        <span class="text-xs font-bold text-gray-700">화주에게 전화</span>
+                    </button>
+                    <button class="bg-white border border-gray-200 rounded-2xl py-4 flex flex-col items-center gap-1">
+                        <i class="fa-solid fa-map-location-dot text-brand-600 text-xl"></i>
+                        <span class="text-xs font-bold text-gray-700">하차지 핀으로 안내</span>
+                    </button>
+                </div>
+            </main>
+        </div>
+
+<div class="app-screen flex-col" id="screen4">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">정산 내역</h1>
+            </header>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-10">
+
+                <!-- 이번 주 정산 요약 -->
+                <div class="bg-gradient-to-r from-brand-600 to-brand-500 rounded-3xl p-6 text-white mb-5 shadow-md">
+                    <p class="text-brand-100 text-sm mb-1">이번 주 정산 예정</p>
+                    <p class="text-4xl font-bold">1,240,000<span class="text-lg font-medium">원</span></p>
+                    <div class="mt-3 inline-flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-full text-xs font-bold">
+                        <i class="fa-solid fa-bolt"></i> 운송 완료 다음 날 자동 입금
+                    </div>
+                </div>
+
+                <!-- 정산 아이템 -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-3">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="font-bold text-gray-800">김제 → 이천 · 곡물 톤백</p>
+                            <p class="text-xs text-gray-400 mt-0.5">7월 13일 완료 · 인수증 확인됨</p>
+                        </div>
+                        <span class="px-2 py-1 bg-green-50 text-green-700 rounded-lg text-xs font-bold">입금완료</span>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-3 text-sm flex flex-col gap-1.5">
+                        <div class="flex justify-between text-gray-500"><span>운임 합계</span><span>280,000원</span></div>
+                        <div class="flex justify-between text-gray-500"><span>수수료 (5%)</span><span>-13,500원</span></div>
+                        <div class="flex justify-between font-bold text-gray-800 border-t border-gray-200 pt-1.5"><span>실지급액</span><span>266,500원</span></div>
+                    </div>
+                    <button class="w-full mt-3 py-2.5 border border-gray-200 rounded-xl text-xs font-bold text-gray-600">
+                        <i class="fa-regular fa-file-lines mr-1"></i>세금계산서 · 인수증 내려받기
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-3">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="font-bold text-gray-800">이천 → 전주 · 비료 파렛트</p>
+                            <p class="text-xs text-gray-400 mt-0.5">7월 14일 완료 · 인수증 확인됨</p>
+                        </div>
+                        <span class="px-2 py-1 bg-brand-50 text-brand-600 rounded-lg text-xs font-bold">내일 입금</span>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-3 text-sm flex flex-col gap-1.5">
+                        <div class="flex justify-between text-gray-500"><span>운임 합계</span><span>190,000원</span></div>
+                        <div class="flex justify-between text-gray-500"><span>수수료 (5%)</span><span>-9,500원</span></div>
+                        <div class="flex justify-between font-bold text-gray-800 border-t border-gray-200 pt-1.5"><span>실지급액</span><span>180,500원</span></div>
+                    </div>
+                </div>
+
+                <!-- 면세 안내 -->
+                <div class="bg-gray-100 rounded-2xl p-4 text-xs text-gray-500 leading-relaxed">
+                    <i class="fa-solid fa-circle-info mr-1"></i>
+                    화주가 면세사업자(농업인)인 경우 계산서가 자동 구분 발행됩니다.
+                </div>
+            </main>
+        </div>
+
+<div class="app-screen flex-col" id="screen5">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">운송 요청하기</h1>
+            </header>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-32">
+
+                <!-- 품목 선택 : 퇴비·축분 선택됨 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">무엇을 보내시나요?</p>
+                <div class="flex flex-wrap gap-2 mb-2">
+                    <button class="px-4 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm">🌾 곡물(벼·쌀)</button>
+                    <button class="px-4 py-2.5 bg-amber-700 text-white rounded-xl text-sm font-bold">💩 퇴비·축분</button>
+                    <button class="px-4 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm">🧪 비료</button>
+                    <button class="px-4 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm">🐄 사료</button>
+                </div>
+
+                <!-- 오염 화물 안내 -->
+                <div class="bg-amber-50 border border-amber-300 rounded-xl p-3.5 mb-5">
+                    <p class="text-sm font-bold text-amber-800"><i class="fa-solid fa-triangle-exclamation mr-1"></i>오염 주의 화물로 분류됩니다</p>
+                    <p class="text-xs text-amber-700 mt-1 leading-relaxed">운반 차량에 퇴비 이력이 기록되며, 방수포(갑바) 덮개가 필수입니다. 덤프·암롤 차량이 우선 매칭됩니다.</p>
+                </div>
+
+                <!-- 적재 형태 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">어떤 상태인가요?</p>
+                <div class="grid grid-cols-3 gap-2 mb-5">
+                    <button class="flex flex-col items-center gap-1 py-3 bg-amber-50 border-2 border-amber-600 rounded-xl">
+                        <i class="fa-solid fa-mound text-amber-700"></i>
+                        <span class="text-xs font-bold text-amber-800">벌크(덤프)</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-1 py-3 bg-white border border-gray-200 rounded-xl">
+                        <i class="fa-solid fa-sack-xmark text-gray-400"></i>
+                        <span class="text-xs text-gray-500">톤백</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-1 py-3 bg-white border border-gray-200 rounded-xl">
+                        <i class="fa-solid fa-bag-shopping text-gray-400"></i>
+                        <span class="text-xs text-gray-500">포대</span>
+                    </button>
+                </div>
+
+                <!-- 상차지 : 축사 퇴비사 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">상차지</p>
+                <div class="bg-white rounded-2xl border border-gray-200 p-3.5 mb-4">
+                    <p class="text-sm font-bold text-gray-800">충남 홍성군 ○○축산 퇴비사</p>
+                    <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-circle-check text-green-500 mr-1"></i>로더(상차 장비) 있음 · 대형차 진입 가능</p>
+                </div>
+
+                <!-- 하차 방식 -->
+                <p class="text-sm font-bold text-gray-700 mb-2">하차는 어떻게 하나요?</p>
+                <div class="flex gap-2 mb-4">
+                    <button class="flex-1 py-3 bg-amber-50 border-2 border-amber-600 rounded-xl text-sm font-bold text-amber-800">덤프 하차</button>
+                    <button class="flex-1 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-500">살포기 살포</button>
+                    <button class="flex-1 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-500">로더 하차</button>
+                </div>
+
+                <!-- 차량 구분 (특수 고정) -->
+                <p class="text-sm font-bold text-gray-700 mb-2">어떤 차량이 필요한가요?</p>
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 mb-3 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-bold text-amber-800"><i class="fa-solid fa-truck-monster mr-1"></i>특수 차량 (덤프·암롤)</p>
+                        <p class="text-xs text-amber-700 mt-0.5">퇴비·축분 벌크는 특수 차량만 배차됩니다</p>
+                    </div>
+                    <i class="fa-solid fa-lock text-amber-400"></i>
+                </div>
+                <div class="grid grid-cols-3 gap-2 mb-5">
+                    <button class="py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-500">11톤</button>
+                    <button class="py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-500">18톤</button>
+                    <button class="py-2.5 bg-amber-50 border-2 border-amber-600 rounded-xl text-xs font-bold text-amber-800">25톤</button>
+                </div>
+
+                <!-- 계근 정산 -->
+                <div class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl p-3.5 mb-5">
+                    <div class="flex-1 pr-2">
+                        <p class="text-sm font-bold text-gray-700">계근소 경유 — 톤당 정산</p>
+                        <p class="text-xs text-gray-500 mt-0.5">계량증명서 기준 15,000원/톤으로 정산됩니다</p>
+                    </div>
+                    <div class="w-11 h-6 bg-brand-600 rounded-full relative flex-shrink-0">
+                        <div class="absolute right-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow"></div>
+                    </div>
+                </div>
+
+                <!-- 예상 운임 -->
+                <div class="bg-gray-800 rounded-2xl p-4 text-white flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-gray-400">예상 운임 (약 18톤 기준)</p>
+                        <p class="text-2xl font-bold mt-0.5">270,000<span class="text-sm font-medium">원</span></p>
+                    </div>
+                    <button class="bg-brand-500 px-5 py-3 rounded-xl font-bold text-sm">요청하기</button>
+                </div>
+            </main>
+
+            <!-- 전화/카카오톡 접수 안내 -->
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
+                <p class="text-center text-xs text-gray-500 mb-2 font-medium">앱이 어려우시면 편한 방법으로 문의하세요</p>
+                <div class="flex gap-2">
+                    <button class="flex-1 bg-[#FEE500] text-[#191919] rounded-xl py-3.5 font-bold text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-comment"></i>카카오톡 문의
+                    </button>
+                    <button class="flex-1 bg-green-600 text-white rounded-xl py-3.5 font-bold text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-phone"></i>전화 1588-0000
+                    </button>
+                </div>
+            </div>
+        </div>
+
+<div class="app-screen flex-col" id="screen6">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">오더 상세</h1>
+            </header>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28">
+
+                <!-- 배지 -->
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <span class="px-2.5 py-1.5 bg-amber-100 text-amber-800 rounded-lg text-xs font-bold"><i class="fa-solid fa-mound mr-1"></i>퇴비·축분 벌크</span>
+                    <span class="px-2.5 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold"><i class="fa-solid fa-truck-ramp-box mr-1"></i>덤프 하차</span>
+                    <span class="px-2.5 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold"><i class="fa-solid fa-truck-monster mr-1"></i>25톤 덤프 · 특수</span>
+                </div>
+
+                <!-- 퇴비 이력 경고 -->
+                <div class="bg-amber-50 border border-amber-300 rounded-2xl p-4 mb-4">
+                    <p class="text-sm font-bold text-amber-800"><i class="fa-solid fa-clock-rotate-left mr-1"></i>수락 시 내 차량에 퇴비 이력이 기록됩니다</p>
+                    <p class="text-xs text-amber-700 mt-1.5 leading-relaxed">이력이 있는 동안 식용 곡물 오더 매칭이 제한됩니다. 적재함 세척 후 사진 인증하면 이력이 해제됩니다.</p>
+                    <div class="mt-2.5 bg-white rounded-xl p-2.5 flex items-center gap-2 text-xs text-gray-600">
+                        <i class="fa-solid fa-spray-can-sparkles text-brand-500"></i>
+                        세척 인증 시 <b class="text-gray-800">세차비 20,000원</b>이 함께 지급됩니다
+                    </div>
+                </div>
+
+                <!-- 경로 -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="flex flex-col items-center">
+                            <div class="w-3 h-3 rounded-full bg-brand-500"></div>
+                            <div class="w-0.5 h-10 bg-gray-200 my-1"></div>
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold text-gray-800">충남 홍성군 ○○축산 퇴비사</p>
+                            <p class="text-xs text-gray-400 mb-3">내일 07:00 상차 · 로더 상차 · 계근소 경유</p>
+                            <p class="font-bold text-gray-800">전북 김제시 죽산면 논 (지도핀)</p>
+                            <p class="text-xs text-gray-400">덤프 하차 · 방수포(갑바) 필수</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 운임 상세 (톤당) -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-3">운임 상세 <span class="text-xs font-medium text-gray-400">· 계량증명서 기준 톤당 정산</span></p>
+                    <div class="flex flex-col gap-2 text-sm">
+                        <div class="flex justify-between"><span class="text-gray-500">톤당 운임 × 실측 중량</span><span class="font-medium text-gray-800">15,000원 × 18.2톤</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">운임 소계</span><span class="font-medium text-gray-800">273,000원</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">세차비 지원 (세척 인증 시)</span><span class="font-medium text-gray-800">+20,000원</span></div>
+                        <div class="flex justify-between text-brand-600"><span>중개 수수료 (정찰 5%)</span><span class="font-medium">-13,650원</span></div>
+                        <div class="border-t border-gray-100 pt-2 mt-1 flex justify-between items-center">
+                            <span class="font-bold text-gray-800">내가 받는 금액 (예상)</span>
+                            <span class="text-2xl font-bold text-gray-900">279,350원</span>
+                        </div>
+                        <p class="text-xs text-gray-400">최종 금액은 계근소 계량증명서 중량으로 확정됩니다</p>
+                    </div>
+                </div>
+
+                <!-- 준비물 체크 -->
+                <div class="bg-gray-50 rounded-2xl p-4 text-xs text-gray-600 flex flex-col gap-1.5">
+                    <p class="font-bold text-gray-700 text-sm mb-1">운행 전 확인</p>
+                    <p><i class="fa-solid fa-check text-green-500 mr-1.5"></i>방수포(갑바) 준비 — 미부착 시 과태료 대상</p>
+                    <p><i class="fa-solid fa-check text-green-500 mr-1.5"></i>덤프 또는 암롤 차량</p>
+                    <p><i class="fa-solid fa-check text-green-500 mr-1.5"></i>하차지 농로 — 진입 전 화주 전화 확인</p>
+                </div>
+            </main>
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 p-4 pb-6 z-20">
+                <button class="w-full bg-amber-700 text-white rounded-2xl py-4 font-bold text-lg">이력 기록 동의하고 수락하기</button>
+            </div>
+        </div>
+
+<div class="app-screen flex-col" id="screen-vehicle-settings">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">내 차량 설정</h1>
+            </header>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-24">
+
+                <!-- 차량 기본 정보 -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-5">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="h-12 w-12 rounded-2xl bg-brand-100 flex items-center justify-center text-brand-600">
+                            <i class="fa-solid fa-truck text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold text-gray-800">서울 88가 1234</p>
+                            <p class="text-xs text-gray-500 mt-0.5">11톤 윙바디 · 일반 카고 · 크레인 장착</p>
+                        </div>
+                        <button class="text-xs font-bold text-brand-600">수정</button>
+                    </div>
+                    <div class="flex gap-1.5">
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-[10px] font-bold">톤수 11톤</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-[10px] font-bold">일반 카고</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-[10px] font-bold">크레인</span>
+                        <span class="px-2 py-1 bg-green-50 text-green-700 rounded-lg text-[10px] font-bold">퇴비 이력 없음</span>
+                    </div>
+                </div>
+
+                <!-- 운송 가능 화물 설정 -->
+                <div class="flex justify-between items-end mb-3">
+                    <h2 class="text-base font-bold text-gray-800">운송 가능 화물 설정</h2>
+                    <span class="text-[10px] text-gray-400">설정한 화물만 오더에 추천돼요</span>
+                </div>
+
+                <!-- 일반 곡물 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-3 flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 flex-shrink-0">
+                        <i class="fa-solid fa-wheat-awn"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-bold text-gray-800">일반 곡물·농산물</p>
+                        <p class="text-xs text-gray-400 mt-0.5">기본 제공 · 별도 자격 불필요</p>
+                    </div>
+                    <div class="w-11 h-6 bg-brand-600 rounded-full relative flex-shrink-0">
+                        <div class="absolute right-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow"></div>
+                    </div>
+                </div>
+
+                <!-- LMO -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 flex-shrink-0">
+                            <i class="fa-solid fa-dna"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-gray-800">LMO 곡물 (유전자변형)</p>
+                            <p class="text-xs text-gray-400 mt-0.5">밀폐 적재함 · 운송 후 세척 확인 필수</p>
+                        </div>
+                        <div class="w-11 h-6 bg-brand-600 rounded-full relative flex-shrink-0">
+                            <div class="absolute right-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow"></div>
+                        </div>
+                    </div>
+                    <div class="mt-3 bg-green-50 rounded-xl p-2.5 flex items-center gap-2 text-xs">
+                        <i class="fa-solid fa-circle-check text-green-600"></i>
+                        <span class="text-green-700 font-medium">LMO 취급 교육 이수 확인됨 · 2027년 3월까지 유효</span>
+                    </div>
+                </div>
+
+                <!-- 위험물 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center text-red-500 flex-shrink-0">
+                            <i class="fa-solid fa-fire-flame-curved"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-gray-800">위험물 (농약·유류·가스)</p>
+                            <p class="text-xs text-gray-400 mt-0.5">위험물운송자격 + 전용 탱크·용기 필요</p>
+                        </div>
+                        <div class="w-11 h-6 bg-gray-200 rounded-full relative flex-shrink-0">
+                            <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow"></div>
+                        </div>
+                    </div>
+                    <button class="w-full mt-3 py-2.5 border border-dashed border-gray-300 rounded-xl text-xs font-bold text-gray-500">
+                        <i class="fa-solid fa-id-card mr-1"></i>위험물운송자격증 업로드하고 활성화하기
+                    </button>
+                </div>
+
+                <!-- 퇴비·축분 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-700 flex-shrink-0">
+                            <i class="fa-solid fa-mound"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-gray-800">퇴비·축분</p>
+                            <p class="text-xs text-gray-400 mt-0.5">방수포(갑바) 필수 · 수락 시 차량에 이력 기록</p>
+                        </div>
+                        <div class="w-11 h-6 bg-brand-600 rounded-full relative flex-shrink-0">
+                            <div class="absolute right-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow"></div>
+                        </div>
+                    </div>
+                    <div class="mt-3 bg-amber-50 rounded-xl p-2.5 text-xs text-amber-700 leading-relaxed">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i>퇴비 운송 후에는 세척 인증 전까지 식용 곡물·LMO 오더가 제한됩니다
+                    </div>
+                </div>
+
+                <p class="text-[10px] text-gray-400 leading-relaxed mt-4">
+                    <i class="fa-solid fa-shield-halved mr-1"></i>자격·교육 정보는 배차 매칭에만 사용되며, 허위 등록 시 이용이 제한될 수 있습니다.
+                </p>
+            </main>
+
+            <!-- 하단 네비게이션 -->
+            <nav class="absolute bottom-0 w-full bg-white border-t border-gray-100 flex justify-around items-center pt-3 pb-6 px-2 z-20">
+                <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
+                    <i class="fa-solid fa-house text-xl"></i>
+                    <span class="text-[10px] font-medium">홈</span>
+                </a>
+                <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
+                    <i class="fa-solid fa-list-check text-xl"></i>
+                    <span class="text-[10px] font-medium">오더목록</span>
+                </a>
+                <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
+                    <i class="fa-regular fa-file-lines text-xl"></i>
+                    <span class="text-[10px] font-medium">정산내역</span>
+                </a>
+                <a href="#" class="flex flex-col items-center gap-1 text-brand-600 w-1/4">
+                    <i class="fa-solid fa-user text-xl"></i>
+                    <span class="text-[10px] font-bold">내 정보</span>
+                </a>
+            </nav>
+        </div>
+<div id="toast"></div>
+</div>
+
+<script>
+const stack = ['screen-onboarding'];
+let role = 'shipper';
+const DRIVER_SCREENS = ['screen-driver-identity','screen-signup-driver','screen0','screen2','screen3','screen4','screen5x','screen6','screen-vehicle-settings'];
+
+function show(id) {
+    document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById(id);
+    el.classList.add('active');
+    const main = el.querySelector('main'); if (main) main.scrollTop = 0;
+}
+function go(id) { stack.push(id); show(id); }
+function back() { if (stack.length > 1) { stack.pop(); show(stack[stack.length-1]); } }
+let toastTimer;
+function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.opacity = 1;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.style.opacity = 0, 1600);
+}
+function selectRole(idx) {
+    const cards = document.querySelectorAll('#screen-onboarding main > button');
+    cards.forEach((b, j) => {
+        if (j === idx) {
+            b.className = b.className.replace('bg-white border border-gray-200', 'bg-brand-50 border-2 border-brand-500');
+            b.lastElementChild.outerHTML = '<i class="fa-solid fa-circle-check text-brand-600 text-xl"></i>';
+        } else {
+            b.className = b.className.replace('bg-brand-50 border-2 border-brand-500', 'bg-white border border-gray-200');
+            b.lastElementChild.outerHTML = '<div class="w-5 h-5 rounded-full border-2 border-gray-200"></div>';
+        }
+    });
+    role = idx === 0 ? 'shipper' : 'driver';
+}
+
+document.addEventListener('click', e => {
+    const scr = e.target.closest('.app-screen');
+    if (!scr) return;
+    const sid = scr.id;
+
+    // 뒤로가기 화살표
+    if (e.target.closest('header') && e.target.classList.contains('fa-arrow-left')) { back(); return; }
+
+    const btn = e.target.closest('button, a');
+    if (btn) {
+        const x = btn.innerText.replace(/\s+/g, '');
+
+        if (sid === 'screen-onboarding') {
+            if (x.includes('짐을보내요')) { selectRole(0); return; }
+            if (x.includes('화물차로운송해요')) { selectRole(1); return; }
+            if (x.includes('시작')) { go(role === 'shipper' ? 'screen-signup-shipper' : 'screen-driver-identity'); return; }
+        }
+        if (x.includes('가입완료하고시작하기')) { go('screen-shipper-lobby'); return; }
+        if (x.includes('인증완료하고서류제출로') || x.includes('PASS앱으로한번에인증')) { go('screen-signup-driver'); return; }
+        if (x.includes('서류제출하고심사받기')) { toast('심사 통과! 데모라서 바로 시작해요 🎉'); setTimeout(() => go('screen0'), 900); return; }
+        if (x.includes('내주변실시간오더찾기')) { go('screen2'); return; }
+        if (x.includes('이오더수락하기')) { go('screen3'); return; }
+        if (x.includes('이력기록동의하고수락하기')) { go('screen3'); return; }
+        if (sid === 'screen-shipper-lobby' && x.includes('운송요청하기')) { go('screen1'); return; }
+        if (sid === 'screen1' && x.includes('요청하기') && !x.includes('운송')) { toast('오더가 등록됐어요 — 차주를 찾는 중'); setTimeout(() => go('screen-shipper-orders'), 900); return; }
+        if (sid === 'screen5' && x.includes('요청하기')) { toast('오더가 등록됐어요 — 차주를 찾는 중'); setTimeout(() => go('screen-shipper-orders'), 900); return; }
+        if (sid === 'screen1' && x.includes('퇴비·축분')) { go('screen5'); return; }
+        if (sid === 'screen5' && x.includes('곡물(벼·쌀)')) { go('screen1'); return; }
+
+        // 하단 네비게이션 (a 태그)
+        if (btn.tagName === 'A') {
+            const nav = btn.innerText.trim();
+            const driverCtx = ['screen0','screen4','screen-vehicle-settings'].includes(sid);
+            if (nav === '홈') { go(driverCtx ? 'screen0' : 'screen-shipper-lobby'); return; }
+            if (nav === '오더목록') { go('screen2'); return; }
+            if (nav === '정산내역') { go('screen4'); return; }
+            if (nav === '내 오더') { go('screen-shipper-orders'); return; }
+            if (nav === '운송비') { go('screen4'); return; }
+            if (nav === '내 정보') { go(driverCtx ? 'screen-vehicle-settings' : 'screen-shipper-lobby'); return; }
+        }
+
+        if (x.includes('전화') || x.includes('카카오')) { toast('데모에서는 연결되지 않아요 📞'); return; }
+        return; // 폼 칩 등은 조용히 무시
+    }
+
+    // 차주 로비 추천 오더 카드
+    if (sid === 'screen0') {
+        const card = e.target.closest('div.bg-white.rounded-2xl');
+        if (card) {
+            const tx = card.innerText;
+            if (tx.includes('바로 상차')) { go('screen2'); return; }
+            if (tx.includes('이력 기록됨')) { go('screen6'); return; }
+        }
+    }
+    // 화주 로비 진행중 카드 → 내 오더
+    if (sid === 'screen-shipper-lobby') {
+        const card = e.target.closest('div.bg-white.rounded-2xl');
+        if (card && (card.innerText.includes('운송 중') || card.innerText.includes('배차 대기'))) { go('screen-shipper-orders'); return; }
+    }
+});
+
+show('screen-onboarding');
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(() => {}); }
+</script>
+</body>
+</html>

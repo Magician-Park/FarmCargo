@@ -1,0 +1,14 @@
+name: farm_cargo
+description: 농업 화물 배차 앱
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
