@@ -99,7 +99,7 @@ form.addEventListener('submit', async (event) => {
 
   const copied = await copyPrompt(text);
   note.textContent = copied
-    ? '저장하고 복사했습니다. Codex 작업창에 붙여넣어 이어서 개발하세요.'
+    ? '저장하고 복사했습니다. 필요한 곳에 붙여넣어 사용하세요.'
     : '브라우저에 저장했습니다. 최근 프롬프트에서 다시 불러올 수 있습니다.';
   note.classList.add('success');
   window.setTimeout(() => note.classList.remove('success'), 2600);
