@@ -55,13 +55,6 @@ void main() {
     expect(find.text('박농부님,'), findsOneWidget);
   });
 
-  testWidgets('비밀번호를 잊으셨나요는 아직 준비 중 안내를 보여준다', (tester) async {
-    await pumpApp(tester);
-    await goToLogin(tester);
-    await tapText(tester, '비밀번호를 잊으셨나요?');
-    expect(find.text('비밀번호 재설정은 준비 중이에요.'), findsOneWidget);
-  });
-
   testWidgets('로그아웃 상태에서 보호된 경로로 가면 로비로 돌아온다', (tester) async {
     final container = await pumpApp(tester);
     container.read(routerProvider).go(AppRoutes.driverHome);

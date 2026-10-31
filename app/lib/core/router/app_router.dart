@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/account_role.dart';
 import '../../features/auth/auth_provider.dart';
+import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
+import '../../features/auth/reset_password_screen.dart';
 import '../../features/onboarding/permissions_screen.dart';
 import '../../features/onboarding/welcome_screen.dart';
 import '../../features/driver/detail_screen.dart';
@@ -18,9 +20,13 @@ abstract final class AppRoutes {
   static const welcome = '/welcome';
   static const login = '/login';
   static const signup = '/signup';
+  static const forgotPassword = '/forgot-password';
+  static const resetPassword = '/reset-password';
   static const driverHome = '/driver';
   static const shipperHome = '/shipper';
 
+  static String resetPasswordLink(String token) =>
+      '$resetPassword?token=${Uri.encodeQueryComponent(token)}';
   static String signupFlow(AccountRole role) => '$signup/${role.name}';
   static String driverOrder(String id) => '$driverHome/orders/$id';
   static String homeFor(AccountRole role) => switch (role) {
@@ -34,6 +40,8 @@ bool _isPublic(String location) =>
     location == AppRoutes.permissions ||
     location == AppRoutes.welcome ||
     location == AppRoutes.login ||
+    location == AppRoutes.forgotPassword ||
+    location == AppRoutes.resetPassword ||
     location.startsWith(AppRoutes.signup);
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -66,6 +74,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        // 메일 링크: /reset-password?token=...
+        path: AppRoutes.resetPassword,
+        builder: (context, state) => ResetPasswordScreen(
+          token: state.uri.queryParameters['token'] ?? '',
+        ),
       ),
       GoRoute(
         path: AppRoutes.signup,
