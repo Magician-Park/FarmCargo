@@ -15,6 +15,8 @@ class ShipperLobbyScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final shipments = ref.watch(shipperShipmentsProvider);
 
+    // 로그아웃 직후 라우터가 이동시키기 전까지 계정이 null일 수 있다.
+    final name = ref.watch(authProvider)?.name ?? '';
     return Scaffold(
       appBar: AppBar(
         title: const Text('화주 홈'),
@@ -30,7 +32,7 @@ class ShipperLobbyScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            const Text('박농부님,',
+            Text('$name님,',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
             const Text('전북 김제시 죽산면 ○○농장', style: TextStyle(color: Colors.grey)),

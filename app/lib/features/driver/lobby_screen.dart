@@ -19,6 +19,8 @@ class LobbyScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final orders = ref.watch(recommendedOrdersProvider);
 
+    // 로그아웃 직후 라우터가 이동시키기 전까지 계정이 null일 수 있다.
+    final name = ref.watch(authProvider)?.name ?? '';
     return Scaffold(
       appBar: AppBar(
         title: const Text('차주 홈'),
@@ -35,7 +37,7 @@ class LobbyScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(20),
           children: [
             // 인사 + 차량 상태
-            const Text('김기사님,',
+            Text('$name님,',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
             const Text('11톤 윙바디 • 서울 88가 1234',

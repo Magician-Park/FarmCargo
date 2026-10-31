@@ -36,6 +36,17 @@ abstract final class AppTheme {
         colorSchemeSeed: AppColors.primary,
         scaffoldBackgroundColor: AppColors.background,
         appBarTheme: const AppBarTheme(backgroundColor: Colors.white),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          border: _inputBorder(AppColors.border),
+          enabledBorder: _inputBorder(AppColors.border),
+          focusedBorder: _inputBorder(AppColors.primary, width: 2),
+          errorBorder: _inputBorder(Colors.red),
+          focusedErrorBorder: _inputBorder(Colors.red, width: 2),
+        ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -43,5 +54,11 @@ abstract final class AppTheme {
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
+      );
+
+  static OutlineInputBorder _inputBorder(Color color, {double width = 1}) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: color, width: width),
       );
 }

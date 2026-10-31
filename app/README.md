@@ -42,22 +42,43 @@ flutter test
 lib/
   main.dart, app.dart          # 진입점 (ProviderScope + MaterialApp.router)
   core/
-    router/app_router.dart     # 경로 정의, 로그인/역할 기반 redirect
-    theme/app_theme.dart       # AppColors, AppTheme
-    utils/, widgets/           # 공용 포맷터와 위젯 (InfoChip, SectionCard, AsyncValueView)
+    router/                    # 경로 정의, 로그인/역할 기반 redirect
+    theme/                     # AppColors, AppTheme
+    utils/                     # 포맷터, 검증(validators), 입력 포맷터
+    widgets/                   # 공용 위젯 (InfoChip, SectionCard, LabeledTextField, BottomActionBar ...)
   features/
-    auth/                      # 역할, 데모 로그인 상태, 로그인 화면
-    orders/                    # Order/Shipment 모델, OrderRepository(+Mock), providers
-    driver/                    # 차주 홈, 오더 상세
-    shipper/                   # 화주 홈
+    onboarding/                # 권한 안내, 로비(로그인/회원가입)
+    auth/                      # 계정/역할, AuthRepository(+Mock), 로그인 화면
+    signup/                    # 차주·화주 회원가입 (한 화면 안에서 단계 전환)
+    orders/                    # Order/Shipment 모델, OrderRepository(+Mock)
+    driver/, shipper/          # 각 역할의 홈 화면
 ```
 
-서버 연동 시 `OrderRepository`의 구현체만 만들어 `orderRepositoryProvider`에서 교체합니다.
+서버 연동 시 `AuthRepository`, `OrderRepository`, `DocumentScanner`의 구현체만 만들어
+각 provider에서 교체합니다. 지금은 모두 데모(Mock) 구현입니다.
+
+## 회원가입 흐름
+
+권한 안내 → 로비 → (회원가입) 역할 선택 → 단계별 입력 → 가입 완료 → 로비 → 로그인
+
+| 단계 | 차주 | 화주 |
+|---|---|---|
+| 1 | 이름·이메일·비밀번호 | 이름·이메일·비밀번호 |
+| 2 | 휴대폰 문자 인증 | 휴대폰 문자 인증 |
+| 3 | 약관 동의 | 약관 동의 |
+| 4 | 화물운송종사자격증 촬영·자동입력 | 주민등록증 촬영·자동입력 |
+| 5 | 사업자등록증 촬영·자동입력(관할 세무서 포함) | 사업자등록증 촬영·자동입력 |
+
+데모 구현에서는 문자가 발송되지 않고 인증번호 `123456`을 화면에 안내하며, 서류 자동입력은 고정된 샘플 값을 채웁니다.
+데모 로그인 계정(앱을 다시 실행하면 가입한 계정은 사라집니다):
+
+- 차주 `driver@farmcargo.test` / `Passw0rd!`
+- 화주 `shipper@farmcargo.test` / `Passw0rd!`
 
 ## 현재 상태
 
-로그인(역할 선택, 데모 인증) → 차주 홈 → 오더 상세, 화주 홈까지 구현된 데모입니다.
-서버 연동, 실제 인증, 오더 수락 로직 등은 아직 없습니다.
+회원가입·로그인 화면과 차주 홈 → 오더 상세, 화주 홈까지 구현된 데모입니다.
+서버 연동, 실제 문자 인증·OCR, 비밀번호 재설정, 오더 수락 로직 등은 아직 없습니다.
 
 ## 앱 식별자
 
