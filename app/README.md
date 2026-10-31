@@ -34,6 +34,14 @@ flutter analyze
 flutter test
 ```
 
+## 웹으로 실행
+
+```bash
+flutter run -d chrome
+```
+
+(`app/web/`에 Flutter Web 설정이 있습니다. 카메라 촬영은 브라우저에서는 파일 선택으로 동작할 수 있습니다.)
+
 ## 코드 구조
 
 상태관리는 Riverpod, 라우팅은 go_router를 사용합니다.
@@ -51,7 +59,8 @@ lib/
     auth/                      # 계정/역할, AuthRepository(+Mock), 로그인 화면
     signup/                    # 차주·화주 회원가입 (한 화면 안에서 단계 전환)
     orders/                    # Order/Shipment 모델, OrderRepository(+Mock)
-    driver/, shipper/          # 각 역할의 홈 화면
+    driver/                    # 차주 홈, 오더 상세
+    shipper/                   # 화주 홈, 곡물·비료·사료 운송 요청 화면
 ```
 
 서버 연동 시 `AuthRepository`, `OrderRepository`, `DocumentScanner`의 구현체만 만들어
@@ -86,7 +95,8 @@ lib/
 
 ## 현재 상태
 
-회원가입·로그인 화면과 차주 홈 → 오더 상세, 화주 홈까지 구현된 데모입니다.
+회원가입·로그인·비밀번호 재설정, 차주 홈 → 오더 상세, 화주 홈 → 곡물/비료/사료 운송 요청까지 구현된 데모입니다.
+역할(차주/화주)은 로그인한 계정으로 정해지며, 한 계정은 한 역할의 화면만 볼 수 있습니다.
 서버 연동, 실제 문자·메일 발송, OCR, 오더 수락 로직 등은 아직 없습니다.
 
 ## 앱 식별자

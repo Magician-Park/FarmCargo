@@ -1,5 +1,4 @@
 import 'package:farm_cargo/features/orders/order_repository.dart';
-import 'package:farm_cargo/features/orders/shipment.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -15,10 +14,5 @@ void main() {
   test('fetchOrder는 id로 찾고 없으면 null', () async {
     expect((await repository.fetchOrder('order-2'))?.isCompost, isTrue);
     expect(await repository.fetchOrder('nope'), isNull);
-  });
-
-  test('화주 운송 현황은 운송 중과 배차 대기를 포함한다', () async {
-    final shipments = await repository.fetchShipperShipments();
-    expect(shipments.map((s) => s.status), containsAll(ShipmentStatus.values));
   });
 }

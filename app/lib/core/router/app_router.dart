@@ -11,7 +11,10 @@ import '../../features/onboarding/permissions_screen.dart';
 import '../../features/onboarding/welcome_screen.dart';
 import '../../features/driver/detail_screen.dart';
 import '../../features/driver/lobby_screen.dart';
-import '../../features/shipper/shipper_lobby_screen.dart';
+import '../../features/shipper/feed_request_screen.dart';
+import '../../features/shipper/fertilizer_request_screen.dart';
+import '../../features/shipper/grain_request_screen.dart';
+import '../../features/shipper/shipper_home_screen.dart';
 import '../../features/signup/role_select_screen.dart';
 import '../../features/signup/signup_flow_screen.dart';
 
@@ -24,6 +27,9 @@ abstract final class AppRoutes {
   static const resetPassword = '/reset-password';
   static const driverHome = '/driver';
   static const shipperHome = '/shipper';
+  static const grainRequest = '/shipper/request/grain';
+  static const fertilizerRequest = '/shipper/request/fertilizer';
+  static const feedRequest = '/shipper/request/feed';
 
   static String resetPasswordLink(String token) =>
       '$resetPassword?token=${Uri.encodeQueryComponent(token)}';
@@ -116,7 +122,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.shipperHome,
-        builder: (context, state) => const ShipperLobbyScreen(),
+        builder: (context, state) => const ShipperHomeScreen(),
+        routes: [
+          GoRoute(
+            path: 'request/grain',
+            builder: (context, state) => const GrainRequestScreen(),
+          ),
+          GoRoute(
+            path: 'request/fertilizer',
+            builder: (context, state) => const FertilizerRequestScreen(),
+          ),
+          GoRoute(
+            path: 'request/feed',
+            builder: (context, state) => const FeedRequestScreen(),
+          ),
+        ],
       ),
     ],
   );

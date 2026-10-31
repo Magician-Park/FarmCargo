@@ -1,11 +1,120 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=./farm-cargo-mockups.html">
-    <title>농업 화물 배차 앱 - 화면 목업</title>
-</head>
-<body>
-    <p>목업 페이지로 이동 중… 자동으로 이동하지 않으면 <a href="farm-cargo-mockups.html">여기</a>를 눌러주세요.</p>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10140f" />
+    <meta
+      name="description"
+      content="팜카고 앱을 프롬프트와 실시간 시연 화면으로 함께 살펴보는 로컬 개발 워크스페이스"
+    />
+    <title>팜카고 개발 워크스페이스</title>
+    <link rel="stylesheet" href="workspace.css" />
+  </head>
+  <body>
+    <div class="workspace" id="workspace">
+      <aside class="prompt-panel" aria-label="개발 프롬프트 패널">
+        <header class="brand-bar">
+          <a class="brand" href="./" aria-label="팜카고 개발 워크스페이스 홈">
+            <span class="brand-mark" aria-hidden="true">ㅍ</span>
+            <span>
+              <strong>팜카고</strong>
+              <small>development workspace</small>
+            </span>
+          </a>
+          <span class="local-badge"><i></i> LOCAL</span>
+        </header>
+
+        <main class="prompt-content">
+          <section class="intro">
+            <span class="eyebrow">팜카고 · MAIN</span>
+            <h1>무엇을<br />만들어 볼까요?</h1>
+            <p>오른쪽 설계를 보며 다음 개발 요청을 구체화하세요. 작성한 내용은 이 브라우저에만 저장됩니다.</p>
+          </section>
+
+          <section class="context-card" aria-labelledby="context-title">
+            <div class="section-heading">
+              <h2 id="context-title">프로젝트 컨텍스트</h2>
+              <span>3 surfaces</span>
+            </div>
+            <ul class="context-list">
+              <li><span class="context-icon blue">F</span><div><strong>Flutter 앱</strong><small>app/lib · 실제 제품 코드</small></div></li>
+              <li><span class="context-icon amber">16</span><div><strong>전체 화면 설계</strong><small>핵심 사용자 흐름 목업</small></div></li>
+              <li><span class="context-icon green">P</span><div><strong>클릭 데모</strong><small>설치 가능한 PWA 시연</small></div></li>
+            </ul>
+          </section>
+
+          <section class="history" aria-labelledby="history-title">
+            <div class="section-heading">
+              <h2 id="history-title">최근 프롬프트</h2>
+              <button class="text-button" id="clear-history" type="button">모두 지우기</button>
+            </div>
+            <div class="history-list" id="history-list">
+              <p class="empty-history">아직 저장한 프롬프트가 없습니다.</p>
+            </div>
+          </section>
+        </main>
+
+        <form class="composer" id="prompt-form">
+          <label for="prompt-input">개발 요청</label>
+          <div class="composer-box">
+            <textarea
+              id="prompt-input"
+              rows="4"
+              placeholder="예: 차주 홈의 추천 오더를 거리순으로 정렬하고 빈 상태 화면도 추가해줘"
+              required
+            ></textarea>
+            <div class="composer-actions">
+              <span><kbd>⌘</kbd><kbd>↵</kbd> 저장</span>
+              <button id="save-prompt" type="submit" aria-label="프롬프트 저장">
+                <span>저장 &amp; 복사</span><b aria-hidden="true">↗</b>
+              </button>
+            </div>
+          </div>
+          <p class="composer-note" id="composer-note" aria-live="polite">작성한 내용은 클립보드에도 복사됩니다.</p>
+        </form>
+      </aside>
+
+      <div class="resizer" id="resizer" role="separator" aria-label="패널 너비 조절" aria-orientation="vertical" tabindex="0">
+        <span></span>
+      </div>
+
+      <section class="preview-panel" aria-label="앱 미리보기">
+        <header class="preview-toolbar">
+          <div class="preview-title">
+            <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <div>
+              <strong id="preview-name">전체 화면 설계</strong>
+              <small id="preview-path">farm-cargo-mockups.html</small>
+            </div>
+          </div>
+
+          <nav class="view-switcher" aria-label="미리보기 선택">
+            <button class="view-button active" type="button" data-preview="design">전체 설계</button>
+            <button class="view-button" type="button" data-preview="demo">클릭 데모</button>
+          </nav>
+
+          <div class="preview-actions">
+            <button class="icon-button" id="refresh-preview" type="button" title="미리보기 새로고침" aria-label="미리보기 새로고침">↻</button>
+            <a class="icon-button" id="open-preview" href="farm-cargo-mockups.html" target="_blank" rel="noreferrer" title="새 탭에서 열기" aria-label="새 탭에서 열기">↗</a>
+          </div>
+        </header>
+
+        <div class="preview-stage">
+          <div class="preview-status">
+            <span><i></i> PREVIEW READY</span>
+            <span id="preview-description">16개 핵심 화면과 사용자 흐름</span>
+          </div>
+          <iframe
+            id="app-preview"
+            title="팜카고 전체 화면 설계 미리보기"
+            src="farm-cargo-mockups.html"
+            loading="eager"
+          ></iframe>
+        </div>
+      </section>
+    </div>
+
+    <script src="workspace.js" defer></script>
+  </body>
 </html>

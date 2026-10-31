@@ -52,7 +52,7 @@ void main() {
     await enterAt(tester, 1, 'Passw0rd!');
     await tapText(tester, '로그인');
     expect(find.text('화주 홈'), findsOneWidget);
-    expect(find.text('박농부님,'), findsOneWidget);
+    expect(find.text('박농부님, 안녕하세요'), findsOneWidget);
   });
 
   testWidgets('로그아웃 상태에서 보호된 경로로 가면 로비로 돌아온다', (tester) async {
