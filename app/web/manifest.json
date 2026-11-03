@@ -1,11 +1,11 @@
 {
-    "name": "farm_cargo",
-    "short_name": "farm_cargo",
+    "name": "팜카고 — 농업 화물 배차",
+    "short_name": "팜카고",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F9FAFB",
+    "theme_color": "#2563EB",
+    "description": "농사짐, 이제 앱으로 부르세요. 농업 화물 배차 앱 팜카고",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

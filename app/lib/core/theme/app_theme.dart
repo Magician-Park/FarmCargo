@@ -33,7 +33,9 @@ abstract final class AppColors {
 abstract final class AppTheme {
   static ThemeData get light => ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: AppColors.primary,
+        // 시드가 만드는 파랑은 브랜드 파랑과 달라 보이므로 주 색만 브랜드 색으로 고정한다.
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary)
+            .copyWith(primary: AppColors.primary, onPrimary: Colors.white),
         scaffoldBackgroundColor: AppColors.background,
         appBarTheme: const AppBarTheme(backgroundColor: Colors.white),
         inputDecorationTheme: InputDecorationTheme(
