@@ -1,0 +1,53 @@
+# Flutter Web 베타를 GitHub Pages에 배포한다.
+# 공개 배포이므로 지금은 수동 실행만 허용한다(Actions 탭 -> Run workflow).
+# main에 푸시할 때마다 자동 배포하려면 아래 on: 에 push 트리거를 추가한다.
+name: Deploy web beta to GitHub Pages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.8
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+      # 프로젝트 사이트 주소(https://<소유자>.github.io/FarmCargo/)에 맞춘 base href.
+      # --no-web-resources-cdn: 렌더링 엔진을 구글 CDN이 아니라 배포 파일에서 받는다.
+      - run: flutter build web --release --no-web-resources-cdn --base-href /FarmCargo/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

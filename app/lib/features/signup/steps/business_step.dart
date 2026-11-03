@@ -7,6 +7,7 @@ import '../../../core/utils/validators.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/labeled_text_field.dart';
 import '../../auth/account_role.dart';
+import '../../../core/widgets/demo_notice.dart';
 import '../document_capture_card.dart';
 import '../document_scanner.dart';
 import '../signup_controller.dart';
@@ -160,6 +161,8 @@ class _BusinessStepState extends ConsumerState<BusinessStep> {
               builder: (context, _) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 실제 서류를 넣을 위험이 커서 이 단계에서 따로 안내한다.
+                  const DemoNotice(margin: EdgeInsets.only(bottom: 12)),
                   DocumentCaptureCard(
                     title: '사업자등록증',
                     icon: Icons.description_outlined,

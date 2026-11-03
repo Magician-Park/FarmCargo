@@ -18,7 +18,8 @@
 - **웹에서 되는 것이 앱에서도 된다고 보장하지 않는다.** 카메라·사진·위치·푸시 알림·권한·파일·보안 저장소·딥링크는 플랫폼마다 구현과 정책이 다르다. 이런 기능은 웹 검증과 별개로 Android·iOS 실기기에서 검증하고, 하지 못했다면 보고에 명시한다.
 - 웹 전용·앱 전용 코드는 인터페이스 뒤에 모아 둔다(현재 예: `PhotoCapture`, `DocumentScanner`, `AuthRepository`). `kIsWeb` 분기를 화면 코드 곳곳에 흩뿌리지 않는다.
 - 웹 베타 중에도 가능한 환경에서 Android 빌드가 깨지지 않는지 정기적으로 확인한다. iOS 플랫폼은 아직 생성하지 않았다.
-- 앱 ID(현재 임시값 `com.farmcargo.app`), 서명 키, 개인정보 처리방침, 스토어 심사·테스트 요건, 웹 베타 배포 위치는 **미정**이다. 임시값을 확정으로 취급하지 않는다. 스토어 정책은 바뀔 수 있으므로 출시 시점에 공식 문서로 확인한다.
+- **웹 베타 배포 위치는 GitHub Pages다**(사용자 결정, 2026-11-03). 주소는 `https://magician-park.github.io/FarmCargo/`(저장소 공개 상태 기준)다. 정적 호스팅이라 서버·DB를 제공하지 않으며, 지금 앱은 샘플 데이터(`Mock*Repository`)로만 동작한다. 공개 배포이므로 배포는 `.github/workflows/deploy-web.yml`을 사용자가 수동 실행하며, 자동 배포로 바꾸려면 먼저 사용자 확인을 받는다. 공개 사이트와 저장소에는 비밀키·실제 개인정보를 두지 않는다.
+- 앱 ID(현재 임시값 `com.farmcargo.app`), 서명 키, 개인정보 처리방침, 스토어 심사·테스트 요건은 **미정**이다. 임시값을 확정으로 취급하지 않는다. 스토어 정책은 바뀔 수 있으므로 출시 시점에 공식 문서로 확인한다.
 - 앞선 방침의 "`app/` 수정·빌드·실행 금지"는 해제한다. 기존 미추적 Flutter 플랫폼 파일을 삭제하거나 덮어쓰지 않는 원칙은 유지한다.
 - 날짜가 지난 파일·목업·README의 설명보다 이 방침을 우선한다.
 
@@ -33,6 +34,7 @@
 | `scripts/dev-server.mjs` | 외부 패키지가 필요 없는 로컬 정적 서버. 업무 API 서버와 구분 |
 | `app/web/`, `app/android/` | Flutter Web 설정과 Android 설정. iOS 폴더는 아직 없음 |
 | `app-demo.html` | 클릭해 볼 수 있는 웹/PWA 시연 프로토타입. 제품 코드의 기준이 아님 |
+| `.github/workflows/deploy-web.yml` | Flutter Web 베타를 GitHub Pages에 배포하는 수동 실행 워크플로 |
 | `팜카고_개발규칙/docs/` | 현재 요구사항·DB·프론트엔드·백엔드 상세 규칙 |
 | `팜카고_개발규칙/README.md`, `CLAUDE.md` | 규칙 폴더 안내와 읽는 순서. 공통 규칙은 이 파일에만 두고 중복 작성하지 않음 |
 | `CLAUDE.md`(저장소 루트) | Claude Code가 이 파일을 읽도록 연결하는 한 줄 문서 |
@@ -119,10 +121,13 @@ flutter analyze
 flutter test
 flutter run -d chrome
 flutter build web --release --no-web-resources-cdn
+flutter build web --release --no-web-resources-cdn --base-href /FarmCargo/
 ```
 
 - 2026-11-03 클라우드 환경(Flutter 3.47.8)에서 `flutter analyze` 이슈 0건, `flutter test` 38개 통과, `flutter build web --release --no-web-resources-cdn` 성공을 확인했다. 빌드한 웹을 Chromium으로 열어 권한 안내 → 로비 화면 이동까지 오류 없이 동작함을 확인했다. 이 환경에는 Android SDK가 없어 Android 빌드·실기기는 확인하지 못했다.
-- `--no-web-resources-cdn`은 렌더링 엔진(CanvasKit)을 구글 CDN이 아니라 배포 파일에서 받게 한다. 기본값은 구글 CDN(`gstatic.com`)에 의존한다. 베타 배포 방식은 미정이므로 확정 옵션으로 취급하지 않는다.
+- `--no-web-resources-cdn`은 렌더링 엔진(CanvasKit)을 구글 CDN이 아니라 배포 파일에서 받게 한다. 기본값은 구글 CDN(`gstatic.com`)에 의존한다. GitHub Pages 배포 워크플로는 이 옵션을 쓴다.
+- GitHub Pages는 프로젝트 사이트라 `/FarmCargo/` 아래에서 서비스된다. 그래서 배포용 빌드에는 `--base-href /FarmCargo/`가 필요하다. 이 설정으로 빌드한 결과를 `/FarmCargo/` 경로로 로컬에서 서비스해, 모든 요청이 정상 응답하고 `#/welcome` 이동과 `#/reset-password?token=...` 주소 직접 진입·새로고침이 동작함을 Chromium으로 확인했다(2026-11-03).
+- `deploy-web.yml`은 YAML 문법만 확인했고 GitHub Actions에서 실행해 보지 못했다. 배포 전 저장소 설정에서 Pages의 Source를 `GitHub Actions`로 지정해야 하며, 2026-11-03 확인 시점에는 Pages가 켜져 있지 않았다.
 - 컴파일 성공, 브라우저에서 실제 동작, 앱 빌드 성공, 실기기 동작은 서로 다른 검증이다. 한글 폰트 로딩, 카메라·사진, 새로고침과 뒤로 가기, 작은 화면은 실제 브라우저에서 따로 확인한다.
 
 HTML 워크스페이스·프로토타입 검증·실행(저장소 루트):

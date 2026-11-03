@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/demo_notice.dart';
 
 /// 팜카고 로비: 로그인 또는 회원가입.
 class WelcomeScreen extends StatelessWidget {
@@ -55,6 +56,7 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                     child: const Text('회원가입'),
                   ),
+                  const DemoNotice(margin: EdgeInsets.only(top: 28)),
                 ],
               ),
             ),

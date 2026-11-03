@@ -4,6 +4,14 @@
 
 농업 화물의 요청, 배차, 운송, 정산 흐름을 설계하고 구현하는 앱 프로젝트입니다. 저장소 루트에는 다음 개발 작업을 구체화할 수 있는 분할형 개발 워크스페이스가 포함되어 있습니다.
 
+## 웹 베타 배포 (GitHub Pages)
+
+주소: `https://magician-park.github.io/FarmCargo/` (Flutter Web, 샘플 데이터로만 동작)
+
+1. 최초 1회: 저장소 **Settings → Pages → Build and deployment → Source**를 `GitHub Actions`로 지정합니다.
+2. 배포: **Actions → Deploy web beta to GitHub Pages → Run workflow**를 눌러 `main`을 배포합니다.
+   (공개 배포라서 자동 배포는 꺼 두었습니다. 자동으로 바꾸려면 `.github/workflows/deploy-web.yml`의 `on:`에 `push`를 추가합니다.)
+
 ## 빠른 시작
 
 Node.js 20 이상에서 별도 패키지 설치 없이 실행됩니다.
