@@ -17,9 +17,7 @@ class ResetLinkExpiredException extends AuthException {
 
 /// 인증/회원가입 데이터 소스. 서버 연동 시 이 인터페이스의 구현만 교체한다.
 abstract interface class AuthRepository {
-  /// [identifier]는 이메일 또는 휴대폰 번호.
-  Future<Account> signIn(
-      {required String identifier, required String password});
+  Future<Account> signIn({required String email, required String password});
 
   /// 인증번호 문자를 보낸다. 데모 구현은 화면에 안내할 인증번호를 돌려준다.
   Future<String?> sendPhoneCode(String phone);
@@ -79,10 +77,8 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   Future<Account> signIn(
-      {required String identifier, required String password}) async {
-    final key = identifier.trim();
-    _Record? record = _accounts[key.toLowerCase()];
-    record ??= _accounts.values.where((r) => r.phone == key).firstOrNull;
+      {required String email, required String password}) async {
+    final record = _accounts[email.trim().toLowerCase()];
     if (record == null || record.password != password) {
       throw const AuthException('이메일 또는 비밀번호가 올바르지 않아요.');
     }

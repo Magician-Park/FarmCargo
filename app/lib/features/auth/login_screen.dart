@@ -10,7 +10,7 @@ import '../../core/widgets/labeled_text_field.dart';
 import 'auth_provider.dart';
 import 'auth_repository.dart';
 
-/// 이메일(또는 휴대폰 번호)과 비밀번호로 로그인한다.
+/// 이메일과 비밀번호로 로그인한다.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -42,7 +42,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // 성공하면 로그인 상태가 바뀌어 라우터가 홈으로 이동시킨다.
       await ref
           .read(authProvider.notifier)
-          .signIn(identifier: _id.text, password: _password.text);
+          .signIn(email: _id.text, password: _password.text);
     } on AuthException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } finally {

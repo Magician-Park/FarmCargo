@@ -9,6 +9,11 @@ void main() {
   testWidgets('앱 실행 시 권한 안내 -> 로비(로그인/회원가입) 순서로 보인다', (tester) async {
     await pumpApp(tester);
     expect(find.text('팜카고 이용을 위해\n접근 권한을 허용해 주세요'), findsOneWidget);
+    // 가입 초안에서 쓰임이 확인되는 카메라만 안내한다
+    expect(find.text('카메라'), findsOneWidget);
+    for (final name in ['위치', '알림', '전화', '사진']) {
+      expect(find.text(name), findsNothing);
+    }
 
     await tapText(tester, '확인');
     expect(find.text('팜카고'), findsOneWidget);
@@ -45,11 +50,18 @@ void main() {
     expect(find.text('회원가입'), findsOneWidget);
   });
 
-  testWidgets('휴대폰 번호로도 로그인할 수 있고 화주 홈으로 간다', (tester) async {
+  testWidgets('로그인은 이메일로만 가능하고 화주는 화주 홈으로 간다', (tester) async {
     await pumpApp(tester);
     await goToLogin(tester);
+
+    // 휴대폰 번호로는 로그인할 수 없다
     await enterAt(tester, 0, '01033334444');
     await enterAt(tester, 1, 'Passw0rd!');
+    await tapText(tester, '로그인');
+    expect(find.text('이메일 또는 비밀번호가 올바르지 않아요.'), findsOneWidget);
+    expect(find.text('화주 홈'), findsNothing);
+
+    await enterAt(tester, 0, 'shipper@farmcargo.test');
     await tapText(tester, '로그인');
     expect(find.text('화주 홈'), findsOneWidget);
     expect(find.text('박농부님, 안녕하세요'), findsOneWidget);
@@ -67,7 +79,7 @@ void main() {
     final container = await pumpApp(tester);
     await container
         .read(authProvider.notifier)
-        .signIn(identifier: 'driver@farmcargo.test', password: 'Passw0rd!');
+        .signIn(email: 'driver@farmcargo.test', password: 'Passw0rd!');
     await tester.pumpAndSettle();
     expect(find.text('차주 홈'), findsOneWidget);
 
@@ -81,7 +93,7 @@ void main() {
     final container = await pumpApp(tester);
     await container
         .read(authProvider.notifier)
-        .signIn(identifier: 'driver@farmcargo.test', password: 'Passw0rd!');
+        .signIn(email: 'driver@farmcargo.test', password: 'Passw0rd!');
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('퇴비 벌크'));
@@ -95,7 +107,7 @@ void main() {
     final container = await pumpApp(tester);
     await container
         .read(authProvider.notifier)
-        .signIn(identifier: 'driver@farmcargo.test', password: 'Passw0rd!');
+        .signIn(email: 'driver@farmcargo.test', password: 'Passw0rd!');
     await tester.pumpAndSettle();
 
     container.read(routerProvider).go(AppRoutes.driverOrder('nope'));

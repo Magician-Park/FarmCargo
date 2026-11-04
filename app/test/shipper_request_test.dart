@@ -8,7 +8,7 @@ Future<void> openShipperRequest(WidgetTester tester) async {
   final container = await pumpApp(tester);
   await container
       .read(authProvider.notifier)
-      .signIn(identifier: 'shipper@farmcargo.test', password: 'Passw0rd!');
+      .signIn(email: 'shipper@farmcargo.test', password: 'Passw0rd!');
   await tester.pumpAndSettle();
   expect(find.text('화주 홈'), findsOneWidget);
   await tester.tap(find.text('운송 요청하기'));
@@ -16,14 +16,15 @@ Future<void> openShipperRequest(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('차주가 추천 오더를 열고 상세 화면으로 이동한다', (tester) async {
+  testWidgets('차주가 일감 목록에서 오더를 열고 상세 화면으로 이동한다', (tester) async {
     final container = await pumpApp(tester);
     await container
         .read(authProvider.notifier)
-        .signIn(identifier: 'driver@farmcargo.test', password: 'Passw0rd!');
+        .signIn(email: 'driver@farmcargo.test', password: 'Passw0rd!');
     await tester.pumpAndSettle();
 
-    expect(find.text('추천 맞춤 오더'), findsOneWidget);
+    expect(find.text('일감 목록'), findsOneWidget);
+    expect(find.text('추천 맞춤 오더'), findsNothing);
     expect(find.text('오더 상세'), findsNothing);
     await tester.tap(find.text('전북 김제시 죽산면'));
     await tester.pumpAndSettle();

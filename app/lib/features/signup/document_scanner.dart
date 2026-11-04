@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../auth/account_role.dart';
 import 'signup_models.dart';
 
 /// 서류 사진을 촬영한다. 사용자가 취소하면 null.
@@ -25,7 +26,7 @@ abstract interface class DocumentScanner {
   Future<IdCard> scanIdCard(String imagePath);
   Future<BusinessRegistration> scanBusinessRegistration(
     String imagePath, {
-    required bool includeTaxOffice,
+    required AccountRole role,
   });
 }
 
@@ -61,23 +62,24 @@ class MockDocumentScanner implements DocumentScanner {
   @override
   Future<BusinessRegistration> scanBusinessRegistration(
     String imagePath, {
-    required bool includeTaxOffice,
+    required AccountRole role,
   }) async {
     await _delay();
+    final driver = role == AccountRole.driver;
     return BusinessRegistration(
       registrationNumber: '123-45-67891',
-      companyName: includeTaxOffice ? '김기사 운송' : '○○농장',
-      representativeName: includeTaxOffice ? '김기사' : '박농부',
+      companyName: driver ? '김기사 운송' : '○○농장',
+      representativeName: driver ? '김기사' : '박농부',
       birthDate: '1975-03-15',
       openedDate: '2016-03-02',
-      address: '서울특별시 강서구 ○○로 123',
-      businessType: includeTaxOffice ? '운수업 / 화물자동차 운송업' : '농업 / 곡물 재배업',
+      address: driver ? '서울특별시 강서구 ○○로 123' : '전북 김제시 죽산면 ○○로 1',
+      businessType: driver ? '운수업 / 화물자동차 운송업' : '농업 / 곡물 재배업',
       issueReason: '신규',
       coRepresentative: '',
       isConsolidatedTax: false,
       taxInvoiceEmail: 'tax@example.com',
       issuedDate: '2024-01-10',
-      taxOffice: includeTaxOffice ? '강서세무서' : '',
+      taxOffice: driver ? '강서세무서' : '김제세무서',
     );
   }
 }

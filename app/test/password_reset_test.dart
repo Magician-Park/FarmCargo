@@ -132,7 +132,7 @@ void main() {
           MockAuthRepository.resetLinkValidity - const Duration(seconds: 1));
       await repo.resetPassword(token: token, newPassword: 'NewPass123!');
       final account = await repo.signIn(
-          identifier: 'driver@farmcargo.test', password: 'NewPass123!');
+          email: 'driver@farmcargo.test', password: 'NewPass123!');
       expect(account.name, '김기사');
     });
 

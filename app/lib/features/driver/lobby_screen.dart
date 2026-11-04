@@ -17,7 +17,7 @@ class LobbyScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final orders = ref.watch(recommendedOrdersProvider);
+    final orders = ref.watch(availableOrdersProvider);
 
     // 로그아웃 직후 라우터가 이동시키기 전까지 계정이 null일 수 있다.
     final name = ref.watch(authProvider)?.name ?? '';
@@ -83,14 +83,14 @@ class LobbyScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
 
-            const Text('추천 맞춤 오더',
+            const Text('일감 목록',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
 
             // 오더 리스트
             AsyncValueView(
               value: orders,
-              onRetry: () => ref.invalidate(recommendedOrdersProvider),
+              onRetry: () => ref.invalidate(availableOrdersProvider),
               builder: (list) => list.isEmpty
                   ? const Padding(
                       padding: EdgeInsets.symmetric(vertical: 24),

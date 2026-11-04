@@ -63,7 +63,7 @@ void main() {
     expect(bottomButtonEnabled(tester, '다음'), isTrue);
     await tapText(tester, '다음');
 
-    // 5. 사업자등록증 (차주는 관할 세무서 포함)
+    // 5. 사업자등록증 (관할 세무서 포함)
     await captureDocument(tester);
     expect(find.text('강서세무서'), findsOneWidget);
     expect(find.text('사업자 단위 과세 적용사업자 여부'), findsOneWidget);
@@ -85,7 +85,7 @@ void main() {
     expect(find.text('이신규님,'), findsOneWidget);
   });
 
-  testWidgets('화주 회원가입: 주민등록증과 사업자등록증(세무서 없음)으로 가입한다', (tester) async {
+  testWidgets('화주 회원가입: 주민등록증과 사업자등록증(관할 세무서 포함)으로 가입한다', (tester) async {
     await pumpApp(tester);
     await startSignup(tester, '짐을 보내요');
 
@@ -106,9 +106,14 @@ void main() {
     await enterAt(tester, 1, '7503151234568');
     await tapText(tester, '다음');
 
-    // 사업자등록증: 세무서 항목이 없다
+    // 사업자등록증: 화주도 관할 세무서를 입력한다
     await captureDocument(tester);
-    expect(find.text('관할 세무서'), findsNothing);
+    expect(find.text('관할 세무서'), findsOneWidget);
+    expect(find.text('김제세무서'), findsOneWidget);
+    expect(bottomButtonEnabled(tester, '가입 완료'), isTrue);
+    await enterAt(tester, 11, ''); // 관할 세무서를 비우면 가입 완료 불가
+    expect(bottomButtonEnabled(tester, '가입 완료'), isFalse);
+    await enterAt(tester, 11, '김제세무서');
     await tapText(tester, '가입 완료');
     expect(find.text('회원가입이 완료되었어요'), findsOneWidget);
   });

@@ -1,7 +1,7 @@
 # 팜카고 개발 규칙
 
 수정일: 2026-11-03
-현재 위치: `E:/FarmCargo/팜카고_개발규칙`
+현재 위치: `E:/FarmCargo/FarmCargo_DevelopmentGuidelines`
 
 ## 기준 파일과 읽는 순서
 

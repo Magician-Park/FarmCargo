@@ -2,7 +2,7 @@ import 'order.dart';
 
 /// 오더 데이터 소스. 서버 연동 시 이 인터페이스의 구현만 교체한다.
 abstract interface class OrderRepository {
-  Future<List<Order>> fetchRecommendedOrders();
+  Future<List<Order>> fetchAvailableOrders();
   Future<Order?> fetchOrder(String id);
 }
 
@@ -36,7 +36,7 @@ class MockOrderRepository implements OrderRepository {
   static const _orders = [_grainOrder, _compostOrder];
 
   @override
-  Future<List<Order>> fetchRecommendedOrders() async => _orders;
+  Future<List<Order>> fetchAvailableOrders() async => _orders;
 
   @override
   Future<Order?> fetchOrder(String id) async {

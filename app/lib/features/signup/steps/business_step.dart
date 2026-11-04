@@ -13,7 +13,7 @@ import '../document_scanner.dart';
 import '../signup_controller.dart';
 import '../signup_models.dart';
 
-/// 사업자등록증: 촬영 -> 자동 입력 -> 직접 수정. 차주만 관할 세무서를 받는다.
+/// 사업자등록증: 촬영 -> 자동 입력 -> 직접 수정. 화주·차주 모두 관할 세무서를 받는다.
 class BusinessStep extends ConsumerStatefulWidget {
   const BusinessStep({super.key, required this.role});
 
@@ -42,8 +42,6 @@ class _BusinessStepState extends ConsumerState<BusinessStep> {
     _type, _reason, _coRep, _taxEmail, _issued, _taxOffice,
   ];
   late final _all = Listenable.merge(_controllers);
-
-  bool get _isDriver => widget.role == AccountRole.driver;
 
   bool _captured = false;
   bool _busy = false;
@@ -93,7 +91,7 @@ class _BusinessStepState extends ConsumerState<BusinessStep> {
     try {
       result = await ref
           .read(documentScannerProvider)
-          .scanBusinessRegistration(path, includeTaxOffice: _isDriver);
+          .scanBusinessRegistration(path, role: widget.role);
     } catch (_) {
       recognized = false;
     }
@@ -120,7 +118,7 @@ class _BusinessStepState extends ConsumerState<BusinessStep> {
       _consolidated != null &&
       isValidEmail(_taxEmail.text) &&
       isValidDate(_issued.text) &&
-      (!_isDriver || _filled(_taxOffice));
+      _filled(_taxOffice);
 
   void _submit() {
     ref
@@ -138,7 +136,7 @@ class _BusinessStepState extends ConsumerState<BusinessStep> {
           isConsolidatedTax: _consolidated,
           taxInvoiceEmail: _taxEmail.text.trim(),
           issuedDate: _issued.text,
-          taxOffice: _isDriver ? _taxOffice.text.trim() : '',
+          taxOffice: _taxOffice.text.trim(),
         ));
   }
 
@@ -224,19 +222,16 @@ class _BusinessStepState extends ConsumerState<BusinessStep> {
                       controller: _issued,
                       hint: 'YYYY-MM-DD',
                       keyboardType: TextInputType.number,
-                      textInputAction: _isDriver
-                          ? TextInputAction.next
-                          : TextInputAction.done,
+                      textInputAction: TextInputAction.next,
                       inputFormatters: const [dateFormatter],
                       validator: _dateError,
                     ),
-                    if (_isDriver)
-                      LabeledTextField(
-                        label: '관할 세무서',
-                        controller: _taxOffice,
-                        hint: '예: 강서세무서',
-                        textInputAction: TextInputAction.done,
-                      ),
+                    LabeledTextField(
+                      label: '관할 세무서',
+                      controller: _taxOffice,
+                      hint: '예: 강서세무서',
+                      textInputAction: TextInputAction.done,
+                    ),
                   ],
                 ],
               ),

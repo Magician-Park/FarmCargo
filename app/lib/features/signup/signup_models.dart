@@ -113,7 +113,7 @@ class BusinessRegistration {
   final bool? isConsolidatedTax; // 사업자 단위 과세 적용사업자 여부. null이면 미선택
   final String taxInvoiceEmail; // 전자세금계산서 전용 전자우편주소
   final String issuedDate;
-  final String taxOffice; // 관할 세무서 (차주만)
+  final String taxOffice; // 관할 세무서
 
   const BusinessRegistration({
     required this.registrationNumber,

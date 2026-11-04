@@ -7,15 +7,14 @@ import '../../core/widgets/bottom_action_bar.dart';
 
 /// 최초 실행 시 앱이 사용하는 접근 권한을 안내한다.
 /// 현재는 안내만 하며, 실제 권한 요청은 해당 기능을 처음 쓸 때 연결한다.
+/// 권한 종류와 문구는 참조 자료가 없어 임시이며 확정되지 않았다.
 class PermissionsScreen extends StatelessWidget {
   const PermissionsScreen({super.key});
 
+  // 팜카고 가입 초안에서 쓰임이 확인되는 권한만 안내한다. 위치·알림·전화 등은
+  // 해당 기능이 정해지면 추가한다(요구사항 3절).
   static const _items = [
     (Icons.photo_camera_outlined, '카메라', '자격증, 사업자등록증, 신분증 촬영'),
-    (Icons.photo_library_outlined, '사진', '촬영한 서류 사진 첨부'),
-    (Icons.location_on_outlined, '위치', '내 주변 오더 찾기, 운행 경로 안내'),
-    (Icons.notifications_none, '알림', '배차, 운송 상태, 정산 소식 알림'),
-    (Icons.call_outlined, '전화', '화주·차주 간 연락'),
   ];
 
   @override
