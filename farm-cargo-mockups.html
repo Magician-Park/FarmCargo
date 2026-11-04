@@ -55,316 +55,341 @@
 <div class="screen-row">
 
     <!-- ============================================================ -->
-    <!-- 화면 1 : 최초 실행 — 역할 선택 -->
+    <!-- 화면 1 : 최초 실행 — 권한 안내 -->
     <!-- ============================================================ -->
-    <div class="screen-col" id="screen-onboarding">
-        <div class="screen-label"><span class="num">1</span>최초 실행 — 역할 선택 + 간편 시작</div>
+    <div class="screen-col" id="screen-permissions">
+        <div class="screen-label"><span class="num">1</span>권한 안내 — 앱 이용에 필요한 접근 권한</div>
         <div class="mobile-mockup flex flex-col">
-            <main class="flex-1 flex flex-col px-6 pt-16 pb-8">
-                <!-- 로고 -->
-                <div class="flex flex-col items-center mb-10">
-                    <div class="h-20 w-20 rounded-3xl bg-brand-600 flex items-center justify-center text-white shadow-lg mb-4">
-                        <i class="fa-solid fa-truck-fast text-3xl"></i>
-                    </div>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 pt-16 pb-28">
+                <h1 class="text-2xl font-bold text-gray-900 leading-snug mb-8">팜카고 이용을 위해<br>접근 권한을 허용해 주세요</h1>
+                <p class="text-base font-bold text-gray-800 pb-3 border-b-2 border-gray-200 mb-5">선택 접근 권한</p>
+                <div class="flex gap-3.5 mb-5"><div class="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-camera"></i></div><div><p class="text-sm font-bold text-gray-800">카메라</p><p class="text-xs text-gray-500 mt-0.5">자격증, 사업자등록증, 신분증 촬영</p></div></div><div class="flex gap-3.5 mb-5"><div class="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-image"></i></div><div><p class="text-sm font-bold text-gray-800">사진</p><p class="text-xs text-gray-500 mt-0.5">촬영한 서류 사진 첨부</p></div></div><div class="flex gap-3.5 mb-5"><div class="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-location-dot"></i></div><div><p class="text-sm font-bold text-gray-800">위치</p><p class="text-xs text-gray-500 mt-0.5">내 주변 일감 확인, 운행 경로 안내</p></div></div><div class="flex gap-3.5 mb-5"><div class="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-bell"></i></div><div><p class="text-sm font-bold text-gray-800">알림</p><p class="text-xs text-gray-500 mt-0.5">배차, 운송 상태, 정산 소식 알림</p></div></div><div class="flex gap-3.5 mb-5"><div class="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-phone"></i></div><div><p class="text-sm font-bold text-gray-800">전화</p><p class="text-xs text-gray-500 mt-0.5">고객센터 등 전화 연결</p></div></div>
+                <p class="text-[11px] text-gray-400 leading-relaxed mt-2">선택 권한은 허용하지 않아도 앱을 이용할 수 있지만, 해당 기능은 사용할 수 없어요. 권한은 기능을 처음 사용할 때 다시 안내해 드려요.</p>
+            </main>
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
+                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 화면 2 : 로비 — 로그인 / 회원가입 -->
+    <!-- ============================================================ -->
+    <div class="screen-col" id="screen-welcome">
+        <div class="screen-label"><span class="num">2</span>로비 — 로그인 또는 회원가입</div>
+        <div class="mobile-mockup flex flex-col">
+            <main class="flex-1 flex flex-col justify-center px-6 pb-10">
+                <div class="flex flex-col items-center mb-12">
+                    <div class="h-20 w-20 rounded-3xl bg-brand-600 flex items-center justify-center text-white shadow-lg mb-4"><i class="fa-solid fa-truck-fast text-3xl"></i></div>
                     <h1 class="text-2xl font-bold text-gray-800">팜카고</h1>
                     <p class="text-sm text-gray-500 mt-1">농사짐, 이제 앱으로 부르세요</p>
                 </div>
-
-                <!-- 역할 선택 -->
-                <p class="text-sm font-bold text-gray-700 mb-2">어떻게 이용하시나요?</p>
-                <button class="w-full bg-brand-50 border-2 border-brand-500 rounded-2xl p-4 mb-2.5 flex items-center gap-3 text-left">
-                    <div class="h-12 w-12 rounded-2xl bg-green-100 flex items-center justify-center text-green-700 flex-shrink-0">
-                        <i class="fa-solid fa-seedling text-xl"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="font-bold text-gray-800">짐을 보내요 <span class="text-xs font-medium text-gray-500">화주·농가</span></p>
-                        <p class="text-xs text-gray-500 mt-0.5">곡물·퇴비·비료 운송을 요청해요</p>
-                    </div>
-                    <i class="fa-solid fa-circle-check text-brand-600 text-xl"></i>
-                </button>
-                <button class="w-full bg-white border border-gray-200 rounded-2xl p-4 mb-2.5 flex items-center gap-3 text-left">
-                    <div class="h-12 w-12 rounded-2xl bg-brand-100 flex items-center justify-center text-brand-600 flex-shrink-0">
-                        <i class="fa-solid fa-truck text-xl"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="font-bold text-gray-800">화물차로 운송해요 <span class="text-xs font-medium text-gray-500">차주</span></p>
-                        <p class="text-xs text-gray-500 mt-0.5">오더 받고 다음 날 바로 정산받아요</p>
-                    </div>
-                    <div class="w-5 h-5 rounded-full border-2 border-gray-200"></div>
-                </button>
-
-                <!-- 시작 버튼 -->
-                <div class="mt-auto flex flex-col gap-2">
-                    <button class="w-full bg-[#FEE500] text-[#191919] rounded-2xl py-4 font-bold text-sm flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-comment"></i>카카오로 3초 만에 시작
-                    </button>
-                    <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-sm flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-mobile-screen"></i>휴대폰 번호로 시작
-                    </button>
-                    <p class="text-[10px] text-gray-400 text-center mt-1 leading-relaxed">시작하면 이용약관 및 개인정보 처리방침에 동의하게 됩니다</p>
-                </div>
+                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold mb-2.5">로그인</button>
+                <button class="w-full bg-white border border-gray-300 text-brand-700 rounded-2xl py-4 font-bold">회원가입</button>
+                <div class="mt-7"><div class="flex gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 leading-relaxed"><i class="fa-solid fa-flask mt-0.5"></i><span>테스트 버전이에요. 입력한 내용은 서버에 저장되지 않으니 실제 개인정보·서류는 입력하지 마세요.</span></div></div>
             </main>
         </div>
     </div>
 
     <!-- ============================================================ -->
-    <!-- 화면 2 : 화주 회원가입 (최소 입력) -->
+    <!-- 화면 3 : 로그인 -->
     <!-- ============================================================ -->
-    <div class="screen-col" id="screen-signup-shipper">
-        <div class="screen-label"><span class="num">2</span>화주 회원가입 — 3개 입력이면 끝</div>
+    <div class="screen-col" id="screen-login">
+        <div class="screen-label"><span class="num">3</span>로그인 — 휴대폰 번호가 아이디</div>
+        <div class="mobile-mockup flex flex-col">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">로그인</h1>
+            </header>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28"><h2 class="text-2xl font-bold text-gray-800 mb-6">로그인</h2>
+                <div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">휴대폰 번호</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">01012345678</span></div>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">비밀번호</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">••••••••••</span></div>
+                </div>
+                <p class="text-xs text-gray-500 mb-2">비밀번호를 잊으셨나요?</p>
+                <p class="text-xs text-brand-600">혹시 회원이 아니신가요?</p></main>
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
+                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base">로그인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 화면 4 : 회원가입 — 역할 선택 -->
+    <!-- ============================================================ -->
+    <div class="screen-col" id="screen-role">
+        <div class="screen-label"><span class="num">4</span>회원가입 — 화주 / 차주 선택</div>
+        <div class="mobile-mockup flex flex-col">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">회원가입</h1>
+            </header>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28"><h2 class="text-xl font-bold text-gray-800 mb-5">어떻게 이용하시나요?</h2><div class="w-full bg-white border border-gray-200 rounded-2xl p-4 mb-3 flex items-center gap-3"><div class="h-12 w-12 rounded-2xl bg-green-100 text-green-700 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-seedling text-xl"></i></div><div class="flex-1"><p class="font-bold text-gray-800">짐을 보내요</p><p class="text-xs text-gray-500 mt-0.5">화주·농가 · 곡물·퇴비·비료 운송을 요청해요</p></div><i class="fa-solid fa-chevron-right text-gray-300"></i></div><div class="w-full bg-white border border-gray-200 rounded-2xl p-4 mb-3 flex items-center gap-3"><div class="h-12 w-12 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-truck text-xl"></i></div><div class="flex-1"><p class="font-bold text-gray-800">화물차로 운송해요</p><p class="text-xs text-gray-500 mt-0.5">차주 · 오더 받고 다음 날 바로 정산받아요</p></div><i class="fa-solid fa-chevron-right text-gray-300"></i></div></main>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 화면 5 : 회원가입 1단계 -->
+    <!-- ============================================================ -->
+    <div class="screen-col" id="screen-signup-account">
+        <div class="screen-label"><span class="num">5</span>회원가입 1단계 — 이름·비밀번호 (차주·화주 공통)</div>
+        <div class="mobile-mockup flex flex-col">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">회원가입 <span class="text-sm font-medium text-gray-400">· 차주</span></h1>
+            </header><div class="flex items-center justify-between px-6 pt-4"><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-100 text-brand-600 border-2 border-brand-500 flex items-center justify-center text-[10px] font-bold">1</div><span class="text-[10px] font-bold text-brand-600">계정</span></div><div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">2</div><span class="text-[10px] text-gray-400">휴대폰</span></div><div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">3</div><span class="text-[10px] text-gray-400">약관</span></div><div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">4</div><span class="text-[10px] text-gray-400">자격증</span></div><div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">5</div><span class="text-[10px] text-gray-400">사업자</span></div></div><h2 class="text-xl font-bold text-gray-800 px-6 pt-5">계정 정보를 입력해 주세요</h2>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28 pt-5"><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">이름</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">이신규</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">비밀번호</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">••••••••</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">비밀번호 확인</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">•••••••••</span></div><p class="text-xs text-red-500 mt-1">비밀번호가 일치하지 않아요.</p>
+                </div><p class="text-xs text-gray-400 leading-relaxed">8~16자의 영문, 숫자, 기호를 모두 포함해 주세요. 모든 칸이 올바를 때만 다음 버튼이 켜져요.</p></main>
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
+                <button class="w-full bg-gray-200 text-gray-400 rounded-2xl py-4 font-bold text-base">다음</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 화면 6 : 회원가입 2단계 -->
+    <!-- ============================================================ -->
+    <div class="screen-col" id="screen-signup-phone">
+        <div class="screen-label"><span class="num">6</span>회원가입 2단계 — 휴대폰 문자 인증 (필수, 번호가 아이디)</div>
+        <div class="mobile-mockup flex flex-col">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">회원가입 <span class="text-sm font-medium text-gray-400">· 차주</span></h1>
+            </header><div class="flex items-center justify-between px-6 pt-4"><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">계정</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-100 text-brand-600 border-2 border-brand-500 flex items-center justify-center text-[10px] font-bold">2</div><span class="text-[10px] font-bold text-brand-600">휴대폰</span></div><div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">3</div><span class="text-[10px] text-gray-400">약관</span></div><div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">4</div><span class="text-[10px] text-gray-400">자격증</span></div><div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">5</div><span class="text-[10px] text-gray-400">사업자</span></div></div><h2 class="text-xl font-bold text-gray-800 px-6 pt-5">휴대폰 번호를 인증해 주세요</h2>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28 pt-5"><div class="flex gap-2 items-start mb-2"><div class="flex-1"><p class="text-sm font-bold text-gray-700 mb-2">휴대폰 번호</p><div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium">01099998888</div></div><span class="mt-8 px-4 py-3.5 rounded-xl text-xs font-bold bg-gray-800 text-white">재전송</span></div>
+                <p class="text-sm font-bold text-gray-700 mb-2 mt-3">인증번호 6자리</p>
+                <div class="relative bg-white border-2 border-brand-500 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium tracking-widest">4729<span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-red-500 tracking-normal">02:41</span></div>
+                <button class="w-full mt-3 border border-gray-300 rounded-xl py-3 text-sm font-bold text-gray-700">인증번호 확인</button>
+                <p class="text-xs text-gray-400 mt-3 leading-relaxed">인증번호는 3분 동안 유효해요. 이 번호가 로그인 아이디가 되며, 이미 가입된 번호는 쓸 수 없어요.</p></main>
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
+                <button class="w-full bg-gray-200 text-gray-400 rounded-2xl py-4 font-bold text-base">다음</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 화면 7 : 회원가입 3단계 -->
+    <!-- ============================================================ -->
+    <div class="screen-col" id="screen-signup-terms">
+        <div class="screen-label"><span class="num">7</span>회원가입 3단계 — 약관 동의 (필수 항목만 모두 동의하면 진행)</div>
+        <div class="mobile-mockup flex flex-col">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">회원가입 <span class="text-sm font-medium text-gray-400">· 차주</span></h1>
+            </header><div class="flex items-center justify-between px-6 pt-4"><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">계정</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">휴대폰</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-100 text-brand-600 border-2 border-brand-500 flex items-center justify-center text-[10px] font-bold">3</div><span class="text-[10px] font-bold text-brand-600">약관</span></div><div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">4</div><span class="text-[10px] text-gray-400">자격증</span></div><div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">5</div><span class="text-[10px] text-gray-400">사업자</span></div></div><h2 class="text-xl font-bold text-gray-800 px-6 pt-5">약관에 동의해 주세요</h2>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28 pt-4"><div class="flex items-center gap-3 py-2"><i class="fa-solid fa-square text-gray-300 text-2xl"></i><span class="text-base font-bold text-gray-800">약관 전체동의</span></div><hr class="my-3 border-gray-200"><div class="flex items-center gap-3 py-2"><i class="fa-solid fa-square-check text-brand-600 text-2xl"></i><span class="text-sm text-gray-800">(필수) 만 14세 이상입니다.</span></div><div class="flex items-center gap-3 py-2"><i class="fa-solid fa-square-check text-brand-600 text-2xl"></i><span class="text-sm text-gray-800">(필수) 팜카고 이용약관 및 동의사항</span></div><p class="ml-10 py-1.5 text-sm text-gray-800 underline">(필수) 서비스 이용 약관</p><p class="ml-10 py-1.5 text-sm text-gray-800 underline">(필수) 화물운송 주선약관</p><p class="ml-10 py-1.5 text-sm text-gray-800 underline">(필수) 개인정보 수집 및 이용 동의</p><p class="ml-10 py-1.5 text-sm text-gray-800 underline">(필수) 개인정보 제3자 제공 동의</p><div class="flex items-center gap-3 py-2"><i class="fa-solid fa-square text-gray-300 text-2xl"></i><span class="text-sm text-gray-800">(선택) 위치기반서비스 이용약관</span></div><div class="flex items-center gap-3 py-2"><i class="fa-solid fa-square text-gray-300 text-2xl"></i><span class="text-sm text-gray-800">(선택) 개인정보 수집 및 이용 동의</span></div><div class="flex items-center gap-3 py-2"><i class="fa-solid fa-square text-gray-300 text-2xl"></i><span class="text-sm text-gray-800">(선택) 마케팅정보 앱푸시, SMS 수신 동의</span></div></main>
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
+                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base">다음</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 화면 8 : 차주 4단계 -->
+    <!-- ============================================================ -->
+    <div class="screen-col" id="screen-signup-license">
+        <div class="screen-label"><span class="num">8</span>차주 4단계 — 화물운송종사자격증 (촬영 → 자동 입력 → 수정)</div>
+        <div class="mobile-mockup flex flex-col">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">회원가입 <span class="text-sm font-medium text-gray-400">· 차주</span></h1>
+            </header><div class="flex items-center justify-between px-6 pt-4"><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">계정</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">휴대폰</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">약관</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-100 text-brand-600 border-2 border-brand-500 flex items-center justify-center text-[10px] font-bold">4</div><span class="text-[10px] font-bold text-brand-600">자격증</span></div><div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">5</div><span class="text-[10px] text-gray-400">사업자</span></div></div><h2 class="text-xl font-bold text-gray-800 px-6 pt-5">화물운송종사자격증을 인증해 주세요</h2>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28 pt-4"><div class="mb-3 flex gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 leading-relaxed"><i class="fa-solid fa-flask mt-0.5"></i><span>테스트 버전이에요. 입력한 내용은 서버에 저장되지 않으니 실제 개인정보·서류는 입력하지 마세요.</span></div><div class="bg-white rounded-2xl border border-green-500 p-4 flex items-center gap-3 mb-3">
+                    <div class="h-10 w-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-id-badge"></i></div>
+                    <div class="flex-1"><p class="text-sm font-bold text-gray-800">화물운송종사자격증</p><p class="text-xs text-green-600 mt-0.5">촬영 완료 · 아래 내용을 확인해 주세요</p></div>
+                    <span class="px-3 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold flex-shrink-0"><i class="fa-solid fa-camera mr-1"></i>다시 촬영</span></div><div class="bg-brand-50 text-brand-700 rounded-xl p-3 text-xs leading-relaxed mb-5">자동으로 입력했어요. 틀린 곳이 있으면 직접 고쳐 주세요.</div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">성명</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">김기사</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">생년월일</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">1975-03-15</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">자격증번호</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">11-1234567-01</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">자격취득일</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">2015-06-01</span></div>
+                </div></main>
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
+                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base">다음</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 화면 9 : 화주 4단계 -->
+    <!-- ============================================================ -->
+    <div class="screen-col" id="screen-signup-idcard">
+        <div class="screen-label"><span class="num">9</span>화주 4단계 — 주민등록증 (실물 촬영 또는 모바일 신분증)</div>
         <div class="mobile-mockup flex flex-col">
             <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
                 <i class="fa-solid fa-arrow-left text-gray-500"></i>
                 <h1 class="text-lg font-bold text-gray-800">회원가입 <span class="text-sm font-medium text-gray-400">· 화주</span></h1>
-            </header>
-            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28">
-
-                <!-- 휴대폰 인증 -->
-                <p class="text-sm font-bold text-gray-700 mb-2">휴대폰 번호</p>
-                <div class="flex gap-2 mb-2">
-                    <div class="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium">010-1234-5678</div>
-                    <button class="px-4 bg-gray-100 text-gray-400 rounded-xl text-xs font-bold">재전송</button>
-                </div>
-                <div class="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl p-3 mb-5">
-                    <i class="fa-solid fa-circle-check text-green-600"></i>
-                    <span class="text-xs font-bold text-green-700">본인인증이 완료되었습니다</span>
-                </div>
-
-                <!-- 이름 -->
-                <p class="text-sm font-bold text-gray-700 mb-2">성함</p>
-                <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium mb-5">박농부</div>
-
-                <!-- 농장 위치 -->
-                <p class="text-sm font-bold text-gray-700 mb-2">우리 농장은 어디에 있나요?</p>
-                <div class="bg-white border-2 border-brand-500 rounded-xl px-4 py-3.5 text-sm font-bold text-gray-800 mb-1.5 flex justify-between items-center">
-                    전북 김제시 죽산면
-                    <i class="fa-solid fa-map-location-dot text-brand-500"></i>
-                </div>
-                <p class="text-xs text-gray-400 mb-5">시·군·면까지만 고르면 돼요 — 정확한 위치는 운송 요청할 때 지도에서 찍어요</p>
-
-                <!-- 농업경영체 (선택) -->
-                <div class="bg-white rounded-2xl border border-gray-200 p-4 mb-5">
-                    <div class="flex justify-between items-center mb-1">
-                        <p class="text-sm font-bold text-gray-700">농업경영체 등록번호 <span class="text-xs font-medium text-gray-400">선택</span></p>
-                        <span class="px-2 py-0.5 bg-gray-100 text-gray-400 rounded text-[10px] font-bold">나중에 하기</span>
-                    </div>
-                    <p class="text-xs text-gray-400 leading-relaxed">등록하면 면세 계산서가 자동 발행돼요. 지금 몰라도 가입할 수 있어요.</p>
-                </div>
-
-                <!-- 약관 동의 -->
-                <div class="bg-white rounded-2xl border border-gray-200 p-4 flex flex-col gap-2.5">
-                    <label class="flex items-center gap-2.5 pb-2.5 border-b border-gray-100">
-                        <div class="w-5 h-5 rounded-md bg-brand-600 flex items-center justify-center"><i class="fa-solid fa-check text-white text-[10px]"></i></div>
-                        <span class="text-sm font-bold text-gray-800">전체 동의</span>
-                    </label>
-                    <label class="flex items-center gap-2.5 text-xs text-gray-600">
-                        <i class="fa-solid fa-check text-brand-500"></i>[필수] 서비스 이용약관
-                        <span class="ml-auto text-gray-300">보기</span>
-                    </label>
-                    <label class="flex items-center gap-2.5 text-xs text-gray-600">
-                        <i class="fa-solid fa-check text-brand-500"></i>[필수] 개인정보 수집·이용 동의
-                        <span class="ml-auto text-gray-300">보기</span>
-                    </label>
-                    <label class="flex items-center gap-2.5 text-xs text-gray-600">
-                        <i class="fa-solid fa-check text-gray-300"></i>[선택] 운임 할인·혜택 알림 받기
-                        <span class="ml-auto text-gray-300">보기</span>
-                    </label>
-                </div>
-            </main>
-
+            </header><div class="flex items-center justify-between px-6 pt-4"><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">계정</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">휴대폰</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">약관</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-100 text-brand-600 border-2 border-brand-500 flex items-center justify-center text-[10px] font-bold">4</div><span class="text-[10px] font-bold text-brand-600">신분증</span></div><div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">5</div><span class="text-[10px] text-gray-400">사업자</span></div></div><h2 class="text-xl font-bold text-gray-800 px-6 pt-5">신분증을 인증해 주세요</h2>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28 pt-4"><div class="mb-3 flex gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 leading-relaxed"><i class="fa-solid fa-flask mt-0.5"></i><span>테스트 버전이에요. 입력한 내용은 서버에 저장되지 않으니 실제 개인정보·서류는 입력하지 마세요.</span></div><div class="bg-white rounded-2xl border border-green-500 p-4 flex items-center gap-3 mb-3">
+                    <div class="h-10 w-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-id-card"></i></div>
+                    <div class="flex-1"><p class="text-sm font-bold text-gray-800">주민등록증</p><p class="text-xs text-green-600 mt-0.5">촬영 완료 · 아래 내용을 확인해 주세요</p></div>
+                    <span class="px-3 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold flex-shrink-0"><i class="fa-solid fa-camera mr-1"></i>다시 촬영</span></div><span class="block w-full border border-gray-300 rounded-xl py-3 text-sm font-bold text-gray-600 text-center mb-1"><i class="fa-solid fa-mobile-screen mr-1.5"></i>모바일 신분증으로 인증 <span class="text-[10px] font-medium text-gray-400">(준비 중)</span></span><div class="mt-3"></div><div class="bg-brand-50 text-brand-700 rounded-xl p-3 text-xs leading-relaxed mb-5">자동으로 입력했어요. 틀린 곳이 있으면 직접 고쳐 주세요.</div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">이름</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">박농부</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">주민등록번호</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">750315-1234568</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">주소</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">전북 김제시 죽산면 ○○로 1</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">발급일자</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">2019-05-20</span></div>
+                </div></main>
             <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
-                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base mb-2">가입 완료하고 시작하기</button>
-                <p class="text-center text-[10px] text-gray-400">가입이 어려우시면 전화 주세요 — <b class="text-green-600">1588-0000</b> 대신 가입해 드려요</p>
+                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base">다음</button>
             </div>
         </div>
     </div>
 
     <!-- ============================================================ -->
-    <!-- 화면 3 : 차주 회원가입 (본인인증) -->
+    <!-- 화면 10 : 차주 5단계 -->
     <!-- ============================================================ -->
-    <div class="screen-col" id="screen-driver-identity">
-        <div class="screen-label"><span class="num">3</span>차주 본인인증 — 실명 + 자격 자동 조회</div>
+    <div class="screen-col" id="screen-signup-business-driver">
+        <div class="screen-label"><span class="num">10</span>차주 5단계 — 사업자등록증 (촬영 → 자동 입력 → 수정)</div>
         <div class="mobile-mockup flex flex-col">
             <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
                 <i class="fa-solid fa-arrow-left text-gray-500"></i>
                 <h1 class="text-lg font-bold text-gray-800">회원가입 <span class="text-sm font-medium text-gray-400">· 차주</span></h1>
-            </header>
-            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28">
-
-                <!-- 단계 표시 -->
-                <div class="flex items-center justify-between mb-5 px-2">
-                    <div class="flex flex-col items-center gap-1 flex-1">
-                        <div class="w-7 h-7 rounded-full bg-brand-100 text-brand-600 border-2 border-brand-500 flex items-center justify-center text-[10px] font-bold">1</div>
-                        <span class="text-[10px] font-bold text-brand-600">본인인증</span>
-                    </div>
-                    <div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div>
-                    <div class="flex flex-col items-center gap-1 flex-1">
-                        <div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">2</div>
-                        <span class="text-[10px] text-gray-400">서류 제출</span>
-                    </div>
-                    <div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div>
-                    <div class="flex flex-col items-center gap-1 flex-1">
-                        <div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">3</div>
-                        <span class="text-[10px] text-gray-400">심사 완료</span>
-                    </div>
-                </div>
-
-                <!-- 인증 필요 안내 -->
-                <div class="bg-brand-50 border border-brand-100 rounded-2xl p-3.5 mb-5 text-xs text-brand-700 leading-relaxed">
-                    <i class="fa-solid fa-shield-halved mr-1"></i>
-                    실명 인증이 끝나면 <b>화물운송종사자격</b>을 자동으로 조회해요 — 자격증 사진을 따로 안 올려도 됩니다.
-                </div>
-
-                <!-- 이름 -->
-                <p class="text-sm font-bold text-gray-700 mb-2">이름</p>
-                <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium mb-4">김기사</div>
-
-                <!-- 주민등록번호 -->
-                <p class="text-sm font-bold text-gray-700 mb-2">주민등록번호</p>
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium">750315</div>
-                    <span class="text-gray-300">—</span>
-                    <div class="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium tracking-widest">1●●●●●●</div>
-                </div>
-
-                <!-- 통신사 -->
-                <p class="text-sm font-bold text-gray-700 mb-2">통신사</p>
-                <div class="grid grid-cols-4 gap-1.5 mb-4">
-                    <button class="py-2.5 bg-brand-50 border-2 border-brand-500 rounded-xl text-xs font-bold text-brand-700">SKT</button>
-                    <button class="py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-500">KT</button>
-                    <button class="py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-500">LG U+</button>
-                    <button class="py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-500">알뜰폰</button>
-                </div>
-
-                <!-- 휴대폰 번호 + 인증번호 -->
-                <p class="text-sm font-bold text-gray-700 mb-2">휴대폰 번호</p>
-                <div class="flex gap-2 mb-3">
-                    <div class="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium">010-5678-1234</div>
-                    <button class="px-4 bg-gray-800 text-white rounded-xl text-xs font-bold">인증번호<br>받기</button>
-                </div>
-                <div class="bg-white border-2 border-brand-500 rounded-xl p-4 mb-1.5">
-                    <div class="flex justify-between items-center mb-2.5">
-                        <p class="text-xs font-bold text-gray-700">인증번호 6자리</p>
-                        <span class="text-xs font-bold text-red-500"><i class="fa-regular fa-clock mr-1"></i>02:47</span>
-                    </div>
-                    <div class="flex gap-1.5 justify-between">
-                        <div class="w-11 h-12 bg-gray-50 rounded-lg flex items-center justify-center font-bold text-lg text-gray-800">4</div>
-                        <div class="w-11 h-12 bg-gray-50 rounded-lg flex items-center justify-center font-bold text-lg text-gray-800">7</div>
-                        <div class="w-11 h-12 bg-gray-50 rounded-lg flex items-center justify-center font-bold text-lg text-gray-800">2</div>
-                        <div class="w-11 h-12 bg-gray-50 rounded-lg flex items-center justify-center font-bold text-lg text-gray-800">9</div>
-                        <div class="w-11 h-12 bg-white border-2 border-brand-400 rounded-lg flex items-center justify-center font-bold text-lg text-brand-600 animate-pulse">|</div>
-                        <div class="w-11 h-12 bg-gray-50 rounded-lg"></div>
-                    </div>
-                </div>
-                <button class="text-xs text-gray-400 font-medium underline mb-5">인증번호가 안 와요 — 재전송</button>
-
-                <!-- PASS 대체 인증 -->
-                <button class="w-full py-3.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 mb-2">
-                    <i class="fa-solid fa-mobile-screen-button mr-1.5 text-red-500"></i>PASS 앱으로 한 번에 인증
-                </button>
-                <p class="text-[10px] text-gray-400 leading-relaxed">
-                    입력한 정보는 본인 확인과 화물운송종사자격 조회에만 사용되며 암호화되어 보관됩니다.
-                </p>
-            </main>
-
-            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 p-4 pb-6 z-20">
-                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base">인증 완료하고 서류 제출로</button>
+            </header><div class="flex items-center justify-between px-6 pt-4"><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">계정</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">휴대폰</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">약관</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">자격증</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-100 text-brand-600 border-2 border-brand-500 flex items-center justify-center text-[10px] font-bold">5</div><span class="text-[10px] font-bold text-brand-600">사업자</span></div></div><h2 class="text-xl font-bold text-gray-800 px-6 pt-5">사업자등록증을 인증해 주세요</h2>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28 pt-4"><div class="mb-3 flex gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 leading-relaxed"><i class="fa-solid fa-flask mt-0.5"></i><span>테스트 버전이에요. 입력한 내용은 서버에 저장되지 않으니 실제 개인정보·서류는 입력하지 마세요.</span></div><div class="bg-white rounded-2xl border border-green-500 p-4 flex items-center gap-3 mb-3">
+                    <div class="h-10 w-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-file-lines"></i></div>
+                    <div class="flex-1"><p class="text-sm font-bold text-gray-800">사업자등록증</p><p class="text-xs text-green-600 mt-0.5">촬영 완료 · 아래 내용을 확인해 주세요</p></div>
+                    <span class="px-3 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold flex-shrink-0"><i class="fa-solid fa-camera mr-1"></i>다시 촬영</span></div><div class="bg-brand-50 text-brand-700 rounded-xl p-3 text-xs leading-relaxed mb-5">자동으로 입력했어요. 틀린 곳이 있으면 직접 고쳐 주세요.</div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">등록번호</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">123-45-67891</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">상호명</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">김기사 운송</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">성명</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">김기사</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">생년월일</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">1975-03-15</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">개업 연월일</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">2016-03-02</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">사업장 소재지</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">서울특별시 강서구 ○○로 123</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">사업의 종류</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">운수업 / 화물자동차 운송업</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">발급사유<span class="text-xs font-medium text-gray-400 ml-1.5">선택</span></p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">신규</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">공동사업자<span class="text-xs font-medium text-gray-400 ml-1.5">선택</span></p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-400 font-normal"></span></div>
+                </div><div class="mb-4"><p class="text-sm font-bold text-gray-700">사업자 단위 과세 적용사업자 여부</p><div class="flex gap-6"><span class="flex items-center gap-1.5 py-2"><i class="fa-solid fa-square text-gray-300 text-xl"></i><span class="text-sm">여</span></span><span class="flex items-center gap-1.5 py-2"><i class="fa-solid fa-square-check text-brand-600 text-xl"></i><span class="text-sm">부</span></span></div></div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">전자세금계산서 전용 전자우편주소</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">tax@example.com</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">발급일자</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">2024-01-10</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">관할 세무서</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">강서세무서</span></div>
+                </div></main>
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
+                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base">가입 완료</button>
             </div>
         </div>
     </div>
 
     <!-- ============================================================ -->
-    <!-- 화면 4 : 차주 회원가입 (서류 제출·심사) -->
+    <!-- 화면 11 : 화주 5단계 -->
     <!-- ============================================================ -->
-    <div class="screen-col" id="screen-signup-driver">
-        <div class="screen-label"><span class="num">4</span>차주 회원가입 — 자격 서류 + 심사</div>
+    <div class="screen-col" id="screen-signup-business-shipper">
+        <div class="screen-label"><span class="num">11</span>화주 5단계 — 사업자등록증 (사진만 수집, 입력 없음)</div>
         <div class="mobile-mockup flex flex-col">
             <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
                 <i class="fa-solid fa-arrow-left text-gray-500"></i>
-                <h1 class="text-lg font-bold text-gray-800">회원가입 <span class="text-sm font-medium text-gray-400">· 차주</span></h1>
+                <h1 class="text-lg font-bold text-gray-800">회원가입 <span class="text-sm font-medium text-gray-400">· 화주</span></h1>
+            </header><div class="flex items-center justify-between px-6 pt-4"><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">계정</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">휴대폰</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">약관</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div><span class="text-[10px] text-gray-400">신분증</span></div><div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div><div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full bg-brand-100 text-brand-600 border-2 border-brand-500 flex items-center justify-center text-[10px] font-bold">5</div><span class="text-[10px] font-bold text-brand-600">사업자</span></div></div><h2 class="text-xl font-bold text-gray-800 px-6 pt-5">사업자등록증을 인증해 주세요</h2>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28 pt-4"><div class="mb-3 flex gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 leading-relaxed"><i class="fa-solid fa-flask mt-0.5"></i><span>테스트 버전이에요. 입력한 내용은 서버에 저장되지 않으니 실제 개인정보·서류는 입력하지 마세요.</span></div><div class="bg-white rounded-2xl border border-green-500 p-4 flex items-center gap-3 mb-3">
+                    <div class="h-10 w-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-file-lines"></i></div>
+                    <div class="flex-1"><p class="text-sm font-bold text-gray-800">사업자등록증</p><p class="text-xs text-green-600 mt-0.5">촬영 완료 · 아래 내용을 확인해 주세요</p></div>
+                    <span class="px-3 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold flex-shrink-0"><i class="fa-solid fa-camera mr-1"></i>다시 촬영</span></div><div class="bg-brand-50 text-brand-700 rounded-xl p-3 text-xs leading-relaxed">사업자등록증 사진은 팜카고가 직접 확인해요. 따로 입력할 내용은 없어요.</div></main>
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
+                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base">가입 완료</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 화면 12 : 가입 완료 -->
+    <!-- ============================================================ -->
+    <div class="screen-col" id="screen-signup-done">
+        <div class="screen-label"><span class="num">12</span>가입 완료 — 로그인하기로 로비 복귀</div>
+        <div class="mobile-mockup flex flex-col">
+            <main class="flex-1 flex flex-col items-center justify-center px-6 text-center pb-28"><i class="fa-solid fa-circle-check text-green-600 text-7xl mb-5"></i>
+                <h1 class="text-xl font-bold text-gray-800 mb-2">회원가입이 완료되었어요</h1><p class="text-sm text-gray-500">가입한 휴대폰 번호와 비밀번호로 로그인해 주세요.</p></main>
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
+                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base">로그인하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 화면 13 : 비밀번호 재설정 (휴대폰 인증) -->
+    <!-- ============================================================ -->
+    <div class="screen-col" id="screen-forgot">
+        <div class="screen-label"><span class="num">13</span>비밀번호 재설정 1 — 휴대폰 문자 인증</div>
+        <div class="mobile-mockup flex flex-col">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">비밀번호 재설정</h1>
             </header>
-            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28">
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28 pt-5"><p class="text-sm text-gray-500 leading-relaxed mb-6">가입할 때 인증한 휴대폰 번호를 입력해 주세요.<br>문자로 받은 인증번호를 확인하면 새 비밀번호를 설정할 수 있어요.</p>
+                <div class="flex gap-2 items-start mb-2"><div class="flex-1"><p class="text-sm font-bold text-gray-700 mb-2">휴대폰 번호</p><div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium">01011112222</div></div><span class="mt-8 px-4 py-3.5 rounded-xl text-xs font-bold bg-gray-100 text-gray-400">재전송</span></div>
+                <div class="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl p-3 mt-2"><i class="fa-solid fa-circle-check text-green-600"></i><span class="text-xs font-bold text-green-700">휴대폰 인증이 완료되었어요</span></div>
+                <p class="text-xs text-gray-400 mt-4 leading-relaxed">가입되지 않은 번호도 같은 화면으로 진행되고, 인증번호 확인에서 막혀요. 인증 후 3분 안에 새 비밀번호를 설정해야 해요.</p></main>
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
+                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base">새 비밀번호 설정하기</button>
+            </div>
+        </div>
+    </div>
 
-                <!-- 단계 표시 -->
-                <div class="flex items-center justify-between mb-5 px-2">
-                    <div class="flex flex-col items-center gap-1 flex-1">
-                        <div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></div>
-                        <span class="text-[10px] font-bold text-brand-600">본인인증</span>
-                    </div>
-                    <div class="h-0.5 flex-1 bg-brand-600 -mt-4"></div>
-                    <div class="flex flex-col items-center gap-1 flex-1">
-                        <div class="w-7 h-7 rounded-full bg-brand-100 text-brand-600 border-2 border-brand-500 flex items-center justify-center text-[10px] font-bold">2</div>
-                        <span class="text-[10px] font-bold text-brand-600">서류 제출</span>
-                    </div>
-                    <div class="h-0.5 flex-1 bg-gray-200 -mt-4"></div>
-                    <div class="flex flex-col items-center gap-1 flex-1">
-                        <div class="w-7 h-7 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">3</div>
-                        <span class="text-[10px] text-gray-400">심사 완료</span>
-                    </div>
-                </div>
-
-                <!-- 서류 체크리스트 -->
-                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-3 flex items-center gap-3">
-                    <div class="h-10 w-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 flex-shrink-0">
-                        <i class="fa-solid fa-id-card"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-sm font-bold text-gray-800">화물운송종사자격증</p>
-                        <p class="text-xs text-green-600 font-medium mt-0.5"><i class="fa-solid fa-circle-check mr-1"></i>업로드 완료 · 확인됨</p>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-3">
-                    <div class="flex items-center gap-3">
-                        <div class="h-10 w-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 flex-shrink-0">
-                            <i class="fa-solid fa-file-invoice"></i>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-sm font-bold text-gray-800">차량등록증 <span class="text-xs font-medium text-gray-400">영업용 번호판</span></p>
-                            <p class="text-xs text-green-600 font-medium mt-0.5"><i class="fa-solid fa-circle-check mr-1"></i>업로드 완료 · 확인됨</p>
-                        </div>
-                    </div>
-                    <div class="mt-3 bg-brand-50 rounded-xl p-3">
-                        <p class="text-xs font-bold text-brand-700 mb-1.5"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>등록증에서 자동 인식됐어요 — 맞는지 확인해주세요</p>
-                        <div class="flex flex-wrap gap-1.5">
-                            <span class="px-2 py-1 bg-white text-gray-700 rounded-lg text-[10px] font-bold">서울 88가 1234</span>
-                            <span class="px-2 py-1 bg-white text-gray-700 rounded-lg text-[10px] font-bold">11톤</span>
-                            <span class="px-2 py-1 bg-white text-gray-700 rounded-lg text-[10px] font-bold">윙바디 · 일반 카고</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-2xl p-4 shadow-sm border-2 border-brand-200 mb-3 flex items-center gap-3">
-                    <div class="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
-                        <i class="fa-solid fa-shield-halved"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-sm font-bold text-gray-800">적재물배상보험 증권</p>
-                        <p class="text-xs text-gray-400 mt-0.5">화물 파손·분실 보상에 필요해요</p>
-                    </div>
-                    <button class="px-3 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold flex-shrink-0"><i class="fa-solid fa-camera mr-1"></i>촬영</button>
-                </div>
-
-                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-4 flex items-center gap-3">
-                    <div class="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
-                        <i class="fa-solid fa-building-columns"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-sm font-bold text-gray-800">정산 계좌</p>
-                        <p class="text-xs text-gray-400 mt-0.5">운송비를 다음 날 받을 계좌예요</p>
-                    </div>
-                    <button class="px-3 py-2 border border-gray-200 text-gray-600 rounded-xl text-xs font-bold flex-shrink-0">등록</button>
-                </div>
-
-                <!-- 심사 안내 -->
-                <div class="bg-gray-100 rounded-2xl p-4 text-xs text-gray-500 leading-relaxed">
-                    <i class="fa-solid fa-circle-info mr-1"></i>
-                    심사는 보통 <b class="text-gray-700">1영업일 이내</b>에 끝나요. 심사 중에도 내 주변 오더를 미리 볼 수 있어요.
-                </div>
-            </main>
-
-            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 p-4 pb-6 z-20">
-                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base">서류 제출하고 심사 받기 (2/4 남음)</button>
+    <!-- ============================================================ -->
+    <!-- 화면 14 : 비밀번호 재설정 (새 비밀번호) -->
+    <!-- ============================================================ -->
+    <div class="screen-col" id="screen-reset">
+        <div class="screen-label"><span class="num">14</span>비밀번호 재설정 2 — 새 비밀번호 + 완료/만료 팝업</div>
+        <div class="mobile-mockup flex flex-col">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+                <i class="fa-solid fa-arrow-left text-gray-500"></i>
+                <h1 class="text-lg font-bold text-gray-800">비밀번호 재설정</h1>
+            </header>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28 pt-5"><p class="text-base text-gray-800 mb-1">새로 사용할 비밀번호를 입력해 주세요.</p><p class="text-xs text-gray-400 mb-5">8~16자 이내의 영문, 숫자, 기호를 포함한 문자열</p><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">새 비밀번호</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">••••••••••••</span></div>
+                </div><div class="mb-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">새 비밀번호 확인</p>
+                    <div class="bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 font-medium"><span class="text-gray-800">••••••••••••</span></div>
+                </div><div class="bg-white border border-gray-200 rounded-2xl p-4 text-center mb-2"><i class="fa-solid fa-circle-check text-green-600 text-2xl mb-2"></i><p class="text-sm font-bold text-gray-800">비밀번호가 성공적으로 재설정되었습니다!</p></div>
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 text-center"><i class="fa-solid fa-circle-exclamation text-red-500 text-2xl mb-2"></i><p class="text-sm font-bold text-gray-800">인증시간이 만료되었습니다.</p><p class="text-[11px] text-gray-400 mt-1">인증 후 3분이 지났거나 이미 변경한 경우</p></div></main>
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
+                <button class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold text-base">비밀번호 재설정하기</button>
             </div>
         </div>
     </div>
@@ -373,7 +398,7 @@
     <!-- 화면 4 : 차주 홈 로비 -->
     <!-- ============================================================ -->
     <div class="screen-col" id="screen0">
-        <div class="screen-label"><span class="num">5</span>차주 홈 로비 — 차량 상태 + 맞춤 오더</div>
+        <div class="screen-label"><span class="num">15</span>차주 홈 로비 — 차량 상태 + 맞춤 오더</div>
         <div class="mobile-mockup flex flex-col">
             <!-- 상단 헤더 -->
             <header class="bg-white px-6 pt-10 pb-4 rounded-b-3xl shadow-sm z-10">
@@ -513,7 +538,7 @@
                 </a>
                 <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
                     <i class="fa-solid fa-list-check text-xl"></i>
-                    <span class="text-[10px] font-medium">오더목록</span>
+                    <span class="text-[10px] font-medium">일감 목록</span>
                 </a>
                 <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
                     <i class="fa-regular fa-file-lines text-xl"></i>
@@ -528,10 +553,38 @@
     </div>
 
     <!-- ============================================================ -->
+    <!-- 화면 16 : 차주 일감 목록 탭 -->
+    <!-- ============================================================ -->
+    <div class="screen-col" id="screen-job-list">
+        <div class="screen-label"><span class="num">16</span>차주 일감 목록 — 별도 탭, 게시글 형식으로 쭉 나열</div>
+        <div class="mobile-mockup flex flex-col">
+            <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10"><h1 class="text-2xl font-bold text-gray-800">일감 목록</h1></header>
+            <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28"><p class="text-xs text-gray-400 mb-3">올라온 일감 6건</p><div class="flex flex-col gap-3"><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-3"><span class="px-2 py-1 bg-brand-50 text-brand-600 rounded-lg text-xs font-bold">식용 곡물</span><span class="text-lg font-bold text-gray-800">256,500원</span></div>
+                        <div class="flex items-center gap-3 mb-2"><div class="flex flex-col items-center"><div class="w-2.5 h-2.5 rounded-full bg-brand-500"></div><div class="w-0.5 h-4 bg-gray-200 my-0.5"></div><div class="w-2.5 h-2.5 rounded-full bg-red-500"></div></div>
+                            <div class="flex-1"><p class="font-bold text-gray-800 text-sm">전북 김제시 죽산면</p><p class="font-bold text-gray-800 text-sm mt-1.5">경기 이천시 ○○ RPC</p></div></div>
+                        <div class="flex gap-2 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-xl"><span>톤백 12개</span><span class="text-gray-300">|</span><span>5톤 카고·크레인</span><span class="text-gray-300">|</span><span>215km</span></div></div><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-3"><span class="px-2 py-1 bg-amber-100 text-amber-800 rounded-lg text-xs font-bold">퇴비 벌크</span><span class="text-lg font-bold text-gray-800">279,350원</span></div>
+                        <div class="flex items-center gap-3 mb-2"><div class="flex flex-col items-center"><div class="w-2.5 h-2.5 rounded-full bg-brand-500"></div><div class="w-0.5 h-4 bg-gray-200 my-0.5"></div><div class="w-2.5 h-2.5 rounded-full bg-red-500"></div></div>
+                            <div class="flex-1"><p class="font-bold text-gray-800 text-sm">충남 홍성군 ○○축산 퇴비사</p><p class="font-bold text-gray-800 text-sm mt-1.5">전북 김제시 죽산면 논</p></div></div>
+                        <div class="flex gap-2 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-xl"><span>톤당 정산</span><span class="text-gray-300">|</span><span>25톤 덤프(특수)</span><span class="text-gray-300">|</span><span>128km</span></div></div><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-3"><span class="px-2 py-1 bg-brand-50 text-brand-600 rounded-lg text-xs font-bold">사료 원료(소맥피)</span><span class="text-lg font-bold text-gray-800">310,000원</span></div>
+                        <div class="flex items-center gap-3 mb-2"><div class="flex flex-col items-center"><div class="w-2.5 h-2.5 rounded-full bg-brand-500"></div><div class="w-0.5 h-4 bg-gray-200 my-0.5"></div><div class="w-2.5 h-2.5 rounded-full bg-red-500"></div></div>
+                            <div class="flex-1"><p class="font-bold text-gray-800 text-sm">인천 서구 ○○항 창고</p><p class="font-bold text-gray-800 text-sm mt-1.5">충남 당진시 ○○사료공장</p></div></div>
+                        <div class="flex gap-2 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-xl"><span>벌크 24톤</span><span class="text-gray-300">|</span><span>25톤 덤프</span><span class="text-gray-300">|</span><span>112km</span></div></div><div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-3"><span class="px-2 py-1 bg-brand-50 text-brand-600 rounded-lg text-xs font-bold">사료 원료(대두박)</span><span class="text-lg font-bold text-gray-800">340,000원</span></div>
+                        <div class="flex items-center gap-3 mb-2"><div class="flex flex-col items-center"><div class="w-2.5 h-2.5 rounded-full bg-brand-500"></div><div class="w-0.5 h-4 bg-gray-200 my-0.5"></div><div class="w-2.5 h-2.5 rounded-full bg-red-500"></div></div>
+                            <div class="flex-1"><p class="font-bold text-gray-800 text-sm">전남 광양시 ○○항</p><p class="font-bold text-gray-800 text-sm mt-1.5">전북 익산시 ○○사료</p></div></div>
+                        <div class="flex gap-2 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-xl"><span>톤백 20개</span><span class="text-gray-300">|</span><span>11톤 카고</span><span class="text-gray-300">|</span><span>164km</span></div></div></div></main>
+            <nav class="absolute bottom-0 w-full bg-white border-t border-gray-100 flex justify-around items-center pt-3 pb-6 px-2 z-20"><a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4"><i class="fa-solid fa-house text-xl"></i><span class="text-[10px] font-medium">홈</span></a><a href="#" class="flex flex-col items-center gap-1 text-brand-600 w-1/4"><i class="fa-solid fa-list-check text-xl"></i><span class="text-[10px] font-bold">일감 목록</span></a><a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4"><i class="fa-regular fa-file-lines text-xl"></i><span class="text-[10px] font-medium">정산내역</span></a><a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4"><i class="fa-regular fa-user text-xl"></i><span class="text-[10px] font-medium">내 정보</span></a></nav>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
     <!-- 화면 2 : 화주(농가) 홈 로비 -->
     <!-- ============================================================ -->
     <div class="screen-col" id="screen-shipper-lobby">
-        <div class="screen-label"><span class="num">6</span>화주 홈 로비 — 큰 버튼 + 진행 오더 한눈에</div>
+        <div class="screen-label"><span class="num">17</span>화주 홈 로비 — 큰 버튼 + 진행 오더 한눈에</div>
         <div class="mobile-mockup flex flex-col">
             <!-- 상단 헤더 -->
             <header class="bg-white px-6 pt-10 pb-5 rounded-b-3xl shadow-sm z-10">
@@ -650,7 +703,7 @@
     <!-- 화면 3 : 화주 내 오더 목록 -->
     <!-- ============================================================ -->
     <div class="screen-col" id="screen-shipper-orders">
-        <div class="screen-label"><span class="num">7</span>화주 내 오더 — 상태별 목록 + 배차 지연 대응</div>
+        <div class="screen-label"><span class="num">18</span>화주 내 오더 — 상태별 목록 + 배차 지연 대응</div>
         <div class="mobile-mockup flex flex-col">
             <header class="bg-white px-6 pt-10 pb-3 shadow-sm z-10">
                 <h1 class="text-lg font-bold text-gray-800 mb-3">내 오더</h1>
@@ -747,7 +800,7 @@
     <!-- 화면 4 : 화주(농가) 오더 등록 -->
     <!-- ============================================================ -->
     <div class="screen-col" id="screen1">
-        <div class="screen-label"><span class="num">8</span>화주 오더 등록 — 농업 특화 필드</div>
+        <div class="screen-label"><span class="num">19</span>화주 오더 등록 — 농업 특화 필드</div>
         <div class="mobile-mockup flex flex-col">
             <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
                 <i class="fa-solid fa-arrow-left text-gray-500"></i>
@@ -886,7 +939,7 @@
     <!-- 추가 화면 : 화주 비료 운송 요청 -->
     <!-- ============================================================ -->
     <div class="screen-col" id="screen-fertilizer-order">
-        <div class="screen-label"><span class="num">15</span>화주 오더 등록 — 비료 포장·안전·장비 맞춤</div>
+        <div class="screen-label"><span class="num">20</span>화주 오더 등록 — 비료 포장·안전·장비 맞춤</div>
         <div class="mobile-mockup flex flex-col">
             <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
                 <i class="fa-solid fa-arrow-left text-gray-500"></i>
@@ -961,7 +1014,7 @@
     <!-- 추가 화면 : 화주 사료 운송 요청 -->
     <!-- ============================================================ -->
     <div class="screen-col" id="screen-feed-order">
-        <div class="screen-label"><span class="num">16</span>화주 오더 등록 — 사료 오염 방지·농장 방역</div>
+        <div class="screen-label"><span class="num">21</span>화주 오더 등록 — 사료 오염 방지·농장 방역</div>
         <div class="mobile-mockup flex flex-col">
             <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3"><i class="fa-solid fa-arrow-left text-gray-500"></i><h1 class="text-lg font-bold text-gray-800">운송 요청하기 <span class="text-sm font-medium text-gray-400">· 사료</span></h1></header>
             <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5 pb-28">
@@ -997,7 +1050,7 @@
     <!-- 화면 5 : 차주 오더 상세 (곡물) -->
     <!-- ============================================================ -->
     <div class="screen-col" id="screen2">
-        <div class="screen-label"><span class="num">9</span>차주 오더 상세 — 운임 투명성 + 회차 매칭</div>
+        <div class="screen-label"><span class="num">22</span>차주 오더 상세 — 운임 투명성 + 회차 매칭</div>
         <div class="mobile-mockup flex flex-col">
             <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
                 <i class="fa-solid fa-arrow-left text-gray-500"></i>
@@ -1074,7 +1127,7 @@
     <!-- 화면 6 : 운송 진행 + 전자 인수증 -->
     <!-- ============================================================ -->
     <div class="screen-col" id="screen3">
-        <div class="screen-label"><span class="num">10</span>운송 진행 — 상태 추적 + 전자 인수증</div>
+        <div class="screen-label"><span class="num">23</span>운송 진행 — 상태 추적 + 전자 인수증</div>
         <div class="mobile-mockup flex flex-col">
             <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
                 <i class="fa-solid fa-arrow-left text-gray-500"></i>
@@ -1149,7 +1202,7 @@
     <!-- 화면 7 : 정산 -->
     <!-- ============================================================ -->
     <div class="screen-col" id="screen4">
-        <div class="screen-label"><span class="num">11</span>정산 — 빠른 지급 + 수수료 투명성</div>
+        <div class="screen-label"><span class="num">24</span>정산 — 빠른 지급 + 수수료 투명성</div>
         <div class="mobile-mockup flex flex-col">
             <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
                 <i class="fa-solid fa-arrow-left text-gray-500"></i>
@@ -1213,7 +1266,7 @@
     <!-- 화면 8 : 화주(축산농가) 오더 등록 — 퇴비·축분 -->
     <!-- ============================================================ -->
     <div class="screen-col" id="screen5">
-        <div class="screen-label"><span class="num">12</span>화주 오더 등록 — 퇴비·축분 (오염 화물)</div>
+        <div class="screen-label"><span class="num">25</span>화주 오더 등록 — 퇴비·축분 (오염 화물)</div>
         <div class="mobile-mockup flex flex-col">
             <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
                 <i class="fa-solid fa-arrow-left text-gray-500"></i>
@@ -1323,7 +1376,7 @@
     <!-- 화면 9 : 차주 오더 상세 — 퇴비·축분 -->
     <!-- ============================================================ -->
     <div class="screen-col" id="screen6">
-        <div class="screen-label"><span class="num">13</span>차주 오더 상세 — 퇴비 이력 경고 + 톤당 정산</div>
+        <div class="screen-label"><span class="num">26</span>차주 오더 상세 — 퇴비 이력 경고 + 톤당 정산</div>
         <div class="mobile-mockup flex flex-col">
             <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
                 <i class="fa-solid fa-arrow-left text-gray-500"></i>
@@ -1399,7 +1452,7 @@
     <!-- 화면 10 : 차주 차량 설정 — 운송 가능 화물 관리 -->
     <!-- ============================================================ -->
     <div class="screen-col" id="screen-vehicle-settings">
-        <div class="screen-label"><span class="num">14</span>차주 차량 설정 — 운송 가능 화물 (LMO·위험물)</div>
+        <div class="screen-label"><span class="num">27</span>차주 차량 설정 — 운송 가능 화물 (LMO·위험물)</div>
         <div class="mobile-mockup flex flex-col">
             <header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
                 <i class="fa-solid fa-arrow-left text-gray-500"></i>
@@ -1518,7 +1571,7 @@
                 </a>
                 <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
                     <i class="fa-solid fa-list-check text-xl"></i>
-                    <span class="text-[10px] font-medium">오더목록</span>
+                    <span class="text-[10px] font-medium">일감 목록</span>
                 </a>
                 <a href="#" class="flex flex-col items-center gap-1 text-gray-400 w-1/4">
                     <i class="fa-regular fa-file-lines text-xl"></i>

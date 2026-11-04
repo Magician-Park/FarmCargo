@@ -28,7 +28,7 @@
 | 경로 | 현재 역할 |
 |---|---|
 | `app/lib/`, `app/test/` | **제품 Flutter 앱.** 웹 베타와 Android·iOS 출시의 공통 코드. 제품 기능의 우선 수정 대상 |
-| `farm-cargo-mockups.html` | 16개 핵심 화면의 전체 설계 보드. 관련 흐름이 바뀌면 함께 대조 |
+| `farm-cargo-mockups.html` | 27개 핵심 화면의 전체 설계 보드(권한 안내·로그인·회원가입·비밀번호 재설정 14개 포함). 관련 흐름이 바뀌면 함께 대조 |
 | `manifest.json`, `sw.js`, 아이콘 | HTML 프로토타입의 PWA 자원. Flutter Web은 `app/web/`의 `index.html`·`manifest.json`을 따로 쓴다 |
 | `index.html`, `workspace.css`, `workspace.js` | 개발 프롬프트와 데모를 나란히 보는 로컬 워크스페이스. 제품 화면과 구분 |
 | `scripts/dev-server.mjs` | 외부 패키지가 필요 없는 로컬 정적 서버. 업무 API 서버와 구분 |
