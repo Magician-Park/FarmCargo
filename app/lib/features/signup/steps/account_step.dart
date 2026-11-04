@@ -8,7 +8,7 @@ import '../../auth/account_role.dart';
 import '../signup_controller.dart';
 import '../signup_models.dart';
 
-/// 이름 / 이메일 / 비밀번호 / 비밀번호 확인.
+/// 이름 / 비밀번호 / 비밀번호 확인. 로그인 아이디는 다음 단계에서 인증하는 휴대폰 번호다.
 class AccountStep extends ConsumerStatefulWidget {
   const AccountStep({super.key, required this.role});
 
@@ -20,11 +20,10 @@ class AccountStep extends ConsumerStatefulWidget {
 
 class _AccountStepState extends ConsumerState<AccountStep> {
   late final _name = TextEditingController();
-  late final _email = TextEditingController();
   late final _password = TextEditingController();
   late final _confirm = TextEditingController();
 
-  late final _all = Listenable.merge([_name, _email, _password, _confirm]);
+  late final _all = Listenable.merge([_name, _password, _confirm]);
 
   @override
   void initState() {
@@ -32,7 +31,6 @@ class _AccountStepState extends ConsumerState<AccountStep> {
     final saved = ref.read(signupControllerProvider(widget.role)).account;
     if (saved != null) {
       _name.text = saved.name;
-      _email.text = saved.email;
       _password.text = saved.password;
       _confirm.text = saved.password;
     }
@@ -41,7 +39,6 @@ class _AccountStepState extends ConsumerState<AccountStep> {
   @override
   void dispose() {
     _name.dispose();
-    _email.dispose();
     _password.dispose();
     _confirm.dispose();
     super.dispose();
@@ -49,7 +46,6 @@ class _AccountStepState extends ConsumerState<AccountStep> {
 
   bool get _valid =>
       _name.text.trim().isNotEmpty &&
-      isValidEmail(_email.text) &&
       isValidPassword(_password.text) &&
       _confirm.text == _password.text;
 
@@ -57,7 +53,6 @@ class _AccountStepState extends ConsumerState<AccountStep> {
     ref.read(signupControllerProvider(widget.role).notifier).submitAccount(
           AccountInfo(
             name: _name.text.trim(),
-            email: _email.text.trim(),
             password: _password.text,
           ),
         );
@@ -80,14 +75,6 @@ class _AccountStepState extends ConsumerState<AccountStep> {
                     label: '이름',
                     controller: _name,
                     hint: '실명을 입력해 주세요',
-                  ),
-                  LabeledTextField(
-                    label: '이메일',
-                    controller: _email,
-                    hint: 'example@farmcargo.kr',
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (v) =>
-                        isValidEmail(v) ? null : '이메일 형식이 올바르지 않아요.',
                   ),
                   LabeledTextField(
                     label: '비밀번호',

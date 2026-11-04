@@ -11,7 +11,7 @@ import '../../core/widgets/labeled_text_field.dart';
 import 'auth_provider.dart';
 import 'auth_repository.dart';
 
-/// 메일 링크로 들어와 새 비밀번호를 설정한다.
+/// 휴대폰 인증을 마친 뒤 받은 토큰으로 새 비밀번호를 설정한다.
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key, required this.token});
 

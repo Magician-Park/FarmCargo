@@ -20,13 +20,14 @@ void main() {
     expect(
         find.textContaining('회원가입 · 차주', findRichText: true), findsOneWidget);
     expect(bottomButtonEnabled(tester, '다음'), isFalse);
+    expect(find.textContaining('이메일'), findsNothing); // 이메일 입력은 없다
+    expect(find.byType(TextField), findsNWidgets(3)); // 이름, 비밀번호, 비밀번호 확인
     await enterAt(tester, 0, '이신규');
-    await enterAt(tester, 1, 'new@farmcargo.test');
-    await enterAt(tester, 2, 'Abcd123!');
-    await enterAt(tester, 3, 'Abcd1234!');
+    await enterAt(tester, 1, 'Abcd123!');
+    await enterAt(tester, 2, 'Abcd1234!');
     expect(find.text('비밀번호가 일치하지 않아요.'), findsOneWidget);
     expect(bottomButtonEnabled(tester, '다음'), isFalse);
-    await enterAt(tester, 3, 'Abcd123!');
+    await enterAt(tester, 2, 'Abcd123!');
     expect(find.text('비밀번호가 일치하지 않아요.'), findsNothing);
     expect(bottomButtonEnabled(tester, '다음'), isTrue);
     await tapText(tester, '다음');
@@ -89,7 +90,7 @@ void main() {
     await pumpApp(tester);
     await startSignup(tester, '짐을 보내요');
 
-    await fillAccount(tester, name: '최화주', email: 'shipper2@farmcargo.test');
+    await fillAccount(tester, name: '최화주');
     await tapText(tester, '다음');
     await verifyPhone(tester, '01055556666');
     await tapText(tester, '다음');
@@ -117,31 +118,11 @@ void main() {
     expect(find.text('회원가입이 완료되었어요'), findsOneWidget);
   });
 
-  testWidgets('이미 가입된 이메일이면 계정 단계로 돌아가 안내한다', (tester) async {
-    await pumpApp(tester);
-    await startSignup(tester, '화물차로 운송해요');
-
-    await fillAccount(tester, email: 'driver@farmcargo.test'); // 데모 계정과 중복
-    await tapText(tester, '다음');
-    await verifyPhone(tester, '01077778888');
-    await tapText(tester, '다음');
-    await agreeAllTerms(tester);
-    await tapText(tester, '다음');
-    await captureDocument(tester);
-    await tapText(tester, '다음');
-    await captureDocument(tester);
-    await tapText(tester, '가입 완료');
-
-    expect(find.text('이미 가입된 이메일이에요.'), findsOneWidget);
-    expect(find.text('계정 정보를 입력해 주세요'), findsOneWidget);
-    expect(find.text('driver@farmcargo.test'), findsOneWidget); // 입력값 유지
-  });
-
   testWidgets('이미 가입된 휴대폰 번호면 휴대폰 인증 단계로 돌아가 다른 번호로 다시 인증한다', (tester) async {
     await pumpApp(tester);
     await startSignup(tester, '짐을 보내요');
 
-    await fillAccount(tester, email: 'fresh@farmcargo.test');
+    await fillAccount(tester);
     await tapText(tester, '다음');
     await verifyPhone(tester, '01011112222'); // 데모 차주 계정의 번호
     await tapText(tester, '다음');
@@ -176,7 +157,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
     expect(find.text('계정 정보를 입력해 주세요'), findsOneWidget);
-    expect(find.text('new@farmcargo.test'), findsOneWidget);
+    expect(find.text('이신규'), findsOneWidget); // 입력값 유지
 
     // 시스템 뒤로가기도 동일하게 동작
     await tapText(tester, '다음');

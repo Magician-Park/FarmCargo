@@ -19,15 +19,17 @@ void main() {
     expect(find.text('회원가입'), findsOneWidget);
   });
 
-  testWidgets('로그인은 이메일과 비밀번호가 맞아야 하고, 로그아웃하면 로비로 돌아온다', (tester) async {
+  testWidgets('로그인은 휴대폰 번호와 비밀번호가 맞아야 하고, 로그아웃하면 로비로 돌아온다', (tester) async {
     await pumpApp(tester);
     await goToLogin(tester);
 
+    expect(find.text('휴대폰 번호'), findsOneWidget);
+    expect(find.textContaining('이메일'), findsNothing); // 이메일 로그인은 없다
     expect(bottomButtonEnabled(tester, '로그인'), isFalse);
-    await enterAt(tester, 0, 'driver@farmcargo.test');
+    await enterAt(tester, 0, '01011112222');
     await enterAt(tester, 1, 'wrong-password');
     await tapText(tester, '로그인');
-    expect(find.text('아이디 또는 비밀번호가 올바르지 않아요.'), findsOneWidget);
+    expect(find.text('휴대폰 번호 또는 비밀번호가 올바르지 않아요.'), findsOneWidget);
     expect(find.text('차주 홈'), findsNothing);
 
     await enterAt(tester, 1, 'Passw0rd!');
@@ -49,33 +51,31 @@ void main() {
     expect(find.text('회원가입'), findsOneWidget);
   });
 
-  testWidgets('휴대폰 번호(하이픈 포함)와 이메일 모두 아이디로 로그인할 수 있다', (tester) async {
+  testWidgets('화주는 화주 홈으로 가고, 번호 입력칸에는 숫자만 들어간다', (tester) async {
     await pumpApp(tester);
     await goToLogin(tester);
-    expect(find.text('아이디'), findsOneWidget);
 
-    // 틀린 비밀번호는 거절
-    await enterAt(tester, 0, '01033334444');
-    await enterAt(tester, 1, 'wrong-password');
-    await tapText(tester, '로그인');
-    expect(find.text('아이디 또는 비밀번호가 올바르지 않아요.'), findsOneWidget);
-    expect(find.text('화주 홈'), findsNothing);
-
-    // 휴대폰 번호가 기본 아이디. 하이픈은 무시한다
-    await enterAt(tester, 0, '010-3333-4444');
+    // 하이픈·문자는 걸러지고 11자리까지만 입력된다
+    await enterAt(tester, 0, '010-3333-4444-99');
+    expect(find.text('01033334444'), findsOneWidget);
     await enterAt(tester, 1, 'Passw0rd!');
     await tapText(tester, '로그인');
     expect(find.text('화주 홈'), findsOneWidget);
     expect(find.text('박농부님, 안녕하세요'), findsOneWidget);
   });
 
-  testWidgets('이메일을 아이디로 써서도 로그인할 수 있다', (tester) async {
+  testWidgets('가입되지 않은 번호나 형식이 틀린 번호는 로그인할 수 없다', (tester) async {
     await pumpApp(tester);
     await goToLogin(tester);
-    await enterAt(tester, 0, 'Shipper@FarmCargo.test'); // 대소문자 무시
+
+    await enterAt(tester, 0, '01012345');
     await enterAt(tester, 1, 'Passw0rd!');
+    expect(find.text('010으로 시작하는 11자리 번호를 입력해 주세요.'), findsOneWidget);
+    expect(bottomButtonEnabled(tester, '로그인'), isFalse);
+
+    await enterAt(tester, 0, '01099990000');
     await tapText(tester, '로그인');
-    expect(find.text('화주 홈'), findsOneWidget);
+    expect(find.text('휴대폰 번호 또는 비밀번호가 올바르지 않아요.'), findsOneWidget);
   });
 
   testWidgets('로그아웃 상태에서 보호된 경로로 가면 로비로 돌아온다', (tester) async {
@@ -90,7 +90,7 @@ void main() {
     final container = await pumpApp(tester);
     await container
         .read(authProvider.notifier)
-        .signIn(id: 'driver@farmcargo.test', password: 'Passw0rd!');
+        .signIn(phone: '01011112222', password: 'Passw0rd!');
     await tester.pumpAndSettle();
     expect(find.text('차주 홈'), findsOneWidget);
 
@@ -104,7 +104,7 @@ void main() {
     final container = await pumpApp(tester);
     await container
         .read(authProvider.notifier)
-        .signIn(id: 'driver@farmcargo.test', password: 'Passw0rd!');
+        .signIn(phone: '01011112222', password: 'Passw0rd!');
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('퇴비 벌크'));
@@ -119,7 +119,7 @@ void main() {
     final container = await pumpApp(tester);
     await container
         .read(authProvider.notifier)
-        .signIn(id: 'driver@farmcargo.test', password: 'Passw0rd!');
+        .signIn(phone: '01011112222', password: 'Passw0rd!');
     await tester.pumpAndSettle();
 
     container.read(routerProvider).go(AppRoutes.driverOrder('nope'));

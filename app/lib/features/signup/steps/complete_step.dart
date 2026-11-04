@@ -26,7 +26,7 @@ class CompleteStep extends StatelessWidget {
                       style:
                           TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   SizedBox(height: 8),
-                  Text('가입한 이메일과 비밀번호로 로그인해 주세요.',
+                  Text('가입한 휴대폰 번호와 비밀번호로 로그인해 주세요.',
                       style: TextStyle(color: AppColors.textMuted)),
                 ],
               ),

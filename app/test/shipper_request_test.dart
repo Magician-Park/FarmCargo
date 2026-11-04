@@ -8,7 +8,7 @@ Future<void> openShipperRequest(WidgetTester tester) async {
   final container = await pumpApp(tester);
   await container
       .read(authProvider.notifier)
-      .signIn(id: 'shipper@farmcargo.test', password: 'Passw0rd!');
+      .signIn(phone: '01033334444', password: 'Passw0rd!');
   await tester.pumpAndSettle();
   expect(find.text('화주 홈'), findsOneWidget);
   await tester.tap(find.text('운송 요청하기'));
@@ -20,7 +20,7 @@ void main() {
     final container = await pumpApp(tester);
     await container
         .read(authProvider.notifier)
-        .signIn(id: 'driver@farmcargo.test', password: 'Passw0rd!');
+        .signIn(phone: '01011112222', password: 'Passw0rd!');
     await tester.pumpAndSettle();
 
     expect(find.text('추천 맞춤 오더'), findsOneWidget);
@@ -37,7 +37,7 @@ void main() {
     final container = await pumpApp(tester);
     await container
         .read(authProvider.notifier)
-        .signIn(id: 'driver@farmcargo.test', password: 'Passw0rd!');
+        .signIn(phone: '01011112222', password: 'Passw0rd!');
     await tester.pumpAndSettle();
 
     final tab = find.descendant(

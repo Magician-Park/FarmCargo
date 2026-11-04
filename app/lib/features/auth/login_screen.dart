@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/router/navigation.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/validators.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/labeled_text_field.dart';
 import 'auth_provider.dart';
 import 'auth_repository.dart';
 
-/// 아이디(휴대폰 번호 또는 이메일)와 비밀번호로 로그인한다. 휴대폰 번호가 기본 아이디다.
+/// 휴대폰 번호(아이디)와 비밀번호로 로그인한다.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -42,7 +44,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // 성공하면 로그인 상태가 바뀌어 라우터가 홈으로 이동시킨다.
       await ref
           .read(authProvider.notifier)
-          .signIn(id: _id.text, password: _password.text);
+          .signIn(phone: _id.text, password: _password.text);
     } on AuthException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } finally {
@@ -76,10 +78,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             fontSize: 28, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 28),
                     LabeledTextField(
-                      label: '아이디',
+                      label: '휴대폰 번호',
                       controller: _id,
-                      hint: '휴대폰 번호 또는 이메일',
-                      keyboardType: TextInputType.emailAddress,
+                      hint: '01012345678',
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(11),
+                      ],
+                      validator: (v) => isValidPhone(v)
+                          ? null
+                          : '010으로 시작하는 11자리 번호를 입력해 주세요.',
                     ),
                     LabeledTextField(
                       label: '비밀번호',
@@ -129,10 +138,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               builder: (context, _) => BottomActionBar(
                 label: '로그인',
                 loading: _submitting,
-                onPressed:
-                    _id.text.trim().isNotEmpty && _password.text.isNotEmpty
-                        ? _login
-                        : null,
+                onPressed: isValidPhone(_id.text) && _password.text.isNotEmpty
+                    ? _login
+                    : null,
               ),
             ),
           ],

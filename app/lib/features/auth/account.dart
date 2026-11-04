@@ -4,12 +4,12 @@ class Account {
   final String id;
   final AccountRole role;
   final String name;
-  final String email;
+  final String phone; // 로그인 아이디
 
   const Account({
     required this.id,
     required this.role,
     required this.name,
-    required this.email,
+    required this.phone,
   });
 }

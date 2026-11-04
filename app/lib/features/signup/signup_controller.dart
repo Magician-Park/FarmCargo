@@ -97,6 +97,8 @@ class SignupController extends Notifier<SignupState> {
   void setPhoneVerified(String phone) =>
       state = state.copyWith(verifiedPhone: phone);
 
+  void clearPhoneVerified() => state = state.copyWith(clearVerifiedPhone: true);
+
   void submitPhone() => _goTo(1);
 
   void submitTerms(Set<TermsItem> agreed) {
@@ -148,7 +150,7 @@ class SignupController extends Notifier<SignupState> {
         error: e.message,
       );
     } on AuthException catch (e) {
-      // 이메일 중복 등은 계정 단계로 돌아가 고치게 한다.
+      // 그 밖의 가입 오류는 계정 단계로 돌아가 다시 시도하게 한다.
       state = state.copyWith(
           submitting: false, step: SignupStep.account, error: e.message);
     }

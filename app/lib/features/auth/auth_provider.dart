@@ -11,10 +11,10 @@ class AuthNotifier extends Notifier<Account?> {
   @override
   Account? build() => null;
 
-  Future<void> signIn({required String id, required String password}) async {
+  Future<void> signIn({required String phone, required String password}) async {
     state = await ref
         .read(authRepositoryProvider)
-        .signIn(id: id, password: password);
+        .signIn(phone: phone, password: password);
   }
 
   void logout() => state = null;

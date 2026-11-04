@@ -50,12 +50,10 @@ Future<void> goToLogin(WidgetTester tester) async {
   await tapText(tester, '로그인');
 }
 
-Future<void> fillAccount(WidgetTester tester,
-    {String name = '이신규', String email = 'new@farmcargo.test'}) async {
+Future<void> fillAccount(WidgetTester tester, {String name = '이신규'}) async {
   await enterAt(tester, 0, name);
-  await enterAt(tester, 1, email);
+  await enterAt(tester, 1, 'Abcd123!');
   await enterAt(tester, 2, 'Abcd123!');
-  await enterAt(tester, 3, 'Abcd123!');
 }
 
 Future<void> verifyPhone(WidgetTester tester, String phone) async {
