@@ -67,7 +67,7 @@ class MockAuthRepository implements AuthRepository {
   }
 
   static const demoCode = '123456';
-  static const resetTokenValidity = Duration(minutes: 10);
+  static const resetTokenValidity = Duration(minutes: 3);
 
   final DateTime Function() _now;
   final _accounts = <String, _Record>{}; // 휴대폰 번호 -> 기록

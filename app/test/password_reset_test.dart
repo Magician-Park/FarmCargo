@@ -128,7 +128,7 @@ void main() {
   group('MockAuthRepository 비밀번호 재설정', () {
     const code = MockAuthRepository.demoCode;
 
-    test('토큰은 10분이 지나면 만료된다', () async {
+    test('토큰은 3분이 지나면 만료된다', () async {
       var now = DateTime(2026, 11, 4, 12);
       final repo = MockAuthRepository(now: () => now);
       final token = (await repo.verifyPasswordResetCode(_driverPhone, code))!;

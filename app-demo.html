@@ -36,6 +36,11 @@
 </head>
 <body>
 <div class="phone-frame">
+<!-- 가입·로그인 흐름(권한 안내 → 로비 → 로그인/회원가입 → 비밀번호 재설정). 화면은 아래 FLOW 스크립트가 그린다. -->
+<div class="app-screen flex-col" id="screen-flow">
+    <div id="flow-body" class="flex flex-col flex-1 min-h-0"></div>
+    <div id="flow-modal" class="hidden absolute inset-0 bg-gray-900/60 z-40 items-center justify-center px-6"></div>
+</div>
 <div class="app-screen flex-col" id="screen-onboarding">
             <main class="flex-1 flex flex-col px-6 pt-16 pb-8">
                 <!-- 로고 -->
@@ -1503,7 +1508,7 @@
 </div>
 
 <script>
-const stack = ['screen-onboarding'];
+const stack = ['screen-flow'];
 let role = 'shipper';
 const DRIVER_SCREENS = ['screen-driver-identity','screen-signup-driver','screen0','screen2','screen3','screen4','screen5x','screen6','screen-vehicle-settings'];
 
@@ -1897,7 +1902,453 @@ document.addEventListener('click', e => {
     }
 });
 
-show('screen-onboarding');
+/* ====================================================================
+   가입·로그인 흐름 데모 — Flutter 앱(app/lib/features/auth, signup, onboarding)과 같은 흐름.
+   서버·문자·OCR이 없는 시연용이며 입력한 내용은 이 페이지(메모리)에만 있고 새로고침하면 사라진다.
+   ==================================================================== */
+const FLOW = (() => {
+    const DEMO_CODE = '123456';
+    const CODE_MS = 3 * 60 * 1000;      // 인증번호 유효 시간 3분
+    const RESET_MS = 3 * 60 * 1000;     // 비밀번호 재설정 인증 유효 시간 3분
+    const st = {
+        route: 'permissions', history: [],
+        accounts: [
+            { phone: '01011112222', password: 'Passw0rd!', name: '김기사', role: 'driver' },
+            { phone: '01033334444', password: 'Passw0rd!', name: '박농부', role: 'shipper' },
+        ],
+        tokens: {}, nextToken: 1, resetToken: null,
+        su: null, pv: null, ticker: null,
+    };
+    const $ = s => document.querySelector('#screen-flow ' + s);
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    /* ---------- 검증·입력 형식 (Flutter validators.dart / input_formatters.dart 와 같은 규칙) ---------- */
+    const digits = (v, max) => String(v).replace(/\D/g, '').slice(0, max);
+    const pattern = pat => v => {
+        const d = String(v).replace(/\D/g, ''); let out = '', i = 0;
+        for (const ch of pat) { if (i >= d.length) break; if (ch === '#') out += d[i++]; else out += ch; }
+        return out;
+    };
+    const fmtDate = pattern('####-##-##'), fmtBiz = pattern('###-##-#####'), fmtRrn = pattern('######-#######');
+    const isPhone = v => /^010\d{8}$/.test(v);
+    const isPassword = v => v.length >= 8 && v.length <= 16 && /[A-Za-z]/.test(v) && /\d/.test(v) && /[^A-Za-z0-9\s]/.test(v);
+    const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+    function isDate(v) {
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v); if (!m) return false;
+        const y = +m[1], mo = +m[2], d = +m[3], dt = new Date(y, mo - 1, d);
+        if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d || y < 1900) return false;
+        return dt <= new Date();
+    }
+    function isBizNo(v) {
+        const s = v.replace(/-/g, ''); if (!/^\d{10}$/.test(s)) return false;
+        const d = s.split('').map(Number), w = [1, 3, 7, 1, 3, 7, 1, 3, 5];
+        let sum = 0; for (let i = 0; i < 9; i++) sum += d[i] * w[i];
+        sum += Math.floor(d[8] * 5 / 10); return (10 - sum % 10) % 10 === d[9];
+    }
+    function isRrn(v) {
+        const s = v.replace(/-/g, ''); if (!/^\d{13}$/.test(s)) return false;
+        const d = s.split('').map(Number), w = [2, 3, 4, 5, 6, 7, 8, 9, 2, 3, 4, 5];
+        let sum = 0; for (let i = 0; i < 12; i++) sum += d[i] * w[i];
+        return (11 - sum % 11) % 10 === d[12];
+    }
+    const mmss = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+
+    /* ---------- 공통 조각 ---------- */
+    const INPUT = 'w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:border-2';
+    const demoNotice = (cls = '') => `<div class="flex gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 leading-relaxed ${cls}"><i class="fa-solid fa-flask mt-0.5"></i><span>테스트 버전이에요. 입력한 내용은 서버에 저장되지 않으니 실제 개인정보·서류는 입력하지 마세요.</span></div>`;
+    function field(f) {
+        return `<div class="mb-4"><p class="text-sm font-bold text-gray-700 mb-2">${esc(f.label)}${f.optional ? '<span class="text-xs font-medium text-gray-400 ml-1.5">선택</span>' : ''}</p>
+            <input id="f-${f.id}" data-f="${f.id}" type="${f.type || 'text'}" inputmode="${f.mode || 'text'}" autocomplete="off" placeholder="${esc(f.hint || '')}" value="${esc(f.value || '')}" class="${INPUT}">
+            <p id="e-${f.id}" class="text-xs text-red-500 mt-1 hidden"></p></div>`;
+    }
+    const bar = (label, act, enabled = true, id = 'bar') => `<div class="bg-white border-t border-gray-100 px-4 pt-3 pb-4 z-20">
+        <button id="${id}" data-act="${act}" ${enabled ? '' : 'disabled'} class="w-full rounded-2xl py-4 font-bold text-base ${enabled ? 'bg-brand-600 text-white' : 'bg-gray-200 text-gray-400'}">${esc(label)}</button></div>`;
+    const header = (title, sub = '') => `<header class="bg-white px-6 pt-10 pb-4 shadow-sm z-10 flex items-center gap-3">
+        <button data-act="back" aria-label="뒤로가기" class="text-gray-500"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="text-lg font-bold text-gray-800">${esc(title)}${sub ? ` <span class="text-sm font-medium text-gray-400">· ${esc(sub)}</span>` : ''}</h1></header>`;
+    function setBar(id, enabled) {
+        const b = $('#' + id); if (!b) return;
+        b.disabled = !enabled;
+        b.className = 'w-full rounded-2xl py-4 font-bold text-base ' + (enabled ? 'bg-brand-600 text-white' : 'bg-gray-200 text-gray-400');
+    }
+    function modal(msg, ok = '확인', onOk) {
+        const m = $('#flow-modal'); m.classList.remove('hidden'); m.classList.add('flex');
+        m.innerHTML = `<div class="bg-white rounded-3xl p-6 w-full text-center"><p class="text-sm text-gray-800 font-bold leading-relaxed mb-5">${esc(msg)}</p>
+            <button id="flow-modal-ok" class="w-full bg-brand-600 text-white rounded-2xl py-3.5 font-bold">${esc(ok)}</button></div>`;
+        $('#flow-modal-ok').onclick = e => { e.stopPropagation(); m.classList.add('hidden'); m.classList.remove('flex'); onOk && onOk(); };
+    }
+
+    /* 입력 칸 묶음: specs = [{id, fmt?, check?(v)->오류문구|null, optional?}] */
+    function bindForm(specs, values, onChange) {
+        const run = () => {
+            let ok = true;
+            for (const s of specs) {
+                const v = values[s.id] ?? '', err = v && s.check ? s.check(v) : null, p = $('#e-' + s.id);
+                if (p) { p.textContent = err || ''; p.classList.toggle('hidden', !err); }
+                if (err || (!v && !s.optional)) ok = false;
+            }
+            onChange(ok);
+        };
+        for (const s of specs) {
+            const el = $('#f-' + s.id); if (!el) continue;
+            el.addEventListener('input', () => {
+                if (s.fmt) el.value = s.fmt(el.value);
+                values[s.id] = el.value; run();
+            });
+        }
+        run();
+    }
+
+    /* ---------- 휴대폰 문자 인증 (가입·비밀번호 재설정 공통) ---------- */
+    function phoneBlock(cfg) {
+        if (!st.pv || st.pv.key !== cfg.key) st.pv = { key: cfg.key, phone: cfg.verified || '', sent: false, expires: 0, demo: null, err: '', verified: !!cfg.verified };
+        const pv = st.pv;
+        return `<div class="flex gap-2 items-start mb-2"><div class="flex-1">
+                <p class="text-sm font-bold text-gray-700 mb-2">휴대폰 번호</p>
+                <input id="pv-phone" inputmode="numeric" autocomplete="off" placeholder="01012345678" value="${esc(pv.phone)}" class="${INPUT}">
+                <p id="pv-phone-err" class="text-xs text-red-500 mt-1 hidden">010으로 시작하는 11자리 번호를 입력해 주세요.</p></div>
+            <button id="pv-send" data-act="pv-send" class="mt-8 px-4 py-3.5 rounded-xl text-xs font-bold">인증번호 받기</button></div>
+            <div id="pv-code-area" class="hidden">
+                <p class="text-sm font-bold text-gray-700 mb-2 mt-2">인증번호 6자리</p>
+                <div class="relative"><input id="pv-code" inputmode="numeric" autocomplete="off" placeholder="문자로 받은 번호를 입력해 주세요" class="${INPUT}"><span id="pv-timer" class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-red-500"></span></div>
+                <p id="pv-code-err" class="text-xs text-red-500 mt-1 hidden"></p>
+                <div id="pv-demo" class="bg-brand-50 text-brand-700 rounded-xl p-3 text-xs mt-3 hidden"></div>
+                <button id="pv-verify" data-act="pv-verify" class="w-full mt-3 border border-gray-300 rounded-xl py-3 text-sm font-bold text-gray-600">인증번호 확인</button></div>
+            <div id="pv-ok" class="hidden items-center gap-2 bg-green-50 border border-green-200 rounded-xl p-3 mt-2"><i class="fa-solid fa-circle-check text-green-600"></i><span class="text-xs font-bold text-green-700">휴대폰 인증이 완료되었어요</span></div>`;
+    }
+    function phoneWire(cfg) {
+        const pv = st.pv, phone = $('#pv-phone'), code = $('#pv-code');
+        const paint = () => {
+            const valid = isPhone(pv.phone);
+            $('#pv-phone-err').classList.toggle('hidden', !pv.phone || valid);
+            const send = $('#pv-send'); send.disabled = !(valid && !pv.verified);
+            send.className = 'mt-8 px-4 py-3.5 rounded-xl text-xs font-bold ' + (send.disabled ? 'bg-gray-100 text-gray-400' : 'bg-gray-800 text-white');
+            send.textContent = pv.sent ? '재전송' : '인증번호 받기';
+            $('#pv-code-area').classList.toggle('hidden', !(pv.sent && !pv.verified));
+            const ok = $('#pv-ok'); ok.classList.toggle('hidden', !pv.verified); ok.classList.toggle('flex', pv.verified);
+            const demo = $('#pv-demo');
+            if (pv.sent && !pv.verified) {
+                demo.classList.remove('hidden');
+                demo.textContent = pv.demo ? `[데모] 실제 문자는 발송되지 않아요. 인증번호는 ${pv.demo} 입니다.` : (cfg.noDemo || '');
+                demo.classList.toggle('hidden', !demo.textContent);
+            }
+            const ce = $('#pv-code-err'); ce.textContent = pv.err; ce.classList.toggle('hidden', !pv.err);
+            const vb = $('#pv-verify'); vb.disabled = code.value.length !== 6;
+            vb.className = 'w-full mt-3 border border-gray-300 rounded-xl py-3 text-sm font-bold ' + (vb.disabled ? 'text-gray-300' : 'text-gray-700');
+        };
+        phone.addEventListener('input', () => {
+            phone.value = digits(phone.value, 11);
+            const was = pv.verified; pv.phone = phone.value;
+            if (pv.sent || pv.verified) { pv.sent = false; pv.verified = false; pv.demo = null; pv.err = ''; code.value = ''; clearInterval(st.ticker); if (was) cfg.onInvalidated(); }
+            paint();
+        });
+        code.addEventListener('input', () => { code.value = digits(code.value, 6); paint(); });
+        pv.send = () => {
+            pv.demo = cfg.send(pv.phone); pv.sent = true; pv.err = ''; code.value = '';
+            pv.expires = Date.now() + CODE_MS;
+            clearInterval(st.ticker);
+            st.ticker = setInterval(() => {
+                const left = pv.expires - Date.now(), t = $('#pv-timer');
+                if (!t) { clearInterval(st.ticker); return; }
+                t.textContent = left > 0 ? mmss(left) : '만료'; if (left <= 0) clearInterval(st.ticker);
+            }, 500);
+            $('#pv-timer').textContent = mmss(CODE_MS);
+            paint();
+        };
+        pv.verify = () => {
+            if (Date.now() >= pv.expires) { pv.err = '인증 시간이 만료되었어요. 인증번호를 다시 받아 주세요.'; paint(); return; }
+            if (cfg.verify(pv.phone, code.value)) { pv.verified = true; pv.err = ''; clearInterval(st.ticker); cfg.onVerified(pv.phone); }
+            else pv.err = '인증번호가 일치하지 않아요.';
+            paint();
+        };
+        paint();
+    }
+
+    /* ---------- 화면: 권한 안내 / 로비 / 역할 선택 ---------- */
+    const PERMS = [['fa-camera', '카메라', '자격증, 사업자등록증, 신분증 촬영'], ['fa-image', '사진', '촬영한 서류 사진 첨부'],
+        ['fa-location-dot', '위치', '내 주변 일감 확인, 운행 경로 안내'], ['fa-bell', '알림', '배차, 운송 상태, 정산 소식 알림'], ['fa-phone', '전화', '고객센터 등 전화 연결']];
+    const screens = {};
+    screens.permissions = {
+        html: () => `<main class="flex-1 overflow-y-auto hide-scrollbar px-6 pt-16 pb-6">
+            <h1 class="text-2xl font-bold text-gray-900 leading-snug mb-8">팜카고 이용을 위해<br>접근 권한을 허용해 주세요</h1>
+            <p class="text-base font-bold text-gray-800 pb-3 border-b-2 border-gray-200 mb-5">선택 접근 권한</p>
+            ${PERMS.map(p => `<div class="flex gap-3.5 mb-5"><div class="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center flex-shrink-0"><i class="fa-solid ${p[0]}"></i></div>
+                <div><p class="text-sm font-bold text-gray-800">${p[1]}</p><p class="text-xs text-gray-500 mt-0.5">${p[2]}</p></div></div>`).join('')}
+            <p class="text-[11px] text-gray-400 leading-relaxed mt-2">선택 권한은 허용하지 않아도 앱을 이용할 수 있지만, 해당 기능은 사용할 수 없어요. 권한은 기능을 처음 사용할 때 다시 안내해 드려요.</p></main>
+            ${bar('확인', 'to-welcome')}`,
+    };
+    screens.welcome = {
+        html: () => `<main class="flex-1 flex flex-col justify-center px-6 pb-10">
+            <div class="flex flex-col items-center mb-12"><div class="h-20 w-20 rounded-3xl bg-brand-600 flex items-center justify-center text-white shadow-lg mb-4"><i class="fa-solid fa-truck-fast text-3xl"></i></div>
+            <h1 class="text-2xl font-bold text-gray-800">팜카고</h1><p class="text-sm text-gray-500 mt-1">농사짐, 이제 앱으로 부르세요</p></div>
+            <button data-act="to-login" class="w-full bg-brand-600 text-white rounded-2xl py-4 font-bold mb-2.5">로그인</button>
+            <button data-act="to-role" class="w-full bg-white border border-gray-300 text-brand-700 rounded-2xl py-4 font-bold">회원가입</button>
+            ${demoNotice('mt-7')}</main>`,
+    };
+    screens.role = {
+        html: () => `${header('회원가입')}<main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-5">어떻게 이용하시나요?</h2>
+            ${[['shipper', 'fa-seedling', 'bg-green-100 text-green-700', '짐을 보내요', '화주·농가 · 곡물·퇴비·비료 운송을 요청해요'], ['driver', 'fa-truck', 'bg-brand-100 text-brand-600', '화물차로 운송해요', '차주 · 오더 받고 다음 날 바로 정산받아요']]
+                .map(r => `<button data-act="start-signup" data-role="${r[0]}" class="w-full bg-white border border-gray-200 rounded-2xl p-4 mb-3 flex items-center gap-3 text-left"><div class="h-12 w-12 rounded-2xl ${r[2]} flex items-center justify-center flex-shrink-0"><i class="fa-solid ${r[1]} text-xl"></i></div>
+                <div class="flex-1"><p class="font-bold text-gray-800">${r[3]}</p><p class="text-xs text-gray-500 mt-0.5">${r[4]}</p></div><i class="fa-solid fa-chevron-right text-gray-300"></i></button>`).join('')}</main>`,
+    };
+
+    /* ---------- 화면: 로그인 / 비밀번호 재설정 ---------- */
+    const login = { phone: '', password: '' };
+    screens.login = {
+        html: () => `${header('로그인')}<main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-6">
+            ${field({ id: 'phone', label: '휴대폰 번호', hint: '01012345678', mode: 'numeric', value: login.phone })}
+            ${field({ id: 'password', label: '비밀번호', type: 'password', hint: '비밀번호를 입력해 주세요', value: login.password })}
+            <p id="login-err" class="text-sm text-red-500 mb-3 hidden"></p>
+            <button data-act="to-forgot" class="block text-xs text-gray-500 mb-2">비밀번호를 잊으셨나요?</button>
+            <button data-act="to-role" class="block text-xs text-brand-600">혹시 회원이 아니신가요?</button></main>${bar('로그인', 'do-login', false)}`,
+        wire: () => bindForm([
+            { id: 'phone', fmt: v => digits(v, 11), check: v => isPhone(v) ? null : '010으로 시작하는 11자리 번호를 입력해 주세요.' },
+            { id: 'password' }], login, ok => setBar('bar', ok)),
+    };
+    const reset = { password: '', confirm: '' };
+    screens.forgot = {
+        html: () => `${header('비밀번호 재설정')}<main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-6">
+            <p class="text-sm text-gray-500 leading-relaxed mb-6">가입할 때 인증한 휴대폰 번호를 입력해 주세요.<br>문자로 받은 인증번호를 확인하면 새 비밀번호를 설정할 수 있어요.</p>
+            ${phoneBlock({ key: 'forgot' })}</main>${bar('새 비밀번호 설정하기', 'to-reset', false)}`,
+        wire: () => phoneWire({
+            noDemo: '[데모] 가입되지 않은 번호라 인증번호가 만들어지지 않았어요.',
+            send: phone => st.accounts.some(a => a.phone === phone) ? DEMO_CODE : null,
+            verify: (phone, code) => {
+                if (!st.accounts.some(a => a.phone === phone) || code !== DEMO_CODE) return false;
+                for (const t of Object.values(st.tokens)) if (t.phone === phone) t.used = true;   // 새로 인증하면 이전 인증은 무효
+                const token = 'reset-' + st.nextToken++; st.tokens[token] = { phone, expires: Date.now() + RESET_MS, used: false };
+                st.resetToken = token; return true;
+            },
+            onVerified: () => setBar('bar', true),
+            onInvalidated: () => { st.resetToken = null; setBar('bar', false); },
+        }),
+    };
+    screens.reset = {
+        html: () => `${header('비밀번호 재설정')}<main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-6">
+            <p class="text-base text-gray-800 mb-1">새로 사용할 비밀번호를 입력해 주세요.</p><p class="text-xs text-gray-400 mb-5">8~16자 이내의 영문, 숫자, 기호를 포함한 문자열</p>
+            ${field({ id: 'password', label: '새 비밀번호', type: 'password', hint: '새 비밀번호 입력', value: reset.password })}
+            ${field({ id: 'confirm', label: '새 비밀번호 확인', type: 'password', hint: '새 비밀번호 확인', value: reset.confirm })}</main>${bar('비밀번호 재설정하기', 'do-reset', false)}`,
+        wire: () => bindForm([
+            { id: 'password', check: v => isPassword(v) ? null : '8~16자의 영문, 숫자, 기호를 모두 포함해 주세요.' },
+            { id: 'confirm', check: v => v === reset.password ? null : '비밀번호가 일치하지 않아요.' }], reset, ok => setBar('bar', ok)),
+    };
+
+    /* ---------- 회원가입 ---------- */
+    const STEPS = { driver: ['account', 'phone', 'terms', 'license', 'business'], shipper: ['account', 'phone', 'terms', 'idCard', 'business'] };
+    const LABELS = { account: '계정', phone: '휴대폰', terms: '약관', license: '자격증', idCard: '신분증', business: '사업자' };
+    const TITLES = { account: '계정 정보를 입력해 주세요', phone: '휴대폰 번호를 인증해 주세요', terms: '약관에 동의해 주세요', license: '화물운송종사자격증을 인증해 주세요', idCard: '신분증을 인증해 주세요', business: '사업자등록증을 인증해 주세요' };
+    const TERMS = [['age14', '만 14세 이상입니다.', true], ['service', '서비스 이용 약관', true], ['brokerage', '화물운송 주선약관', true], ['privacyCollect', '개인정보 수집 및 이용 동의', true],
+        ['privacyThird', '개인정보 제3자 제공 동의', true], ['location', '위치기반서비스 이용약관', false], ['privacyOpt', '개인정보 수집 및 이용 동의', false], ['marketing', '마케팅정보 앱푸시, SMS 수신 동의', false]];
+    const GROUP = ['service', 'brokerage', 'privacyCollect', 'privacyThird'];
+    const SAMPLE = {
+        license: { name: '김기사', birth: '1975-03-15', number: '11-1234567-01', acquired: '2015-06-01' },
+        idCard: { name: '박농부', rrn: '750315-1234568', address: '전북 김제시 죽산면 ○○로 1', issued: '2019-05-20' },
+        biz: { no: '123-45-67891', company: '김기사 운송', rep: '김기사', birth: '1975-03-15', opened: '2016-03-02', address: '서울특별시 강서구 ○○로 123', type: '운수업 / 화물자동차 운송업',
+            reason: '신규', coRep: '', consolidated: 'no', taxEmail: 'tax@example.com', issued: '2024-01-10', taxOffice: '강서세무서' },
+    };
+    const newSignup = role => ({ role, step: 0, name: '', password: '', confirm: '', phone: '', terms: new Set(), license: null, idCard: null, biz: null, bizPhoto: false, scan: {} });
+    const stepName = () => STEPS[st.su.role][st.su.step];
+
+    function stepIndicator() {
+        const labels = STEPS[st.su.role].map(s => LABELS[s]);
+        return `<div class="flex items-start px-6 pt-4">${labels.map((l, i) => {
+            const done = i < st.su.step, active = i === st.su.step;
+            const dot = `<div class="flex flex-col items-center gap-1"><div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${done ? 'bg-brand-600 text-white' : active ? 'bg-brand-50 text-brand-600 border-2 border-brand-500' : 'bg-gray-100 text-gray-400'}">${done ? '<i class="fa-solid fa-check text-[10px]"></i>' : i + 1}</div>
+                <span class="text-[10px] ${active ? 'font-bold text-brand-600' : 'text-gray-400'}">${l}</span></div>`;
+            return (i ? `<div class="flex-1 h-0.5 mt-3.5 ${i <= st.su.step ? 'bg-brand-600' : 'bg-gray-200'}"></div>` : '') + dot;
+        }).join('')}</div>`;
+    }
+    const captureCard = (title, icon, captured, hint) => `<div class="bg-white rounded-2xl border ${captured ? 'border-green-500' : 'border-gray-200'} p-4 flex items-center gap-3">
+        <div class="h-10 w-10 rounded-xl ${captured ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'} flex items-center justify-center flex-shrink-0"><i class="fa-solid ${icon}"></i></div>
+        <div class="flex-1"><p class="text-sm font-bold text-gray-800">${title}</p><p class="text-xs ${captured ? 'text-green-600' : 'text-gray-400'} mt-0.5">${captured ? '촬영 완료 · 아래 내용을 확인해 주세요' : hint}</p></div>
+        <button data-act="capture" class="px-3 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold flex-shrink-0"><i class="fa-solid fa-camera mr-1"></i>${captured ? '다시 촬영' : '촬영'}</button></div>
+        <input id="file-input" type="file" accept="image/*" capture="environment" class="hidden">
+        ${captured ? '' : '<button data-act="capture-sample" class="text-xs text-gray-400 underline mt-2">(데모) 사진 없이 샘플로 진행</button>'}`;
+    const scanBanner = '<div class="bg-brand-50 text-brand-700 rounded-xl p-3 text-xs leading-relaxed mt-3 mb-5">자동으로 입력했어요. 틀린 곳이 있으면 직접 고쳐 주세요.</div>';
+    const dateErr = v => isDate(v) ? null : '날짜를 YYYY-MM-DD 형식으로 입력해 주세요.';
+
+    function stepHtml() {
+        const su = st.su, name = stepName();
+        if (name === 'account') return `${field({ id: 'name', label: '이름', hint: '실명을 입력해 주세요', value: su.name })}
+            ${field({ id: 'password', label: '비밀번호', type: 'password', hint: '8~16자 영문, 숫자, 기호 포함', value: su.password })}
+            ${field({ id: 'confirm', label: '비밀번호 확인', type: 'password', hint: '비밀번호를 한 번 더 입력해 주세요', value: su.confirm })}`;
+        if (name === 'phone') return phoneBlock({ key: 'signup', verified: su.phone });
+        if (name === 'terms') {
+            const on = k => su.terms.has(k), box = c => `<i class="fa-solid ${c ? 'fa-square-check text-brand-600' : 'fa-square text-gray-300'} text-2xl"></i>`;
+            const row = (k, label, bold) => `<button data-act="term" data-k="${k}" class="w-full flex items-center gap-3 py-2 text-left">${box(on(k))}<span class="${bold ? 'text-base font-bold' : 'text-sm'} text-gray-800">${label}</span></button>`;
+            const all = TERMS.every(t => on(t[0])), group = GROUP.every(on);
+            return `<button data-act="term-all" class="w-full flex items-center gap-3 py-2 text-left">${box(all)}<span class="text-base font-bold text-gray-800">약관 전체동의</span></button><hr class="my-3 border-gray-200">
+                ${row('age14', '(필수) 만 14세 이상입니다.')}
+                <button data-act="term-group" class="w-full flex items-center gap-3 py-2 text-left">${box(group)}<span class="text-sm text-gray-800">(필수) 팜카고 이용약관 및 동의사항</span></button>
+                ${GROUP.map(k => `<button data-act="term-doc" class="block ml-10 py-1.5 text-sm text-gray-800 underline text-left">(필수) ${TERMS.find(t => t[0] === k)[1]}</button>`).join('')}
+                ${TERMS.filter(t => !t[2]).map(t => row(t[0], '(선택) ' + t[1])).join('')}`;
+        }
+        if (name === 'license') {
+            const L = su.license;
+            return `${demoNotice('mb-3')}${captureCard('화물운송종사자격증', 'fa-id-badge', !!L, '자격증 앞면을 촬영해 주세요')}${L ? scanBanner +
+                field({ id: 'name', label: '성명', value: L.name }) + field({ id: 'birth', label: '생년월일', hint: 'YYYY-MM-DD', mode: 'numeric', value: L.birth }) +
+                field({ id: 'number', label: '자격증번호', value: L.number }) + field({ id: 'acquired', label: '자격취득일', hint: 'YYYY-MM-DD', mode: 'numeric', value: L.acquired }) : ''}`;
+        }
+        if (name === 'idCard') {
+            const C = su.idCard;
+            return `${demoNotice('mb-3')}${captureCard('주민등록증', 'fa-id-card', !!C, '실물 신분증 앞면을 촬영해 주세요')}
+                <button data-act="mobile-id" class="w-full mt-3 border border-gray-300 rounded-xl py-3 text-sm font-bold text-gray-600"><i class="fa-solid fa-mobile-screen mr-1.5"></i>모바일 신분증으로 인증</button>${C ? scanBanner +
+                field({ id: 'name', label: '이름', value: C.name }) + field({ id: 'rrn', label: '주민등록번호', hint: '000000-0000000', mode: 'numeric', value: C.rrn }) +
+                field({ id: 'address', label: '주소', value: C.address }) + field({ id: 'issued', label: '발급일자', hint: 'YYYY-MM-DD', mode: 'numeric', value: C.issued }) : ''}`;
+        }
+        // business
+        const B = su.biz, shipper = su.role === 'shipper';
+        if (shipper) return `${demoNotice('mb-3')}${captureCard('사업자등록증', 'fa-file-lines', su.bizPhoto, '사업자등록증 사진을 촬영해 주세요')}
+            ${su.bizPhoto ? '<div class="bg-brand-50 text-brand-700 rounded-xl p-3 text-xs leading-relaxed mt-3">사업자등록증 사진은 팜카고가 직접 확인해요. 따로 입력할 내용은 없어요.</div>' : ''}`;
+        const radio = v => `<button data-act="consolidated" data-v="${v}" class="flex items-center gap-1.5 py-2"><i class="fa-solid ${B.consolidated === v ? 'fa-square-check text-brand-600' : 'fa-square text-gray-300'} text-xl"></i><span class="text-sm">${v === 'yes' ? '여' : '부'}</span></button>`;
+        return `${demoNotice('mb-3')}${captureCard('사업자등록증', 'fa-file-lines', !!B, '사업자등록증을 촬영해 주세요')}${B ? scanBanner +
+            field({ id: 'no', label: '등록번호', hint: '000-00-00000', mode: 'numeric', value: B.no }) + field({ id: 'company', label: '상호명', value: B.company }) + field({ id: 'rep', label: '성명', value: B.rep }) +
+            field({ id: 'birth', label: '생년월일', hint: 'YYYY-MM-DD', mode: 'numeric', value: B.birth }) + field({ id: 'opened', label: '개업 연월일', hint: 'YYYY-MM-DD', mode: 'numeric', value: B.opened }) +
+            field({ id: 'address', label: '사업장 소재지', value: B.address }) + field({ id: 'type', label: '사업의 종류', hint: '업태 / 종목', value: B.type }) +
+            field({ id: 'reason', label: '발급사유', optional: true, value: B.reason }) + field({ id: 'coRep', label: '공동사업자', optional: true, value: B.coRep }) +
+            `<div class="mb-4"><p class="text-sm font-bold text-gray-700">사업자 단위 과세 적용사업자 여부</p><div class="flex gap-6">${radio('yes')}${radio('no')}</div></div>` +
+            field({ id: 'taxEmail', label: '전자세금계산서 전용 전자우편주소', mode: 'email', value: B.taxEmail }) + field({ id: 'issued', label: '발급일자', hint: 'YYYY-MM-DD', mode: 'numeric', value: B.issued }) +
+            field({ id: 'taxOffice', label: '관할 세무서', hint: '예: 강서세무서', value: B.taxOffice }) : ''}`;
+    }
+    function stepSpecs() {
+        const su = st.su, name = stepName(), req = (id, extra = {}) => ({ id, ...extra });
+        if (name === 'account') return [{ values: su, specs: [req('name'), req('password', { check: v => isPassword(v) ? null : '8~16자의 영문, 숫자, 기호를 모두 포함해 주세요.' }),
+            req('confirm', { check: v => v === su.password ? null : '비밀번호가 일치하지 않아요.' })] }];
+        if (name === 'license' && su.license) return [{ values: su.license, specs: [req('name'), req('birth', { fmt: fmtDate, check: dateErr }), req('number'), req('acquired', { fmt: fmtDate, check: dateErr })] }];
+        if (name === 'idCard' && su.idCard) return [{ values: su.idCard, specs: [req('name'), req('rrn', { fmt: fmtRrn, check: v => isRrn(v) ? null : '주민등록번호를 다시 확인해 주세요.' }), req('address'), req('issued', { fmt: fmtDate, check: dateErr })] }];
+        if (name === 'business' && su.role === 'driver' && su.biz) return [{ values: su.biz, specs: [req('no', { fmt: fmtBiz, check: v => isBizNo(v) ? null : '사업자등록번호를 다시 확인해 주세요.' }), req('company'), req('rep'),
+            req('birth', { fmt: fmtDate, check: dateErr }), req('opened', { fmt: fmtDate, check: dateErr }), req('address'), req('type'), req('reason', { optional: true }), req('coRep', { optional: true }),
+            req('taxEmail', { check: v => isEmail(v) ? null : '이메일 형식이 올바르지 않아요.' }), req('issued', { fmt: fmtDate, check: dateErr }), req('taxOffice')] }];
+        return [];
+    }
+    function stepValid() {
+        const su = st.su, name = stepName();
+        if (name === 'phone') return !!su.phone;
+        if (name === 'terms') return TERMS.filter(t => t[2]).every(t => su.terms.has(t[0]));
+        if (name === 'business' && su.role === 'shipper') return su.bizPhoto;
+        return null;   // 입력 칸 검증은 bindForm 이 맡는다
+    }
+    screens.signup = {
+        html: () => {
+            const su = st.su, name = stepName(), last = su.step === STEPS[su.role].length - 1;
+            return `${header('회원가입', su.role === 'driver' ? '차주' : '화주')}${stepIndicator()}
+                <h2 class="text-xl font-bold text-gray-800 px-6 pt-5">${TITLES[name]}</h2>
+                <main class="flex-1 overflow-y-auto hide-scrollbar px-6 py-5">${stepHtml()}</main>${bar(last ? '가입 완료' : '다음', 'next', false)}`;
+        },
+        wire: () => {
+            const su = st.su, name = stepName(), fixed = stepValid();
+            if (name === 'phone') {
+                phoneWire({
+                    send: () => DEMO_CODE, verify: (p, c) => c === DEMO_CODE,
+                    onVerified: p => { su.phone = p; setBar('bar', true); }, onInvalidated: () => { su.phone = ''; setBar('bar', false); },
+                });
+                setBar('bar', !!su.phone); return;
+            }
+            const groups = stepSpecs();
+            if (!groups.length) { setBar('bar', !!fixed); return; }
+            let okAll = groups.map(() => false);
+            groups.forEach((g, i) => bindForm(g.specs, g.values, ok => { okAll[i] = ok; setBar('bar', okAll.every(Boolean)); }));
+            if (name === 'business' && su.role === 'driver') setBar('bar', okAll.every(Boolean) && !!su.biz.consolidated);
+        },
+    };
+    screens.done = {
+        html: () => `<main class="flex-1 flex flex-col items-center justify-center px-6 text-center"><i class="fa-solid fa-circle-check text-green-600 text-7xl mb-5"></i>
+            <h1 class="text-xl font-bold text-gray-800 mb-2">회원가입이 완료되었어요</h1><p class="text-sm text-gray-500">가입한 휴대폰 번호와 비밀번호로 로그인해 주세요.</p></main>${bar('로그인하기', 'to-welcome-reset')}`,
+    };
+
+    /* ---------- 이동·렌더 ---------- */
+    function render() {
+        clearInterval(st.ticker);
+        const s = screens[st.route];
+        $('#flow-body').innerHTML = s.html();
+        $('#flow-modal').classList.add('hidden'); $('#flow-modal').classList.remove('flex');
+        if (s.wire) s.wire();
+        const main = $('#flow-body main'); if (main) main.scrollTop = 0;
+    }
+    function nav(route, replace = false) { if (!replace) st.history.push(st.route); st.route = route; render(); }
+    function back() {
+        if (st.route === 'signup' && st.su.step > 0) { st.su.step--; render(); return; }
+        if (st.history.length) { st.route = st.history.pop(); render(); }
+    }
+    function reset_() { st.history = []; st.route = 'welcome'; st.pv = null; render(); }
+
+    function login_() {
+        const a = st.accounts.find(x => x.phone === login.phone && x.password === login.password);
+        const err = $('#login-err');
+        if (!a) { err.textContent = '휴대폰 번호 또는 비밀번호가 올바르지 않아요.'; err.classList.remove('hidden'); return; }
+        role = a.role;
+        const home = a.role === 'driver' ? 'screen0' : 'screen-shipper-lobby';
+        const h1 = document.querySelector(`#${home} h1`); if (h1) h1.textContent = a.name + '님,';
+        login.phone = ''; login.password = '';
+        stack.length = 0; stack.push(home); show(home); toast(`${a.name}님, 환영해요`);
+    }
+    function register() {
+        const su = st.su;
+        if (st.accounts.some(a => a.phone === su.phone)) {   // 휴대폰 번호가 아이디라 중복 불가
+            su.phone = ''; su.step = STEPS[su.role].indexOf('phone'); st.pv = null; render();
+            toast('이미 가입된 휴대폰 번호예요'); modal('이미 가입된 휴대폰 번호예요. 다른 번호로 다시 인증해 주세요.'); return;
+        }
+        st.accounts.push({ phone: su.phone, password: su.password, name: su.name.trim(), role: su.role });
+        st.su = null; st.pv = null; nav('done');
+    }
+    function doReset() {
+        const t = st.tokens[st.resetToken];
+        if (!t || t.used || Date.now() >= t.expires) { modal('인증시간이 만료되었습니다.', '확인', () => { reset.password = reset.confirm = ''; reset_(); nav('login'); }); return; }
+        t.used = true; st.accounts.find(a => a.phone === t.phone).password = reset.password;
+        modal('비밀번호가 성공적으로 재설정되었습니다!', '확인', () => { reset.password = reset.confirm = ''; st.resetToken = null; st.pv = null; reset_(); nav('login'); });
+    }
+    function capture(sample) {
+        const su = st.su, name = stepName();
+        const done = () => {
+            if (name === 'license') su.license = { ...SAMPLE.license };
+            if (name === 'idCard') su.idCard = { ...SAMPLE.idCard };
+            if (name === 'business') { if (su.role === 'driver') su.biz = { ...SAMPLE.biz }; else su.bizPhoto = true; }
+            render();
+        };
+        const b = $('[data-act="capture"]'); if (b) b.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>인식 중';
+        setTimeout(done, 450);   // 자동 입력(OCR) 흉내
+    }
+
+    function onClick(e) {
+        const el = e.target.closest('[data-act]'); e.stopPropagation();
+        if (!el || el.disabled) return;
+        const a = el.dataset.act, su = st.su;
+        switch (a) {
+            case 'back': back(); break;
+            case 'to-welcome': st.history = []; st.route = 'welcome'; render(); break;
+            case 'to-welcome-reset': reset_(); break;
+            case 'to-login': nav('login'); break;
+            case 'to-role': nav('role'); break;
+            case 'to-forgot': st.pv = null; nav('forgot'); break;
+            case 'to-reset': nav('reset'); break;
+            case 'start-signup': st.su = newSignup(el.dataset.role); st.pv = null; nav('signup'); break;
+            case 'do-login': login_(); break;
+            case 'do-reset': doReset(); break;
+            case 'pv-send': st.pv.send(); break;
+            case 'pv-verify': st.pv.verify(); break;
+            case 'next': if (stepName() === 'business' && su.step === STEPS[su.role].length - 1) register(); else { su.step++; render(); } break;
+            case 'term': su.terms.has(el.dataset.k) ? su.terms.delete(el.dataset.k) : su.terms.add(el.dataset.k); render(); break;
+            case 'term-all': TERMS.every(t => su.terms.has(t[0])) ? su.terms.clear() : TERMS.forEach(t => su.terms.add(t[0])); render(); break;
+            case 'term-group': GROUP.every(k => su.terms.has(k)) ? GROUP.forEach(k => su.terms.delete(k)) : GROUP.forEach(k => su.terms.add(k)); render(); break;
+            case 'term-doc': modal('약관 전문은 서비스 오픈 전 법무 검토를 거쳐 게재될 예정이에요.'); break;
+            case 'mobile-id': toast('모바일 신분증 인증은 준비 중이에요'); break;
+            case 'consolidated': su.biz.consolidated = el.dataset.v; render(); break;
+            case 'capture': $('#file-input').click(); break;
+            case 'capture-sample': capture(true); break;
+        }
+    }
+    function init() {
+        const root = document.getElementById('screen-flow');
+        root.addEventListener('click', onClick);
+        root.addEventListener('change', e => { if (e.target.id === 'file-input' && e.target.files.length) capture(false); });
+        render();
+    }
+    return { init, state: st };
+})();
+
+show('screen-flow');
+FLOW.init();
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(() => {}); }
 </script>
 </body>
