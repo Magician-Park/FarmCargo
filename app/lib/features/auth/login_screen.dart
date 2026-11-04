@@ -10,7 +10,7 @@ import '../../core/widgets/labeled_text_field.dart';
 import 'auth_provider.dart';
 import 'auth_repository.dart';
 
-/// 이메일과 비밀번호로 로그인한다.
+/// 아이디(휴대폰 번호 또는 이메일)와 비밀번호로 로그인한다. 휴대폰 번호가 기본 아이디다.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -42,7 +42,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // 성공하면 로그인 상태가 바뀌어 라우터가 홈으로 이동시킨다.
       await ref
           .read(authProvider.notifier)
-          .signIn(email: _id.text, password: _password.text);
+          .signIn(id: _id.text, password: _password.text);
     } on AuthException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } finally {
@@ -76,9 +76,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             fontSize: 28, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 28),
                     LabeledTextField(
-                      label: '이메일 주소',
+                      label: '아이디',
                       controller: _id,
-                      hint: 'example@farmcargo.kr',
+                      hint: '휴대폰 번호 또는 이메일',
                       keyboardType: TextInputType.emailAddress,
                     ),
                     LabeledTextField(

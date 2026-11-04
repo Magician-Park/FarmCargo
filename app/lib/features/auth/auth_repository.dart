@@ -10,6 +10,16 @@ class AuthException implements Exception {
   String toString() => message;
 }
 
+/// 이미 가입된 이메일로 가입하려는 경우.
+class DuplicateEmailException extends AuthException {
+  const DuplicateEmailException() : super('이미 가입된 이메일이에요.');
+}
+
+/// 이미 가입된 휴대폰 번호로 가입하려는 경우. 휴대폰 번호가 기본 아이디다.
+class DuplicatePhoneException extends AuthException {
+  const DuplicatePhoneException() : super('이미 가입된 휴대폰 번호예요.');
+}
+
 /// 비밀번호 재설정 링크가 만료됐거나 이미 사용된 경우.
 class ResetLinkExpiredException extends AuthException {
   const ResetLinkExpiredException() : super('인증시간이 만료되었습니다.');
@@ -17,7 +27,8 @@ class ResetLinkExpiredException extends AuthException {
 
 /// 인증/회원가입 데이터 소스. 서버 연동 시 이 인터페이스의 구현만 교체한다.
 abstract interface class AuthRepository {
-  Future<Account> signIn({required String email, required String password});
+  /// [id]는 휴대폰 번호(기본 아이디) 또는 이메일이다. 번호는 하이픈이 있어도 된다.
+  Future<Account> signIn({required String id, required String password});
 
   /// 인증번호 문자를 보낸다. 데모 구현은 화면에 안내할 인증번호를 돌려준다.
   Future<String?> sendPhoneCode(String phone);
@@ -76,11 +87,17 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Account> signIn(
-      {required String email, required String password}) async {
-    final record = _accounts[email.trim().toLowerCase()];
+  Future<Account> signIn({required String id, required String password}) async {
+    final key = id.trim();
+    final _Record? record;
+    if (key.contains('@')) {
+      record = _accounts[key.toLowerCase()];
+    } else {
+      final phone = key.replaceAll(RegExp(r'[\s-]'), '');
+      record = _accounts.values.where((r) => r.phone == phone).firstOrNull;
+    }
     if (record == null || record.password != password) {
-      throw const AuthException('이메일 또는 비밀번호가 올바르지 않아요.');
+      throw const AuthException('아이디 또는 비밀번호가 올바르지 않아요.');
     }
     return record.account;
   }
@@ -96,10 +113,10 @@ class MockAuthRepository implements AuthRepository {
   Future<Account> register(SignupRequest request) async {
     final email = request.account.email.trim();
     if (_accounts.containsKey(email.toLowerCase())) {
-      throw const AuthException('이미 가입된 이메일이에요.');
+      throw const DuplicateEmailException();
     }
     if (_accounts.values.any((r) => r.phone == request.phone)) {
-      throw const AuthException('이미 가입된 휴대폰 번호예요.');
+      throw const DuplicatePhoneException();
     }
     final account = Account(
       id: 'user-${_nextId++}',

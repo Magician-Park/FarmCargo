@@ -28,6 +28,7 @@ Future<void> tapText(WidgetTester tester, String text) async {
   final button = find.widgetWithText(FilledButton, text);
   final finder = button.evaluate().length == 1 ? button : find.text(text);
   await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
   await tester.tap(finder);
   await tester.pumpAndSettle();
 }

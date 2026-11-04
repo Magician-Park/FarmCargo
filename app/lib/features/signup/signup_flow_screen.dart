@@ -49,8 +49,12 @@ class SignupFlowScreen extends ConsumerWidget {
     ref.listen(signupControllerProvider(role).select((s) => s.error),
         (previous, error) {
       if (error == null) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error)));
+      // 하단 고정 버튼을 가리지 않도록 버튼 위에 띄운다.
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(error),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 88),
+      ));
       ref.read(signupControllerProvider(role).notifier).clearError();
     });
 

@@ -15,6 +15,7 @@ class SignupState {
   final FreightLicense? license;
   final IdCard? idCard;
   final BusinessRegistration? business;
+  final String? businessPhotoPath;
   final bool submitting;
   final String? error;
 
@@ -27,6 +28,7 @@ class SignupState {
     this.license,
     this.idCard,
     this.business,
+    this.businessPhotoPath,
     this.submitting = false,
     this.error,
   });
@@ -42,19 +44,23 @@ class SignupState {
     FreightLicense? license,
     IdCard? idCard,
     BusinessRegistration? business,
+    String? businessPhotoPath,
     bool? submitting,
     String? error,
     bool clearError = false,
+    bool clearVerifiedPhone = false,
   }) =>
       SignupState(
         role: role,
         step: step ?? this.step,
         account: account ?? this.account,
-        verifiedPhone: verifiedPhone ?? this.verifiedPhone,
+        verifiedPhone:
+            clearVerifiedPhone ? null : (verifiedPhone ?? this.verifiedPhone),
         agreedTerms: agreedTerms ?? this.agreedTerms,
         license: license ?? this.license,
         idCard: idCard ?? this.idCard,
         business: business ?? this.business,
+        businessPhotoPath: businessPhotoPath ?? this.businessPhotoPath,
         submitting: submitting ?? this.submitting,
         error: clearError ? null : (error ?? this.error),
       );
@@ -109,9 +115,17 @@ class SignupController extends Notifier<SignupState> {
   }
 
   /// 마지막 입력 단계. 서버에 가입을 요청하고 성공하면 완료 화면으로 간다.
-  Future<void> submitBusiness(BusinessRegistration business) async {
-    state =
-        state.copyWith(business: business, submitting: true, clearError: true);
+  /// 차주는 [business] 항목을 함께 받고, 화주는 사진([photoPath])만 받는다.
+  Future<void> submitBusiness(
+    BusinessRegistration? business, {
+    required String photoPath,
+  }) async {
+    state = state.copyWith(
+      business: business,
+      businessPhotoPath: photoPath,
+      submitting: true,
+      clearError: true,
+    );
     try {
       await ref.read(authRepositoryProvider).register(SignupRequest(
             role: role,
@@ -121,11 +135,20 @@ class SignupController extends Notifier<SignupState> {
             license: state.license,
             idCard: state.idCard,
             business: business,
+            businessPhotoPath: photoPath,
           ));
       state = state.copyWith(submitting: false);
       _goTo(1);
+    } on DuplicatePhoneException catch (e) {
+      // 휴대폰 번호가 아이디라 중복이면 휴대폰 인증 단계에서 다른 번호로 다시 인증한다.
+      state = state.copyWith(
+        submitting: false,
+        step: SignupStep.phone,
+        clearVerifiedPhone: true,
+        error: e.message,
+      );
     } on AuthException catch (e) {
-      // 이메일/휴대폰 중복 등은 계정 단계로 돌아가 고치게 한다.
+      // 이메일 중복 등은 계정 단계로 돌아가 고치게 한다.
       state = state.copyWith(
           submitting: false, step: SignupStep.account, error: e.message);
     }

@@ -13,7 +13,8 @@ import '../document_scanner.dart';
 import '../signup_controller.dart';
 import '../signup_models.dart';
 
-/// 사업자등록증: 촬영 -> 자동 입력 -> 직접 수정. 화주·차주 모두 관할 세무서를 받는다.
+/// 사업자등록증. 차주는 촬영 -> 자동 입력 -> 직접 수정(관할 세무서 포함),
+/// 화주는 사진만 받고 입력은 시키지 않는다.
 class BusinessStep extends ConsumerStatefulWidget {
   const BusinessStep({super.key, required this.role});
 
@@ -43,6 +44,9 @@ class _BusinessStepState extends ConsumerState<BusinessStep> {
   ];
   late final _all = Listenable.merge(_controllers);
 
+  bool get _isShipper => widget.role == AccountRole.shipper;
+
+  String? _photoPath;
   bool _captured = false;
   bool _busy = false;
   bool _recognized = true;
@@ -51,11 +55,11 @@ class _BusinessStepState extends ConsumerState<BusinessStep> {
   @override
   void initState() {
     super.initState();
-    final saved = ref.read(signupControllerProvider(widget.role)).business;
-    if (saved != null) {
-      _fill(saved);
-      _captured = true;
-    }
+    final state = ref.read(signupControllerProvider(widget.role));
+    _photoPath = state.businessPhotoPath;
+    final saved = state.business;
+    if (saved != null) _fill(saved);
+    _captured = _photoPath != null;
   }
 
   @override
@@ -85,18 +89,26 @@ class _BusinessStepState extends ConsumerState<BusinessStep> {
   Future<void> _capture() async {
     final path = await ref.read(photoCaptureProvider).capture();
     if (path == null || !mounted) return;
+    if (_isShipper) {
+      setState(() {
+        _photoPath = path;
+        _captured = true;
+      });
+      return;
+    }
     setState(() => _busy = true);
     var result = BusinessRegistration.empty;
     var recognized = true;
     try {
       result = await ref
           .read(documentScannerProvider)
-          .scanBusinessRegistration(path, role: widget.role);
+          .scanBusinessRegistration(path);
     } catch (_) {
       recognized = false;
     }
     if (!mounted) return;
     setState(() {
+      _photoPath = path;
       _fill(result);
       _captured = true;
       _recognized = recognized;
@@ -108,22 +120,27 @@ class _BusinessStepState extends ConsumerState<BusinessStep> {
 
   /// 발급사유와 공동사업자는 해당 없을 수 있어 선택 입력이다.
   bool get _valid =>
+      _isShipper ||
       isValidBusinessNumber(_number.text) &&
-      _filled(_company) &&
-      _filled(_rep) &&
-      isValidDate(_birth.text) &&
-      isValidDate(_opened.text) &&
-      _filled(_address) &&
-      _filled(_type) &&
-      _consolidated != null &&
-      isValidEmail(_taxEmail.text) &&
-      isValidDate(_issued.text) &&
-      _filled(_taxOffice);
+          _filled(_company) &&
+          _filled(_rep) &&
+          isValidDate(_birth.text) &&
+          isValidDate(_opened.text) &&
+          _filled(_address) &&
+          _filled(_type) &&
+          _consolidated != null &&
+          isValidEmail(_taxEmail.text) &&
+          isValidDate(_issued.text) &&
+          _filled(_taxOffice);
 
   void _submit() {
-    ref
-        .read(signupControllerProvider(widget.role).notifier)
-        .submitBusiness(BusinessRegistration(
+    final controller = ref.read(signupControllerProvider(widget.role).notifier);
+    if (_isShipper) {
+      controller.submitBusiness(null, photoPath: _photoPath!);
+      return;
+    }
+    controller.submitBusiness(
+        BusinessRegistration(
           registrationNumber: _number.text,
           companyName: _company.text.trim(),
           representativeName: _rep.text.trim(),
@@ -137,7 +154,8 @@ class _BusinessStepState extends ConsumerState<BusinessStep> {
           taxInvoiceEmail: _taxEmail.text.trim(),
           issuedDate: _issued.text,
           taxOffice: _taxOffice.text.trim(),
-        ));
+        ),
+        photoPath: _photoPath!);
   }
 
   String? _dateError(String v) =>
@@ -167,9 +185,25 @@ class _BusinessStepState extends ConsumerState<BusinessStep> {
                     captured: _captured,
                     busy: _busy,
                     onCapture: _capture,
-                    hint: '사업자등록증을 촬영해 주세요',
+                    hint: _isShipper ? '사업자등록증 사진을 촬영해 주세요' : '사업자등록증을 촬영해 주세요',
                   ),
-                  if (_captured) ...[
+                  if (_captured && _isShipper)
+                    Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primarySoft,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        '사업자등록증 사진은 팜카고가 직접 확인해요. 따로 입력할 내용은 없어요.',
+                        style: TextStyle(
+                            fontSize: 12,
+                            height: 1.4,
+                            color: AppColors.primaryDark),
+                      ),
+                    ),
+                  if (_captured && !_isShipper) ...[
                     ScanResultBanner(recognized: _recognized),
                     LabeledTextField(
                       label: '등록번호',

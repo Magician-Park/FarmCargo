@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../auth/account_role.dart';
 import 'signup_models.dart';
 
 /// 서류 사진을 촬영한다. 사용자가 취소하면 null.
@@ -24,10 +23,9 @@ class CameraPhotoCapture implements PhotoCapture {
 abstract interface class DocumentScanner {
   Future<FreightLicense> scanFreightLicense(String imagePath);
   Future<IdCard> scanIdCard(String imagePath);
-  Future<BusinessRegistration> scanBusinessRegistration(
-    String imagePath, {
-    required AccountRole role,
-  });
+
+  /// 차주 사업자등록증. 화주는 사진만 받아 자동 입력을 쓰지 않는다.
+  Future<BusinessRegistration> scanBusinessRegistration(String imagePath);
 }
 
 /// 실제 인식 없이 고정된 샘플 값을 돌려주는 데모 구현.
@@ -61,25 +59,22 @@ class MockDocumentScanner implements DocumentScanner {
 
   @override
   Future<BusinessRegistration> scanBusinessRegistration(
-    String imagePath, {
-    required AccountRole role,
-  }) async {
+      String imagePath) async {
     await _delay();
-    final driver = role == AccountRole.driver;
-    return BusinessRegistration(
+    return const BusinessRegistration(
       registrationNumber: '123-45-67891',
-      companyName: driver ? '김기사 운송' : '○○농장',
-      representativeName: driver ? '김기사' : '박농부',
+      companyName: '김기사 운송',
+      representativeName: '김기사',
       birthDate: '1975-03-15',
       openedDate: '2016-03-02',
-      address: driver ? '서울특별시 강서구 ○○로 123' : '전북 김제시 죽산면 ○○로 1',
-      businessType: driver ? '운수업 / 화물자동차 운송업' : '농업 / 곡물 재배업',
+      address: '서울특별시 강서구 ○○로 123',
+      businessType: '운수업 / 화물자동차 운송업',
       issueReason: '신규',
       coRepresentative: '',
       isConsolidatedTax: false,
       taxInvoiceEmail: 'tax@example.com',
       issuedDate: '2024-01-10',
-      taxOffice: driver ? '강서세무서' : '김제세무서',
+      taxOffice: '강서세무서',
     );
   }
 }

@@ -10,6 +10,8 @@ import '../../features/auth/reset_password_screen.dart';
 import '../../features/onboarding/permissions_screen.dart';
 import '../../features/onboarding/welcome_screen.dart';
 import '../../features/driver/detail_screen.dart';
+import '../../features/driver/driver_shell.dart';
+import '../../features/driver/jobs_screen.dart';
 import '../../features/driver/lobby_screen.dart';
 import '../../features/shipper/feed_request_screen.dart';
 import '../../features/shipper/fertilizer_request_screen.dart';
@@ -26,6 +28,7 @@ abstract final class AppRoutes {
   static const forgotPassword = '/forgot-password';
   static const resetPassword = '/reset-password';
   static const driverHome = '/driver';
+  static const driverJobs = '/driver/jobs';
   static const shipperHome = '/shipper';
   static const grainRequest = '/shipper/request/grain';
   static const fertilizerRequest = '/shipper/request/fertilizer';
@@ -109,16 +112,29 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      GoRoute(
-        path: AppRoutes.driverHome,
-        builder: (context, state) => const LobbyScreen(),
-        routes: [
-          GoRoute(
-            path: 'orders/:id',
-            builder: (context, state) =>
-                DetailScreen(orderId: state.pathParameters['id']!),
-          ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            DriverShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.driverHome,
+              builder: (context, state) => const LobbyScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.driverJobs,
+              builder: (context, state) => const JobsScreen(),
+            ),
+          ]),
         ],
+      ),
+      // 탭 밖의 상세 화면: 하단 탭을 가리고 뒤로 가면 보던 탭으로 돌아간다.
+      GoRoute(
+        path: '${AppRoutes.driverHome}/orders/:id',
+        builder: (context, state) =>
+            DetailScreen(orderId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: AppRoutes.shipperHome,

@@ -4,12 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/format.dart';
 import '../../core/widgets/async_value_view.dart';
 import '../../core/widgets/info_chip.dart';
 import '../auth/auth_provider.dart';
-import '../orders/order.dart';
 import '../orders/orders_providers.dart';
+import 'order_card.dart';
 
 /// 차주 홈 로비. 오더 카드를 탭하면 상세 화면으로 Push 이동한다.
 class LobbyScreen extends ConsumerWidget {
@@ -17,7 +16,7 @@ class LobbyScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final orders = ref.watch(availableOrdersProvider);
+    final orders = ref.watch(recommendedOrdersProvider);
 
     // 로그아웃 직후 라우터가 이동시키기 전까지 계정이 null일 수 있다.
     final name = ref.watch(authProvider)?.name ?? '';
@@ -83,14 +82,14 @@ class LobbyScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
 
-            const Text('일감 목록',
+            const Text('추천 맞춤 오더',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
 
             // 오더 리스트
             AsyncValueView(
               value: orders,
-              onRetry: () => ref.invalidate(availableOrdersProvider),
+              onRetry: () => ref.invalidate(recommendedOrdersProvider),
               builder: (list) => list.isEmpty
                   ? const Padding(
                       padding: EdgeInsets.symmetric(vertical: 24),
@@ -99,7 +98,7 @@ class LobbyScreen extends ConsumerWidget {
                   : Column(
                       children: [
                         for (final order in list) ...[
-                          _OrderCard(
+                          OrderCard(
                             order: order,
                             onTap: () =>
                                 context.push(AppRoutes.driverOrder(order.id)),
@@ -110,59 +109,6 @@ class LobbyScreen extends ConsumerWidget {
                     ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _OrderCard extends StatelessWidget {
-  const _OrderCard({required this.order, required this.onTap});
-
-  final Order order;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  InfoChip(order.category,
-                      bg: order.isCompost
-                          ? AppColors.warningSoft
-                          : AppColors.primarySoft,
-                      fg: order.isCompost
-                          ? AppColors.warningText
-                          : AppColors.primary),
-                  const Spacer(),
-                  Text('${formatWon(order.price)}원',
-                      style: const TextStyle(
-                          fontSize: 17, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(order.origin,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              Text('→ ${order.destination}',
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-              Text(
-                '${order.cargoInfo}  |  ${order.vehicleInfo}  |  ${order.distanceLabel}',
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-            ],
-          ),
         ),
       ),
     );

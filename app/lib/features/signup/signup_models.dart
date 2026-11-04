@@ -155,7 +155,8 @@ class SignupRequest {
   final Set<TermsItem> agreedTerms;
   final FreightLicense? license; // 차주
   final IdCard? idCard; // 화주
-  final BusinessRegistration business;
+  final BusinessRegistration? business; // 차주만. 화주는 사진만 받는다
+  final String businessPhotoPath; // 사업자등록증 사진
 
   const SignupRequest({
     required this.role,
@@ -165,5 +166,6 @@ class SignupRequest {
     required this.license,
     required this.idCard,
     required this.business,
+    required this.businessPhotoPath,
   });
 }

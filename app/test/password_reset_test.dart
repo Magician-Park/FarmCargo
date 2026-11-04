@@ -42,11 +42,11 @@ void main() {
     await tapText(tester, '확인');
 
     // 로그인 화면으로 이동. 이전 비밀번호는 거절, 새 비밀번호는 통과
-    expect(find.text('이메일 주소'), findsOneWidget);
+    expect(find.text('아이디'), findsOneWidget);
     await enterAt(tester, 0, 'driver@farmcargo.test');
     await enterAt(tester, 1, 'Passw0rd!');
     await tapText(tester, '로그인');
-    expect(find.text('이메일 또는 비밀번호가 올바르지 않아요.'), findsOneWidget);
+    expect(find.text('아이디 또는 비밀번호가 올바르지 않아요.'), findsOneWidget);
     await enterAt(tester, 1, 'NewPass123!');
     await tapText(tester, '로그인');
     expect(find.text('차주 홈'), findsOneWidget);
@@ -72,7 +72,7 @@ void main() {
     expect(find.text('인증시간이 만료되었습니다.'), findsOneWidget);
     expect(find.text('비밀번호가 성공적으로 재설정되었습니다!'), findsNothing);
     await tapText(tester, '확인');
-    expect(find.text('이메일 주소'), findsOneWidget);
+    expect(find.text('아이디'), findsOneWidget);
 
     // 두 번째 시도는 반영되지 않는다
     await enterAt(tester, 0, 'driver@farmcargo.test');
@@ -97,7 +97,7 @@ void main() {
     expect(find.text('메일의 링크 열기'), findsNothing);
 
     await tapText(tester, '로그인으로 돌아가기');
-    expect(find.text('이메일 주소'), findsOneWidget);
+    expect(find.text('아이디'), findsOneWidget);
   });
 
   testWidgets('이메일 형식이 틀리면 링크 보내기가 비활성화된다', (tester) async {
@@ -132,7 +132,7 @@ void main() {
           MockAuthRepository.resetLinkValidity - const Duration(seconds: 1));
       await repo.resetPassword(token: token, newPassword: 'NewPass123!');
       final account = await repo.signIn(
-          email: 'driver@farmcargo.test', password: 'NewPass123!');
+          id: 'driver@farmcargo.test', password: 'NewPass123!');
       expect(account.name, '김기사');
     });
 

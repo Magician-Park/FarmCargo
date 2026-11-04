@@ -11,10 +11,12 @@ import '../../core/widgets/bottom_action_bar.dart';
 class PermissionsScreen extends StatelessWidget {
   const PermissionsScreen({super.key});
 
-  // 팜카고 가입 초안에서 쓰임이 확인되는 권한만 안내한다. 위치·알림·전화 등은
-  // 해당 기능이 정해지면 추가한다(요구사항 3절).
   static const _items = [
     (Icons.photo_camera_outlined, '카메라', '자격증, 사업자등록증, 신분증 촬영'),
+    (Icons.photo_library_outlined, '사진', '촬영한 서류 사진 첨부'),
+    (Icons.location_on_outlined, '위치', '내 주변 일감 확인, 운행 경로 안내'),
+    (Icons.notifications_none, '알림', '배차, 운송 상태, 정산 소식 알림'),
+    (Icons.call_outlined, '전화', '고객센터 등 전화 연결'),
   ];
 
   @override

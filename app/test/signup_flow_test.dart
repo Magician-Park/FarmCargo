@@ -78,14 +78,14 @@ void main() {
     expect(find.text('회원가입이 완료되었어요'), findsOneWidget);
     await tapText(tester, '로그인하기');
     await tapText(tester, '로그인');
-    await enterAt(tester, 0, 'new@farmcargo.test');
+    await enterAt(tester, 0, '01099998888'); // 가입한 휴대폰 번호가 기본 아이디
     await enterAt(tester, 1, 'Abcd123!');
     await tapText(tester, '로그인');
     expect(find.text('차주 홈'), findsOneWidget);
     expect(find.text('이신규님,'), findsOneWidget);
   });
 
-  testWidgets('화주 회원가입: 주민등록증과 사업자등록증(관할 세무서 포함)으로 가입한다', (tester) async {
+  testWidgets('화주 회원가입: 주민등록증을 입력하고 사업자등록증은 사진만 제출해 가입한다', (tester) async {
     await pumpApp(tester);
     await startSignup(tester, '짐을 보내요');
 
@@ -106,14 +106,13 @@ void main() {
     await enterAt(tester, 1, '7503151234568');
     await tapText(tester, '다음');
 
-    // 사업자등록증: 화주도 관할 세무서를 입력한다
-    await captureDocument(tester);
-    expect(find.text('관할 세무서'), findsOneWidget);
-    expect(find.text('김제세무서'), findsOneWidget);
-    expect(bottomButtonEnabled(tester, '가입 완료'), isTrue);
-    await enterAt(tester, 11, ''); // 관할 세무서를 비우면 가입 완료 불가
+    // 사업자등록증: 화주는 사진만 받고 입력은 시키지 않는다
     expect(bottomButtonEnabled(tester, '가입 완료'), isFalse);
-    await enterAt(tester, 11, '김제세무서');
+    await captureDocument(tester);
+    expect(find.text('관할 세무서'), findsNothing);
+    expect(find.byType(TextField), findsNothing);
+    expect(find.textContaining('따로 입력할 내용은 없어요'), findsOneWidget);
+    expect(bottomButtonEnabled(tester, '가입 완료'), isTrue);
     await tapText(tester, '가입 완료');
     expect(find.text('회원가입이 완료되었어요'), findsOneWidget);
   });
@@ -136,6 +135,34 @@ void main() {
     expect(find.text('이미 가입된 이메일이에요.'), findsOneWidget);
     expect(find.text('계정 정보를 입력해 주세요'), findsOneWidget);
     expect(find.text('driver@farmcargo.test'), findsOneWidget); // 입력값 유지
+  });
+
+  testWidgets('이미 가입된 휴대폰 번호면 휴대폰 인증 단계로 돌아가 다른 번호로 다시 인증한다', (tester) async {
+    await pumpApp(tester);
+    await startSignup(tester, '짐을 보내요');
+
+    await fillAccount(tester, email: 'fresh@farmcargo.test');
+    await tapText(tester, '다음');
+    await verifyPhone(tester, '01011112222'); // 데모 차주 계정의 번호
+    await tapText(tester, '다음');
+    await agreeAllTerms(tester);
+    await tapText(tester, '다음');
+    await captureDocument(tester);
+    await tapText(tester, '다음');
+    await captureDocument(tester);
+    await tapText(tester, '가입 완료');
+
+    expect(find.text('이미 가입된 휴대폰 번호예요.'), findsOneWidget);
+    expect(find.text('휴대폰 번호를 인증해 주세요'), findsOneWidget);
+    expect(find.text('휴대폰 인증이 완료되었어요'), findsNothing);
+
+    // 다른 번호로 다시 인증하면 이어서 가입할 수 있다
+    await verifyPhone(tester, '01055550000');
+    await tapText(tester, '다음');
+    await tapText(tester, '다음'); // 약관(유지됨)
+    await tapText(tester, '다음'); // 신분증(유지됨)
+    await tapText(tester, '가입 완료');
+    expect(find.text('회원가입이 완료되었어요'), findsOneWidget);
   });
 
   testWidgets('뒤로가기는 이전 단계로 가고 입력값이 유지되며, 첫 단계에서는 역할 선택으로 간다', (tester) async {

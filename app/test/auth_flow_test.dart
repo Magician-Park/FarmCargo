@@ -9,10 +9,8 @@ void main() {
   testWidgets('앱 실행 시 권한 안내 -> 로비(로그인/회원가입) 순서로 보인다', (tester) async {
     await pumpApp(tester);
     expect(find.text('팜카고 이용을 위해\n접근 권한을 허용해 주세요'), findsOneWidget);
-    // 가입 초안에서 쓰임이 확인되는 카메라만 안내한다
-    expect(find.text('카메라'), findsOneWidget);
-    for (final name in ['위치', '알림', '전화', '사진']) {
-      expect(find.text(name), findsNothing);
+    for (final name in ['카메라', '사진', '위치', '알림', '전화']) {
+      expect(find.text(name), findsOneWidget);
     }
 
     await tapText(tester, '확인');
@@ -29,7 +27,7 @@ void main() {
     await enterAt(tester, 0, 'driver@farmcargo.test');
     await enterAt(tester, 1, 'wrong-password');
     await tapText(tester, '로그인');
-    expect(find.text('이메일 또는 비밀번호가 올바르지 않아요.'), findsOneWidget);
+    expect(find.text('아이디 또는 비밀번호가 올바르지 않아요.'), findsOneWidget);
     expect(find.text('차주 홈'), findsNothing);
 
     await enterAt(tester, 1, 'Passw0rd!');
@@ -38,6 +36,7 @@ void main() {
     expect(find.text('김기사님,'), findsOneWidget);
 
     await tester.ensureVisible(find.text('식용 곡물'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('식용 곡물'));
     await tester.pumpAndSettle();
     expect(find.text('오더 상세'), findsOneWidget);
@@ -50,21 +49,33 @@ void main() {
     expect(find.text('회원가입'), findsOneWidget);
   });
 
-  testWidgets('로그인은 이메일로만 가능하고 화주는 화주 홈으로 간다', (tester) async {
+  testWidgets('휴대폰 번호(하이픈 포함)와 이메일 모두 아이디로 로그인할 수 있다', (tester) async {
     await pumpApp(tester);
     await goToLogin(tester);
+    expect(find.text('아이디'), findsOneWidget);
 
-    // 휴대폰 번호로는 로그인할 수 없다
+    // 틀린 비밀번호는 거절
     await enterAt(tester, 0, '01033334444');
-    await enterAt(tester, 1, 'Passw0rd!');
+    await enterAt(tester, 1, 'wrong-password');
     await tapText(tester, '로그인');
-    expect(find.text('이메일 또는 비밀번호가 올바르지 않아요.'), findsOneWidget);
+    expect(find.text('아이디 또는 비밀번호가 올바르지 않아요.'), findsOneWidget);
     expect(find.text('화주 홈'), findsNothing);
 
-    await enterAt(tester, 0, 'shipper@farmcargo.test');
+    // 휴대폰 번호가 기본 아이디. 하이픈은 무시한다
+    await enterAt(tester, 0, '010-3333-4444');
+    await enterAt(tester, 1, 'Passw0rd!');
     await tapText(tester, '로그인');
     expect(find.text('화주 홈'), findsOneWidget);
     expect(find.text('박농부님, 안녕하세요'), findsOneWidget);
+  });
+
+  testWidgets('이메일을 아이디로 써서도 로그인할 수 있다', (tester) async {
+    await pumpApp(tester);
+    await goToLogin(tester);
+    await enterAt(tester, 0, 'Shipper@FarmCargo.test'); // 대소문자 무시
+    await enterAt(tester, 1, 'Passw0rd!');
+    await tapText(tester, '로그인');
+    expect(find.text('화주 홈'), findsOneWidget);
   });
 
   testWidgets('로그아웃 상태에서 보호된 경로로 가면 로비로 돌아온다', (tester) async {
@@ -79,7 +90,7 @@ void main() {
     final container = await pumpApp(tester);
     await container
         .read(authProvider.notifier)
-        .signIn(email: 'driver@farmcargo.test', password: 'Passw0rd!');
+        .signIn(id: 'driver@farmcargo.test', password: 'Passw0rd!');
     await tester.pumpAndSettle();
     expect(find.text('차주 홈'), findsOneWidget);
 
@@ -93,10 +104,11 @@ void main() {
     final container = await pumpApp(tester);
     await container
         .read(authProvider.notifier)
-        .signIn(email: 'driver@farmcargo.test', password: 'Passw0rd!');
+        .signIn(id: 'driver@farmcargo.test', password: 'Passw0rd!');
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('퇴비 벌크'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('퇴비 벌크'));
     await tester.pumpAndSettle();
     expect(find.textContaining('퇴비 이력이 기록됩니다'), findsOneWidget);
@@ -107,7 +119,7 @@ void main() {
     final container = await pumpApp(tester);
     await container
         .read(authProvider.notifier)
-        .signIn(email: 'driver@farmcargo.test', password: 'Passw0rd!');
+        .signIn(id: 'driver@farmcargo.test', password: 'Passw0rd!');
     await tester.pumpAndSettle();
 
     container.read(routerProvider).go(AppRoutes.driverOrder('nope'));
