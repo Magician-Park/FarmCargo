@@ -36,6 +36,7 @@
 | `app-demo.html` | 클릭해 볼 수 있는 웹/PWA 시연 프로토타입. 제품 코드의 기준이 아님 |
 | `.github/workflows/deploy-web.yml` | Flutter Web 베타를 GitHub Pages에 배포하는 수동 실행 워크플로 |
 | `FarmCargo_DevelopmentGuidelines/docs/` | 현재 요구사항·DB·프론트엔드·백엔드 상세 규칙 |
+| `[Obsidian] FarmCargo/` | 제품 결정 근거·변경 기록 Obsidian 보관함. Git 미추적 사용자 작업 폴더라 클라우드 환경에는 없음. 구현 기준은 `requirements.md` |
 | `FarmCargo_DevelopmentGuidelines/README.md`, `CLAUDE.md` | 규칙 폴더 안내와 읽는 순서. 공통 규칙은 이 파일에만 두고 중복 작성하지 않음 |
 | `CLAUDE.md`(저장소 루트) | Claude Code가 이 파일을 읽도록 연결하는 한 줄 문서 |
 
@@ -112,7 +113,7 @@
 | 로컬 서버·패키지 관리 | HTML 워크스페이스는 Node.js, npm. `package.json` 요구 버전은 Node.js 20 이상 |
 | Flutter 앱 | `app/pubspec.yaml`의 Dart SDK 제약은 `^3.0.0`. 주요 패키지는 `flutter_riverpod`, `go_router`, `image_picker`. 플랫폼은 `android`, `web`만 있고 `ios`는 없음. 설치된 SDK 버전은 개발 PC에서 별도 확인 |
 | 현재 오더 예시 | `app/lib/features/orders/order_repository.dart`의 `MockOrderRepository`는 서버 연동 전 샘플 데이터라고 명시함. 웹·앱 예시를 실제 DB 연동으로 보고하지 않음 |
-| 업무 백엔드·DB·마이그레이션 | 제품 구성과 실제 연결은 미확인. 정적 개발 서버를 업무 백엔드로 간주하지 않음 |
+| 업무 백엔드·DB·마이그레이션 | 제품 구성과 실제 연결은 미확인. 정적 개발 서버를 업무 백엔드로 간주하지 않음. 인증(비밀번호 저장·검증)은 프로토타입 Firebase Auth·앱 출시 Argon2id로 정했으나(사용자 결정 2026-11-04) 아직 연결하지 않음(`app/pubspec.yaml`에 Firebase 패키지 없음) |
 
 Flutter 앱 검증·실행(`app/`에서):
 
