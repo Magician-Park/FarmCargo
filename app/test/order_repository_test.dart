@@ -1,3 +1,4 @@
+import 'package:farm_cargo/features/orders/order.dart';
 import 'package:farm_cargo/features/orders/order_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -19,9 +20,25 @@ void main() {
     expect(posts.map((o) => o.id).toSet().length, posts.length);
   });
 
+  test('모든 오더에 화주 이름·원산지·차종·상하차 일정이 있고, kg당 단가는 소수점 첫째 자리까지다', () async {
+    for (final o in await repository.fetchJobPosts()) {
+      expect(o.shipperName, isNotEmpty);
+      expect(o.vehicleTypes, isNotEmpty);
+      expect(o.loading.startTime.compareTo(o.loading.endTime), lessThan(0));
+      expect(o.unloading.date.isBefore(o.loading.date), isFalse);
+      if (o.priceUnit == PriceUnit.perKg) {
+        expect((o.unitPrice * 10).round() / 10, o.unitPrice);
+      }
+    }
+    final soybean = (await repository.fetchOrder('order-3'))!;
+    expect(soybean.itemLabel, '소맥피 · 외국산');
+    expect(soybean.priceLabel, 'kg당 12.5원');
+    expect((await repository.fetchOrder('order-4'))!.priceLabel, '건당 350,000원');
+  });
+
   test('fetchOrder는 id로 찾고 없으면 null', () async {
     expect((await repository.fetchOrder('order-2'))?.isCompost, isTrue);
-    expect((await repository.fetchOrder('order-6'))?.category, '사료 원료(주정박)');
+    expect((await repository.fetchOrder('order-6'))?.item, '팜박');
     expect(await repository.fetchOrder('nope'), isNull);
   });
 }

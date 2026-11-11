@@ -7,7 +7,7 @@ import '../../core/widgets/async_value_view.dart';
 import '../orders/orders_providers.dart';
 import 'order_card.dart';
 
-/// 일감 목록 탭. 화주가 올린 일감이 게시글 형식으로 쭉 나열된다.
+/// ‘오더 찾기’ 탭(2026-11-05 이름 결정). 화주가 올린 오더가 게시글 형식으로 쭉 나열된다.
 class JobsScreen extends ConsumerWidget {
   const JobsScreen({super.key});
 
@@ -16,13 +16,13 @@ class JobsScreen extends ConsumerWidget {
     final posts = ref.watch(jobPostsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('일감 목록')),
+      appBar: AppBar(title: const Text('오더 찾기')),
       body: SafeArea(
         child: AsyncValueView(
           value: posts,
           onRetry: () => ref.invalidate(jobPostsProvider),
           builder: (list) => list.isEmpty
-              ? const Center(child: Text('지금 올라온 일감이 없어요.'))
+              ? const Center(child: Text('지금 올라온 오더가 없어요.'))
               : ListView.separated(
                   padding: const EdgeInsets.all(20),
                   itemCount: list.length + 1,
@@ -30,7 +30,7 @@ class JobsScreen extends ConsumerWidget {
                       const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     if (index == 0) {
-                      return Text('올라온 일감 ${list.length}건',
+                      return Text('올라온 오더 ${list.length}건',
                           style: const TextStyle(
                               fontSize: 13, color: Colors.grey));
                     }

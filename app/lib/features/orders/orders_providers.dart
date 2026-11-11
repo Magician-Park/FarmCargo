@@ -10,7 +10,7 @@ final orderRepositoryProvider =
 final recommendedOrdersProvider = FutureProvider<List<Order>>(
     (ref) => ref.watch(orderRepositoryProvider).fetchRecommendedOrders());
 
-/// 일감 목록 탭의 게시글 목록.
+/// ‘오더 찾기’ 탭의 게시글 목록.
 final jobPostsProvider = FutureProvider<List<Order>>(
     (ref) => ref.watch(orderRepositoryProvider).fetchJobPosts());
 

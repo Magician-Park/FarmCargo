@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/format.dart';
 import '../../core/widgets/async_value_view.dart';
 import '../../core/widgets/section_card.dart';
 import '../orders/order.dart';
@@ -100,46 +99,119 @@ class _OrderDetail extends StatelessWidget {
             ),
           ),
 
-        // 경로 카드
         SectionCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(order.origin,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 6),
-                child: Icon(Icons.south, size: 16, color: Colors.grey),
-              ),
-              Text(order.destination,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-              Text(
-                '${order.cargoInfo}  |  ${order.vehicleInfo}  |  ${order.distanceLabel}',
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
-              ),
+              Text(order.itemLabel,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text('화주 ${order.shipperName}',
+                  style: const TextStyle(color: AppColors.textChip)),
             ],
           ),
         ),
         const SizedBox(height: 12),
 
-        // 운임 카드
+        // 경로: 상·하차지 상세 주소와 일정
         SectionCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('내가 받는 금액',
+              _Labeled('상차', order.origin, order.loading.label),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 6),
+                child: Icon(Icons.south, size: 16, color: Colors.grey),
+              ),
+              _Labeled('하차', order.destination, order.unloading.label),
+              const SizedBox(height: 10),
+              Text('거리 ${order.distanceLabel}',
+                  style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // 화물과 차종
+        SectionCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _Row('물량', order.quantity),
+              const SizedBox(height: 8),
+              _Row('운반 가능 차종', order.vehicleLabel),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // 운송비
+        SectionCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('운송비 단가',
                   style: TextStyle(color: Colors.grey, fontSize: 13)),
               const SizedBox(height: 4),
-              Text('${formatWon(order.price)}원',
+              Text(order.priceLabel,
                   style: const TextStyle(
-                      fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              const Text('⚡ 운송 완료 다음 날 지급 · 수수료 정찰 5% 반영',
+                      fontSize: 24, fontWeight: FontWeight.bold)),
+              const Text('부가세 별도',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+              const SizedBox(height: 8),
+              const Text(
+                  '운송비에서 수수료 4%를 떼고, 화주 정산일 10일 뒤(은행 영업일)에 지급돼요.',
                   style: TextStyle(color: AppColors.successText, fontSize: 12)),
             ],
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _Labeled extends StatelessWidget {
+  const _Labeled(this.label, this.address, this.schedule);
+
+  final String label;
+  final String address;
+  final String schedule;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('$label  $schedule',
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+        const SizedBox(height: 2),
+        Text(address, style: const TextStyle(fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+}
+
+class _Row extends StatelessWidget {
+  const _Row(this.label, this.value);
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 96,
+          child: Text(label,
+              style:
+                  const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+        ),
+        Expanded(
+            child: Text(value,
+                style: const TextStyle(fontWeight: FontWeight.bold))),
       ],
     );
   }

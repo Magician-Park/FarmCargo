@@ -25,15 +25,21 @@ void main() {
 
     expect(find.text('추천 맞춤 오더'), findsOneWidget);
     expect(find.text('오더 상세'), findsNothing);
-    await tester.tap(find.text('전북 김제시 죽산면'));
+    // 목록에서부터 화주 이름과 상세 주소가 보인다(D06)
+    expect(find.text('화주 ○○영농조합'), findsOneWidget);
+    await tester.tap(find.text('전북 김제시 죽산면 ○○로 12 ○○영농조합 창고'));
     await tester.pumpAndSettle();
 
     expect(find.text('오더 상세'), findsOneWidget);
-    expect(find.text('내가 받는 금액'), findsOneWidget);
-    expect(find.text('256,500원'), findsOneWidget);
+    expect(find.text('운송비 단가'), findsOneWidget);
+    expect(find.text('건당 270,000원'), findsOneWidget);
+    expect(find.text('부가세 별도'), findsOneWidget);
+    expect(find.text('상차  11월 13일(금) 07:00~09:00'), findsOneWidget);
+    expect(find.textContaining('수수료 4%'), findsOneWidget);
+    expect(find.textContaining('5%'), findsNothing); // 이전 샘플 문구가 남지 않음
   });
 
-  testWidgets('일감 목록 탭에는 게시글 형식으로 일감이 나열되고 상세에서 돌아오면 같은 탭이다', (tester) async {
+  testWidgets('오더 찾기 탭에는 게시글 형식으로 오더가 나열되고 상세에서 돌아오면 같은 탭이다', (tester) async {
     final container = await pumpApp(tester);
     await container
         .read(authProvider.notifier)
@@ -41,32 +47,33 @@ void main() {
     await tester.pumpAndSettle();
 
     final tab = find.descendant(
-        of: find.byType(NavigationBar), matching: find.text('일감 목록'));
+        of: find.byType(NavigationBar), matching: find.text('오더 찾기'));
     await tester.tap(tab);
     await tester.pumpAndSettle();
-    expect(find.text('올라온 일감 6건'), findsOneWidget);
+    expect(find.text('올라온 오더 6건'), findsOneWidget);
     expect(find.text('추천 맞춤 오더'), findsNothing);
-    expect(find.text('식용 곡물'), findsOneWidget);
+    expect(find.text('대두 · 국산'), findsOneWidget);
 
-    await tester.tap(find.text('식용 곡물'));
+    await tester.tap(find.text('대두 · 국산'));
     await tester.pumpAndSettle();
     expect(find.text('오더 상세'), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
 
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
-    expect(find.text('올라온 일감 6건'), findsOneWidget);
+    expect(find.text('올라온 오더 6건'), findsOneWidget);
 
     // 목록 아래쪽의 게시글도 상세로 열린다
     await tester.dragUntilVisible(
-      find.text('사료 원료(주정박)'),
+      find.text('팜박 · 외국산'),
       find.byType(ListView),
       const Offset(0, -300),
     );
-    await tester.tap(find.text('사료 원료(주정박)'));
+    await tester.tap(find.text('팜박 · 외국산'));
     await tester.pumpAndSettle();
     expect(find.text('오더 상세'), findsOneWidget);
-    expect(find.text('198,000원'), findsOneWidget);
+    expect(find.text('kg당 16원'), findsOneWidget);
+    expect(find.text('카고'), findsOneWidget);
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
 

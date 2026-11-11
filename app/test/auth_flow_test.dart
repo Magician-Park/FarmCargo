@@ -37,9 +37,9 @@ void main() {
     expect(find.text('차주 홈'), findsOneWidget);
     expect(find.text('김기사님,'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('식용 곡물'));
+    await tester.ensureVisible(find.text('대두 · 국산'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('식용 곡물'));
+    await tester.tap(find.text('대두 · 국산'));
     await tester.pumpAndSettle();
     expect(find.text('오더 상세'), findsOneWidget);
     await tester.tap(find.byIcon(Icons.arrow_back));
@@ -107,9 +107,9 @@ void main() {
         .signIn(phone: '01011112222', password: 'Passw0rd!');
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('퇴비 벌크'));
+    await tester.ensureVisible(find.text('퇴비 · 국산'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('퇴비 벌크'));
+    await tester.tap(find.text('퇴비 · 국산'));
     await tester.pumpAndSettle();
     expect(find.textContaining('퇴비 이력이 기록됩니다'), findsOneWidget);
     expect(find.text('이력 기록 동의하고 수락하기'), findsOneWidget);

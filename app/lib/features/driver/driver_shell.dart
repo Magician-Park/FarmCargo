@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// 차주 화면의 하단 탭(홈 / 일감 목록). 탭을 오가도 각 탭의 스크롤·상태가 유지된다.
+/// 차주 화면의 하단 탭(홈 / 오더 찾기). 탭을 오가도 각 탭의 스크롤·상태가 유지된다.
 class DriverShell extends StatelessWidget {
   const DriverShell({super.key, required this.navigationShell});
 
@@ -26,7 +26,7 @@ class DriverShell extends StatelessWidget {
           NavigationDestination(
               icon: Icon(Icons.list_alt_outlined),
               selectedIcon: Icon(Icons.list_alt),
-              label: '일감 목록'),
+              label: '오더 찾기'),
         ],
       ),
     );
