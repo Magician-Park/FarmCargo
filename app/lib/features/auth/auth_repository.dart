@@ -54,7 +54,8 @@ class MockAuthRepository implements AuthRepository {
           id: 'demo-driver',
           role: AccountRole.driver,
           name: '김기사',
-          phone: '01011112222'),
+          phone: '01011112222',
+          vehicleLabel: '일반 카고(25톤)'),
       password: 'Passw0rd!',
     );
     _add(
@@ -111,6 +112,7 @@ class MockAuthRepository implements AuthRepository {
       status: request.role == AccountRole.driver
           ? AccountStatus.pending
           : AccountStatus.approved,
+      vehicleLabel: request.vehicle?.typeLabel,
     );
     _add(account, password: request.account.password);
     return account;

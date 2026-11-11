@@ -13,6 +13,9 @@ import '../../features/driver/detail_screen.dart';
 import '../../features/driver/driver_shell.dart';
 import '../../features/driver/jobs_screen.dart';
 import '../../features/driver/lobby_screen.dart';
+import '../../features/driver/my_orders_screen.dart';
+import '../../features/driver/settings_screen.dart';
+import '../../features/driver/settlement_screen.dart';
 import '../../features/driver/pending_approval_screen.dart';
 import '../../features/shipper/feed_request_screen.dart';
 import '../../features/shipper/fertilizer_request_screen.dart';
@@ -30,6 +33,9 @@ abstract final class AppRoutes {
   static const resetPassword = '/reset-password';
   static const driverHome = '/driver';
   static const driverJobs = '/driver/jobs';
+  static const driverMyOrders = '/driver/my-orders';
+  static const driverSettlement = '/driver/settlement';
+  static const driverSettings = '/driver/settings';
   static const driverPending = '/pending';
   static const shipperHome = '/shipper';
   static const grainRequest = '/shipper/request/grain';
@@ -138,6 +144,24 @@ final routerProvider = Provider<GoRouter>((ref) {
             GoRoute(
               path: AppRoutes.driverJobs,
               builder: (context, state) => const JobsScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.driverMyOrders,
+              builder: (context, state) => const MyOrdersScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.driverSettlement,
+              builder: (context, state) => const SettlementScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.driverSettings,
+              builder: (context, state) => const SettingsScreen(),
             ),
           ]),
         ],

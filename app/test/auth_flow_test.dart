@@ -44,8 +44,11 @@ void main() {
     expect(find.text('오더 상세'), findsOneWidget);
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
-    expect(find.text('차주 홈'), findsOneWidget);
+    expect(find.text('추천 맞춤 오더'), findsOneWidget); // 홈으로 돌아옴
 
+    // 로그아웃은 설정 탭에 있다
+    await openDriverTab(tester, '설정');
+    await tester.scrollUntilVisible(find.text('로그아웃'), 100);
     await tapText(tester, '로그아웃');
     expect(find.text('로그인'), findsOneWidget);
     expect(find.text('회원가입'), findsOneWidget);

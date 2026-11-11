@@ -1,4 +1,5 @@
 import 'package:farm_cargo/app.dart';
+import 'package:farm_cargo/core/clock.dart';
 import 'package:farm_cargo/features/signup/document_scanner.dart';
 import 'package:farm_cargo/features/signup/photo_preview.dart';
 import 'package:flutter/material.dart';
@@ -13,9 +14,20 @@ class FakePhotoCapture implements PhotoCapture {
   Future<String?> capture() async => '/fake/photo.jpg';
 }
 
+/// 테스트의 ‘지금’: 2026-11-12(목) 오전 9시. 샘플 오더 일정은 이 날을 기준으로 만들어진다.
+final testNow = DateTime(2026, 11, 12, 9);
+
+/// 차주 하단 탭 이동.
+Future<void> openDriverTab(WidgetTester tester, String label) async {
+  await tester.tap(find.descendant(
+      of: find.byType(NavigationBar), matching: find.text(label)));
+  await tester.pumpAndSettle();
+}
+
 Future<ProviderContainer> pumpApp(WidgetTester tester) async {
   final container = ProviderContainer(overrides: [
     photoCaptureProvider.overrideWithValue(const FakePhotoCapture()),
+    clockProvider.overrideWithValue(() => testNow),
     // 테스트에는 실제 사진 파일이 없으므로 미리보기 자리에 빈 상자를 둔다.
     photoPreviewProvider.overrideWithValue(
         (path) => ColoredBox(color: Colors.grey, key: ValueKey('preview:$path'))),

@@ -119,7 +119,7 @@ void main() {
       expect(find.text('승인 대기'), findsOneWidget, reason: path);
     }
 
-    await tapText(tester, '로그아웃');
+    await tapText(tester, '로그아웃'); // 승인 대기 화면의 로그아웃
     expect(find.text('로그인'), findsWidgets);
   });
 

@@ -9,6 +9,7 @@ class Account {
   final String name;
   final String phone; // 로그인 아이디
   final AccountStatus status;
+  final String? vehicleLabel; // 차주 차종·톤급. 예: '일반 카고(25톤)'
 
   const Account({
     required this.id,
@@ -16,6 +17,7 @@ class Account {
     required this.name,
     required this.phone,
     this.status = AccountStatus.approved,
+    this.vehicleLabel,
   });
 
   bool get isPending => status == AccountStatus.pending;

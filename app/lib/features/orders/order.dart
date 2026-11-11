@@ -1,3 +1,5 @@
+import '../../core/clock.dart';
+import '../../core/location/location_service.dart';
 import '../../core/utils/format.dart';
 
 /// 원산지. 오더 작성 때 반드시 고른다(D13).
@@ -32,7 +34,11 @@ class Order {
   final String shipperName; // 차주에게 목록에서부터 보이는 화주 이름(D06)
   final String origin; // 상차지 상세 주소
   final String destination; // 하차지 상세 주소
+  final String originRegion; // 카드 제목용 짧은 지역명. 예: '인천 서구'
+  final String destinationRegion;
+  final GeoPoint originPoint; // 상차지 위치(내 위치에서의 거리 계산용)
   final String quantity; // 물량. 예: '24톤'
+  final int weightKg; // 물량(kg). kg당 단가의 예상 운송비 계산용
   final List<String> vehicleTypes; // 운반 가능한 차종(여러 개, 표기는 워킹·덤프·카고)
   final Schedule loading;
   final Schedule unloading;
@@ -40,7 +46,8 @@ class Order {
 
   /// 단가(원, 부가세 별도). kg당이면 소수점 첫째 자리까지.
   final num unitPrice;
-  final int distanceKm;
+  final int distanceKm; // 상차지→하차지 운행 거리
+  final DateTime registeredAt; // 화주가 오더를 올린 시각
   final bool isCompost; // true면 상세 화면에 퇴비 이력 경고 표시
 
   const Order({
@@ -50,19 +57,46 @@ class Order {
     required this.shipperName,
     required this.origin,
     required this.destination,
+    required this.originRegion,
+    required this.destinationRegion,
+    required this.originPoint,
     required this.quantity,
+    required this.weightKg,
     required this.vehicleTypes,
     required this.loading,
     required this.unloading,
     required this.priceUnit,
     required this.unitPrice,
     required this.distanceKm,
+    required this.registeredAt,
     this.isCompost = false,
   });
 
   String get distanceLabel => '${distanceKm}km';
   String get itemLabel => '$item · ${originCountry.label}';
   String get vehicleLabel => vehicleTypes.join('·');
+
+  /// 예상 운송비(원, 부가세 별도). kg당이면 단가 × 물량(kg)으로 계산한 값이다.
+  int get estimatedFare => switch (priceUnit) {
+        PriceUnit.perTruck => unitPrice.toInt(),
+        PriceUnit.perKg => (unitPrice * weightKg).round(),
+      };
+
+  /// 상차 배지. 오늘 상차면 ‘당상’, 내일 상차면 ‘익상’, 그 밖에는 없음.
+  String? loadingBadge(DateTime today) =>
+      switch (daysBetween(today, loading.date)) {
+        0 => '당상',
+        1 => '익상',
+        _ => null,
+      };
+
+  /// 하차 배지. 상차한 날 하차면 ‘당착’, 다음 날 하차면 ‘내착’.
+  String? get unloadingBadge =>
+      switch (daysBetween(loading.date, unloading.date)) {
+        0 => '당착',
+        1 => '내착',
+        _ => null,
+      };
 
   /// 예: '건당 350,000원', 'kg당 12.5원'. 부가세는 별도.
   String get priceLabel => switch (priceUnit) {

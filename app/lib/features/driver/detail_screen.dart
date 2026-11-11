@@ -7,13 +7,40 @@ import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_value_view.dart';
 import '../../core/widgets/section_card.dart';
 import '../orders/order.dart';
+import '../orders/order_repository.dart';
 import '../orders/orders_providers.dart';
 
 /// 오더 상세. 상단 뒤로 가기 버튼으로 로비로 Pop 복귀한다.
-class DetailScreen extends ConsumerWidget {
+class DetailScreen extends ConsumerStatefulWidget {
   const DetailScreen({super.key, required this.orderId});
 
   final String orderId;
+
+  @override
+  ConsumerState<DetailScreen> createState() => _DetailScreenState();
+}
+
+class _DetailScreenState extends ConsumerState<DetailScreen> {
+  bool _accepting = false;
+
+  String get orderId => widget.orderId;
+
+  /// 수락하면 바로 확정된다(D02). 결과는 저장소(서버)가 판단한다.
+  Future<void> _accept() async {
+    setState(() => _accepting = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await acceptOrder(ref, orderId);
+      if (!mounted) return;
+      messenger.showSnackBar(
+          const SnackBar(content: Text('오더를 수락했어요. 내 오더에서 확인할 수 있어요.')));
+      context.go(AppRoutes.driverMyOrders);
+    } on OrderAcceptException catch (e) {
+      if (!mounted) return;
+      setState(() => _accepting = false);
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
 
   // 딥링크로 바로 들어와 쌓인 화면이 없으면 차주 홈으로 이동한다.
   void _back(BuildContext context) {
@@ -25,8 +52,10 @@ class DetailScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final order = ref.watch(orderProvider(orderId));
+    final mine = ref.watch(myOrdersProvider).value ?? const [];
+    final accepted = mine.any((o) => o.id == orderId);
 
     return Scaffold(
       appBar: AppBar(
@@ -59,9 +88,13 @@ class DetailScreen extends ConsumerWidget {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                   ),
-                  onPressed: () => _back(context), // 수락 후 로비 복귀
+                  onPressed: accepted || _accepting ? null : _accept,
                   child: Text(
-                    order.value!.isCompost ? '이력 기록 동의하고 수락하기' : '이 오더 수락하기',
+                    accepted
+                        ? '내가 수락한 오더예요'
+                        : order.value!.isCompost
+                            ? '이력 기록 동의하고 수락하기'
+                            : '이 오더 수락하기',
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold),
                   ),

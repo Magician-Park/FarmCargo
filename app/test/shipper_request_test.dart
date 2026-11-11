@@ -26,8 +26,8 @@ void main() {
     expect(find.text('추천 맞춤 오더'), findsOneWidget);
     expect(find.text('오더 상세'), findsNothing);
     // 목록에서부터 화주 이름과 상세 주소가 보인다(D06)
-    expect(find.text('화주 ○○영농조합'), findsOneWidget);
-    await tester.tap(find.text('전북 김제시 죽산면 ○○로 12 ○○영농조합 창고'));
+    expect(find.text('화주 한들영농조합'), findsOneWidget);
+    await tester.tap(find.text('상차 전북 김제시 죽산면 한들로 12 한들영농조합 창고'));
     await tester.pumpAndSettle();
 
     expect(find.text('오더 상세'), findsOneWidget);
@@ -52,9 +52,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('올라온 오더 6건'), findsOneWidget);
     expect(find.text('추천 맞춤 오더'), findsNothing);
-    expect(find.text('대두 · 국산'), findsOneWidget);
+    expect(find.text('소맥피 · 외국산'), findsOneWidget); // 빠른 상차순 첫 오더
 
-    await tester.tap(find.text('대두 · 국산'));
+    await tester.tap(find.text('소맥피 · 외국산'));
     await tester.pumpAndSettle();
     expect(find.text('오더 상세'), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
@@ -64,11 +64,9 @@ void main() {
     expect(find.text('올라온 오더 6건'), findsOneWidget);
 
     // 목록 아래쪽의 게시글도 상세로 열린다
-    await tester.dragUntilVisible(
-      find.text('팜박 · 외국산'),
-      find.byType(ListView),
-      const Offset(0, -300),
-    );
+    await tester.scrollUntilVisible(find.text('팜박 · 외국산'), 300);
+    await tester.ensureVisible(find.text('팜박 · 외국산'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('팜박 · 외국산'));
     await tester.pumpAndSettle();
     expect(find.text('오더 상세'), findsOneWidget);

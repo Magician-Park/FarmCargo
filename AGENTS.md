@@ -42,7 +42,7 @@
 | `CLAUDE.md`(저장소 루트) | Claude Code가 이 파일을 읽도록 연결하는 한 줄 문서 |
 
 - 기존 한국어 제품 문구와 농업 화물 도메인 맥락을 유지한다.
-- 디자인은 브랜드 파랑 `#2563EB`, 밝은 회색 배경, 큰 터치 영역, 쉬운 한국어 표현을 따른다.
+- 디자인은 브랜드 초록 `#0A7455`(사용자 결정 2026-11-12, 사용자가 준 초록 색상표 계열. 이전 파랑 `#2563EB`를 대체), 초록빛이 살짝 도는 밝은 회색 배경, 큰 터치 영역, 쉬운 한국어 표현을 따른다. 다른 회사 앱 화면은 배치만 참고하고 로고·이름·색은 따라 하지 않는다.
 - 루트 프롬프트 입력 UI는 로컬 메모·복사 도구다. API 키나 개발 도구 실행 기능을 브라우저에 직접 노출하지 않는다.
 - 기존 미추적 Flutter 플랫폼 파일은 사용자 작업으로 간주한다. 삭제하거나 덮어쓰지 않는다.
 - 목업·샘플 화면에 있는 추천·인증·정산·가격 예시는 실제 서버 기능이나 확정 정책의 증거가 아니다.
@@ -127,7 +127,7 @@ flutter build web --release --no-web-resources-cdn --base-href /FarmCargo/
 ```
 
 - 2026-11-03 클라우드 환경(Flutter 3.47.8)에서 `flutter analyze` 이슈 0건, `flutter test` 38개 통과, `flutter build web --release --no-web-resources-cdn` 성공을 확인했다. 빌드한 웹을 Chromium으로 열어 권한 안내 → 로비 화면 이동까지 오류 없이 동작함을 확인했다. 이 환경에는 Android SDK가 없어 Android 빌드·실기기는 확인하지 못했다.
-- 2026-11-12 사용자 PC(Windows, Flutter 3.47.9)에서 `flutter analyze` 이슈 0건, `flutter test` 47개 통과, 웹 빌드 성공, Android 디버그 APK 빌드(`flutter build apk --debug`) 성공을 확인했다. 실기기 설치·실행은 확인하지 못했다. 이 PC는 사용자 폴더 경로에 한글이 있어 `flutter test`가 셰이더 컴파일 중 멈춘다. 패키지 저장 위치와 임시 폴더를 영문 경로로 바꿔 실행한다(예: Git Bash에서 `export PUB_CACHE='E:\pub_cache' TEMP='E:\tmp_flutter' TMP='E:\tmp_flutter'`).
+- 2026-11-12 사용자 PC(Windows, Flutter 3.47.9)에서 `flutter analyze` 이슈 0건, `flutter test` 56개 통과, 웹 빌드 성공, Android 디버그 APK 빌드(`flutter build apk --debug`, 차주 가입 변경 시점) 성공을 확인했다. 실기기 설치·실행은 확인하지 못했다. 이 PC는 사용자 폴더 경로에 한글이 있어 `flutter test`가 셰이더 컴파일 중 멈춘다. 패키지 저장 위치와 임시 폴더를 영문 경로로 바꿔 실행한다(예: Git Bash에서 `export PUB_CACHE='E:\pub_cache' TEMP='E:\tmp_flutter' TMP='E:\tmp_flutter'`).
 - `--no-web-resources-cdn`은 렌더링 엔진(CanvasKit)을 구글 CDN이 아니라 배포 파일에서 받게 한다. 기본값은 구글 CDN(`gstatic.com`)에 의존한다. GitHub Pages 배포 워크플로는 이 옵션을 쓴다.
 - GitHub Pages는 프로젝트 사이트라 `/FarmCargo/` 아래에서 서비스된다. 그래서 배포용 빌드에는 `--base-href /FarmCargo/`가 필요하다. 이 설정으로 빌드한 결과를 `/FarmCargo/` 경로로 로컬에서 서비스해, 모든 요청이 정상 응답하고 `#/welcome` 이동과 `#/reset-password?token=...` 주소 직접 진입·새로고침이 동작함을 Chromium으로 확인했다(2026-11-03).
 - `deploy-web.yml`은 YAML 문법만 확인했고 GitHub Actions에서 실행해 보지 못했다. 배포 전 저장소 설정에서 Pages의 Source를 `GitHub Actions`로 지정해야 하며, 2026-11-03 확인 시점에는 Pages가 켜져 있지 않았다.
