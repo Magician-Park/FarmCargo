@@ -1,4 +1,6 @@
 import 'package:farm_cargo/features/auth/auth_provider.dart';
+import 'package:farm_cargo/features/driver/my_orders_screen.dart';
+import 'package:farm_cargo/features/orders/trip_record.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -133,5 +135,86 @@ void main() {
     await tester.pumpAndSettle();
     await openDriverTab(tester, '내 오더');
     expect(find.textContaining('아직 수락한 오더가 없어요'), findsOneWidget);
+  });
+
+  testWidgets('설정에서 선호 구간을 등록하면 오더 찾기에서 그 구간 오더만 볼 수 있다', (tester) async {
+    await loginDriver(tester);
+    await openDriverTab(tester, '오더 찾기');
+    await tester.tap(find.text('선호 구간만'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('등록한 선호 구간이 없어요'), findsOneWidget);
+
+    await openDriverTab(tester, '설정');
+    await tester.scrollUntilVisible(find.text('선호 구간 설정'), 100);
+    await tester.tap(find.text('선호 구간 설정'));
+    await tester.pumpAndSettle();
+    expect(bottomButtonEnabled(tester, '구간 추가'), isFalse);
+    await tester.tap(find.text('상차 지역'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('인천').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('하차 지역'));
+    await tester.pumpAndSettle();
+    // 드롭다운 목록 아래쪽에 있어 스크롤해서 고른다.
+    await tester.scrollUntilVisible(find.text('충남'), 48,
+        scrollable: find.byType(Scrollable).last);
+    await tester.tap(find.text('충남').last);
+    await tester.pumpAndSettle();
+    await tapText(tester, '구간 추가');
+    expect(find.text('인천 → 충남'), findsOneWidget);
+    expect(find.text('등록한 구간 1개'), findsOneWidget);
+
+    await openDriverTab(tester, '오더 찾기');
+    expect(find.text('올라온 오더 1건'), findsOneWidget); // 인천 서구 → 충남 당진
+    expect(find.text('소맥피 · 외국산'), findsOneWidget);
+    await tester.tap(find.text('선호 구간만'));
+    await tester.pumpAndSettle();
+    expect(find.text('올라온 오더 6건'), findsOneWidget);
+  });
+
+  testWidgets('정산 상태는 화주 정산 대기·지급 예정·지급 완료·지급 보류다', (tester) async {
+    await loginDriver(tester);
+    await openDriverTab(tester, '정산');
+    for (final s in ['전체', '화주 정산 대기', '지급 예정', '지급 완료', '지급 보류']) {
+      expect(find.text(s), findsOneWidget, reason: s);
+    }
+  });
+
+  testWidgets('운행 기록 카드: 날짜·구간·품목·물량·운송비·별점', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Column(children: [
+          TripRecordCard(
+            record: TripRecord(
+              orderId: 'x',
+              date: DateTime(2026, 11, 10),
+              originRegion: '인천 서구',
+              destinationRegion: '충남 당진',
+              itemLabel: '소맥피 · 외국산',
+              quantity: '벌크 24톤',
+              fare: 300000,
+              rating: 4,
+            ),
+          ),
+          TripRecordCard(
+            record: TripRecord(
+              orderId: 'y',
+              date: DateTime(2026, 11, 11),
+              originRegion: '충남 천안',
+              destinationRegion: '전북 익산',
+              itemLabel: '대두박 · 외국산',
+              quantity: '20톤',
+              fare: 350000,
+            ),
+          ),
+        ]),
+      ),
+    ));
+    expect(find.text('11월 10일(화)'), findsOneWidget);
+    expect(find.text('인천 서구 → 충남 당진'), findsOneWidget);
+    expect(find.text('소맥피 · 외국산 · 벌크 24톤'), findsOneWidget);
+    expect(find.text('300,000원'), findsOneWidget);
+    expect(find.byIcon(Icons.star), findsNWidgets(4));
+    expect(find.text('별점 대기'), findsOneWidget);
   });
 }

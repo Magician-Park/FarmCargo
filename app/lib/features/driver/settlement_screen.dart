@@ -6,7 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/widgets/period_selector.dart';
 
 /// 정산 화면 틀. 정산 서버가 없어 금액은 늘 0원이고 내역은 비어 있다.
-/// 상태 이름(지급 예정·지급 완료)은 확정 전 샘플이다.
+/// 상태 이름은 사용자 결정(2026-11-12 17차): 화주 정산 대기·지급 예정·지급 완료·지급 보류(책임 확인 중).
 class SettlementScreen extends ConsumerStatefulWidget {
   const SettlementScreen({super.key});
 
@@ -23,7 +23,7 @@ class _SettlementScreenState extends ConsumerState<SettlementScreen> {
         (t) => DateRange(DateTime(t.year, t.month - 6, t.day), t)),
     PeriodOption.directInput,
   ];
-  static const _statuses = ['전체', '지급 예정', '지급 완료'];
+  static const _statuses = ['전체', '화주 정산 대기', '지급 예정', '지급 완료', '지급 보류'];
 
   late final DateTime _today = dateOnly(ref.read(clockProvider)());
   late PeriodOption _option = _options.first;
@@ -72,6 +72,7 @@ class _SettlementScreenState extends ConsumerState<SettlementScreen> {
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,
+            runSpacing: 4,
             children: [
               for (final s in _statuses)
                 ChoiceChip(
@@ -93,7 +94,7 @@ class _SettlementScreenState extends ConsumerState<SettlementScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.textMuted)),
           ),
-          const Text('정산 기능은 준비 중이에요. 상태 이름은 확정 전 예시예요.',
+          const Text('정산 기능은 준비 중이에요. 지급 보류는 사고 책임을 확인하는 동안이에요.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
         ],

@@ -82,7 +82,8 @@ class Order {
         PriceUnit.perKg => (unitPrice * weightKg).round(),
       };
 
-  /// 상차 배지. 오늘 상차면 ‘당상’, 내일 상차면 ‘익상’, 그 밖에는 없음.
+  /// 상차 배지(사용자 정의 2026-11-12): 당상=당일 상차(오늘 싣기), 익상=익일 상차(내일 싣기).
+  /// 그 밖의 날짜는 배지 없이 날짜를 보여 준다.
   String? loadingBadge(DateTime today) =>
       switch (daysBetween(today, loading.date)) {
         0 => '당상',
@@ -90,9 +91,10 @@ class Order {
         _ => null,
       };
 
-  /// 하차 배지. 상차한 날 하차면 ‘당착’, 다음 날 하차면 ‘내착’.
-  String? get unloadingBadge =>
-      switch (daysBetween(loading.date, unloading.date)) {
+  /// 하차 배지(사용자 정의 2026-11-12): 당착=당일 도착(오늘 내리기), 내착=내일 도착(내일 내리기).
+  /// 상차일이 아니라 오늘을 기준으로 센다.
+  String? unloadingBadge(DateTime today) =>
+      switch (daysBetween(today, unloading.date)) {
         0 => '당착',
         1 => '내착',
         _ => null,

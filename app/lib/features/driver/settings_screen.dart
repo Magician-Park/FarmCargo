@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
+import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../auth/auth_provider.dart';
 
@@ -73,6 +76,11 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => _notReady(context, '회원 가입 서류 변경'),
           ),
           _Tile(
+            icon: Icons.route,
+            label: '선호 구간 설정',
+            onTap: () => context.push(AppRoutes.driverPreferredRoutes),
+          ),
+          _Tile(
             icon: Icons.notifications_none,
             label: '알림 설정',
             onTap: () => _notReady(context, '알림 설정',
@@ -89,7 +97,7 @@ class SettingsScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: FilledButton.icon(
               onPressed: () => _notReady(context, '고객센터',
-                  '고객센터는 24시간 전화로 응대해요. 전화번호는 정식 오픈 때 안내해 드려요.'),
+                  '버튼을 누르면 회사 대표번호로 바로 전화가 연결돼요(24시간 응대). 대표번호는 정식 오픈 때 앱에 넣을 예정이에요.'),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primarySoft,
                 foregroundColor: AppColors.primaryDark,

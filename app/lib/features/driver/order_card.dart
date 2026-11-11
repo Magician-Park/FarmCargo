@@ -56,7 +56,7 @@ class OrderCard extends StatelessWidget {
                   ),
                   const Spacer(),
                   _TimeTag(
-                    badge: order.unloadingBadge,
+                    badge: order.unloadingBadge(today),
                     fallback: formatShortDate(order.unloading.date),
                     time: order.unloading.startTime,
                     label: '하차',
@@ -118,7 +118,7 @@ class OrderCard extends StatelessWidget {
                     child: Text(
                       distanceFromMeKm == null
                           ? ''
-                          : '내 위치에서 ${distanceFromMeKm!.round()}km',
+                          : '내 위치에서 직선 약 ${distanceFromMeKm!.round()}km',
                       style: _small,
                     ),
                   ),

@@ -17,6 +17,7 @@ import '../../features/driver/my_orders_screen.dart';
 import '../../features/driver/settings_screen.dart';
 import '../../features/driver/settlement_screen.dart';
 import '../../features/driver/pending_approval_screen.dart';
+import '../../features/driver/preferred_routes_screen.dart';
 import '../../features/shipper/feed_request_screen.dart';
 import '../../features/shipper/fertilizer_request_screen.dart';
 import '../../features/shipper/grain_request_screen.dart';
@@ -36,6 +37,7 @@ abstract final class AppRoutes {
   static const driverMyOrders = '/driver/my-orders';
   static const driverSettlement = '/driver/settlement';
   static const driverSettings = '/driver/settings';
+  static const driverPreferredRoutes = '/driver/settings/preferred-routes';
   static const driverPending = '/pending';
   static const shipperHome = '/shipper';
   static const grainRequest = '/shipper/request/grain';
@@ -162,6 +164,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             GoRoute(
               path: AppRoutes.driverSettings,
               builder: (context, state) => const SettingsScreen(),
+              routes: [
+                GoRoute(
+                  path: 'preferred-routes',
+                  builder: (context, state) => const PreferredRoutesScreen(),
+                ),
+              ],
             ),
           ]),
         ],

@@ -1,6 +1,7 @@
 import '../../core/clock.dart';
 import '../../core/location/location_service.dart';
 import 'order.dart';
+import 'trip_record.dart';
 
 /// 오더를 수락할 수 없을 때. [message]는 화면에 그대로 보여 준다.
 class OrderAcceptException implements Exception {
@@ -28,6 +29,9 @@ abstract interface class OrderRepository {
 
   /// 내가 수락한 오더(‘내 오더’). 상차가 빠른 순.
   Future<List<Order>> fetchMyOrders();
+
+  /// 운송 종료가 확인된 운행 기록. 최근 순.
+  Future<List<TripRecord>> fetchTripRecords();
 }
 
 /// 서버 연동 전까지 쓰는 샘플 데이터. 화주 이름·주소·단가·위치는 모두 가상 값이다.
@@ -77,6 +81,10 @@ class MockOrderRepository implements OrderRepository {
     }
     _acceptedIds.add(id);
   }
+
+  /// 운송 완료(증빙) 처리가 아직 없어 데모에서는 늘 비어 있다.
+  @override
+  Future<List<TripRecord>> fetchTripRecords() async => const [];
 
   @override
   Future<List<Order>> fetchMyOrders() async {

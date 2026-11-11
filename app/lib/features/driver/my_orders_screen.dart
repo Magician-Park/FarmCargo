@@ -9,6 +9,7 @@ import '../../core/utils/format.dart';
 import '../../core/widgets/async_value_view.dart';
 import '../../core/widgets/period_selector.dart';
 import '../orders/orders_providers.dart';
+import '../orders/trip_record.dart';
 import 'order_card.dart';
 
 /// ‘내 오더’: 오더 내역(내가 수락한 오더) + 운행 기록(기간 조회) 두 탭(사용자 결정 2026-11-12).
@@ -120,29 +121,111 @@ class _TripRecordsState extends ConsumerState<_TripRecords> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      children: [
-        PeriodSelector(
-          options: _options,
-          selected: _option,
-          range: _range,
-          today: _today,
-          onChanged: (o, r) => setState(() {
-            _option = o;
-            _range = r;
-          }),
-        ),
-        const SizedBox(height: 12),
-        const Text('검색 결과 0건',
-            style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 48),
-          child: Text('이 기간에 표시할 운행 기록이 없어요.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textMuted)),
-        ),
-      ],
+    final records = ref.watch(tripRecordsProvider);
+    return AsyncValueView(
+      value: records,
+      onRetry: () => ref.invalidate(tripRecordsProvider),
+      builder: (all) {
+        final inRange = [for (final r in all) if (_range.contains(r.date)) r];
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          children: [
+            PeriodSelector(
+              options: _options,
+              selected: _option,
+              range: _range,
+              today: _today,
+              onChanged: (o, r) => setState(() {
+                _option = o;
+                _range = r;
+              }),
+            ),
+            const SizedBox(height: 12),
+            Text('검색 결과 ${inRange.length}건',
+                style: const TextStyle(
+                    fontSize: 13, color: AppColors.textMuted)),
+            const SizedBox(height: 8),
+            if (inRange.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 48),
+                child: Text('이 기간에 표시할 운행 기록이 없어요.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.textMuted)),
+              )
+            else
+              for (final r in inRange) ...[
+                TripRecordCard(record: r),
+                const SizedBox(height: 10),
+              ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// 운행 기록 한 건: 운행 날짜, 상차지→하차지, 품목·물량, 운송비, 받은 별점.
+class TripRecordCard extends StatelessWidget {
+  const TripRecordCard({super.key, required this.record});
+
+  final TripRecord record;
+
+  @override
+  Widget build(BuildContext context) {
+    final rating = record.rating;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primarySoft),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(formatShortDate(record.date),
+                  style: const TextStyle(
+                      fontSize: 12, color: AppColors.textMuted)),
+              const Spacer(),
+              if (rating == null)
+                const Text('별점 대기',
+                    style: TextStyle(fontSize: 12, color: AppColors.textMuted))
+              else
+                Semantics(
+                  label: '받은 별점 $rating점',
+                  excludeSemantics: true,
+                  child: Row(
+                    children: [
+                      for (var i = 1; i <= 5; i++)
+                        Icon(i <= rating ? Icons.star : Icons.star_border,
+                            size: 16, color: AppColors.primaryLight),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text('${record.originRegion} → ${record.destinationRegion}',
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: Text('${record.itemLabel} · ${record.quantity}',
+                    style: const TextStyle(
+                        fontSize: 13, color: AppColors.textChip)),
+              ),
+              Text('${formatWon(record.fare)}원',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryDark)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

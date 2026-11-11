@@ -10,6 +10,7 @@ import '../../core/widgets/async_value_view.dart';
 import '../orders/orders_providers.dart';
 import 'order_card.dart';
 import 'order_search.dart';
+import 'preferred_routes.dart';
 
 /// ‘오더 찾기’ 탭(2026-11-05 이름 결정). 화주가 올린 오더가 게시글 형식으로 쭉 나열되고,
 /// 내 위치 기준 거리 필터와 정렬을 고를 수 있다(2026-11-12).
@@ -23,6 +24,7 @@ class JobsScreen extends ConsumerStatefulWidget {
 class _JobsScreenState extends ConsumerState<JobsScreen> {
   DistanceFilter _filter = DistanceFilter.all;
   OrderSort _sort = OrderSort.fastLoading;
+  bool _onlyPreferred = false;
 
   void _refresh() {
     ref.invalidate(jobPostsProvider);
@@ -34,6 +36,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
     final posts = ref.watch(jobPostsProvider);
     final location = ref.watch(currentLocationProvider).value;
     final today = ref.watch(clockProvider)();
+    final preferred = ref.watch(preferredRoutesProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -104,6 +107,19 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
                         ),
                       ),
                       const Spacer(),
+                      FilterChip(
+                        label: const Text('선호 구간만'),
+                        selected: _onlyPreferred,
+                        onSelected: (v) => setState(() => _onlyPreferred = v),
+                        visualDensity: VisualDensity.compact,
+                        selectedColor: AppColors.primarySoft,
+                        checkmarkColor: AppColors.primaryDark,
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      const Spacer(),
                       const Icon(Icons.place_outlined,
                           size: 16, color: AppColors.textMuted),
                       const SizedBox(width: 2),
@@ -129,15 +145,24 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
                 value: posts,
                 onRetry: _refresh,
                 builder: (orders) {
+                  if (_onlyPreferred && preferred.isEmpty) {
+                    return const _Empty(
+                        '등록한 선호 구간이 없어요.\n설정 > 선호 구간 설정에서 먼저 등록해 주세요.');
+                  }
                   final items = arrangeOrders(orders,
-                      filter: _filter, sort: _sort, myLocation: location?.point);
+                      filter: _filter,
+                      sort: _sort,
+                      myLocation: location?.point,
+                      onlyRoutes: _onlyPreferred ? preferred : null);
                   if (location == null && _filter != DistanceFilter.all) {
                     return const _Empty('내 위치를 알 수 없어 거리 필터를 쓸 수 없어요.');
                   }
                   if (items.isEmpty) {
-                    return _Empty(_filter == DistanceFilter.all
-                        ? '지금 올라온 오더가 없어요.'
-                        : '${_filter.label}에 올라온 오더가 없어요.');
+                    return _Empty(_onlyPreferred
+                        ? '선호 구간에 맞는 오더가 없어요.'
+                        : _filter == DistanceFilter.all
+                            ? '지금 올라온 오더가 없어요.'
+                            : '${_filter.label}에 올라온 오더가 없어요.');
                   }
                   return ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),

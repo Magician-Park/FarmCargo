@@ -4,6 +4,7 @@ import '../../core/clock.dart';
 import '../auth/auth_provider.dart';
 import 'order.dart';
 import 'order_repository.dart';
+import 'trip_record.dart';
 
 /// 로그인한 계정이 바뀌면 새로 만든다. 이전 차주의 수락 내역이 다음 사용자에게 보이지 않게 한다.
 final orderRepositoryProvider = Provider<OrderRepository>((ref) {
@@ -25,6 +26,10 @@ final orderProvider = FutureProvider.family<Order?, String>(
 /// ‘내 오더’: 내가 수락한 오더.
 final myOrdersProvider = FutureProvider<List<Order>>(
     (ref) => ref.watch(orderRepositoryProvider).fetchMyOrders());
+
+/// ‘내 오더’ 운행 기록.
+final tripRecordsProvider = FutureProvider<List<TripRecord>>(
+    (ref) => ref.watch(orderRepositoryProvider).fetchTripRecords());
 
 /// 오더를 수락하고 목록들을 새로 불러온다. 실패하면 [OrderAcceptException].
 Future<void> acceptOrder(WidgetRef ref, String id) async {

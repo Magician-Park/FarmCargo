@@ -62,15 +62,17 @@ void main() {
       expect(await repository.fetchOrder('nope'), isNull);
     });
 
-    test('배지: 오늘 상차는 당상, 내일 상차는 익상 / 같은 날 하차는 당착, 다음 날은 내착', () async {
+    test('배지: 오늘 상차는 당상, 내일 상차는 익상 / 오늘 하차는 당착, 내일 하차는 내착', () async {
       final wheat = (await repository.fetchOrder('order-3'))!; // 오늘 상차·오늘 하차
       final corn = (await repository.fetchOrder('order-5'))!; // 오늘 상차·내일 하차
       final soy = (await repository.fetchOrder('order-1'))!; // 내일 상차
       final palm = (await repository.fetchOrder('order-6'))!; // 3일 뒤 상차
       expect(wheat.loadingBadge(_now), '당상');
-      expect(wheat.unloadingBadge, '당착');
-      expect(corn.unloadingBadge, '내착');
+      expect(wheat.unloadingBadge(_now), '당착');
+      expect(corn.unloadingBadge(_now), '내착');
       expect(soy.loadingBadge(_now), '익상');
+      expect(soy.unloadingBadge(_now), '내착'); // 내일 싣고 내일 내림
+      expect(palm.unloadingBadge(_now), isNull); // 3일 뒤 하차
       expect(palm.loadingBadge(_now), isNull);
     });
   });
