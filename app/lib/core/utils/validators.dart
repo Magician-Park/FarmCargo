@@ -51,3 +51,11 @@ bool isValidResidentNumber(String value) {
   }
   return (11 - sum % 11) % 10 == d[12];
 }
+
+/// 차량번호의 띄어쓰기를 없앤다. 예: '경기 12 가 3456' -> '경기12가3456'.
+String normalizePlateNumber(String value) => value.replaceAll(RegExp(r'\s'), '');
+
+/// 자동차 번호판 형식. 지역명(2글자)은 있어도 없어도 되고, 숫자 2~3자리 + 한글 1자 + 숫자 4자리.
+/// 사업용 화물차의 용도 글자(바·사·아·자 등)는 따로 제한하지 않는다.
+bool isValidPlateNumber(String value) => RegExp(r'^([가-힣]{2})?\d{2,3}[가-힣]\d{4}$')
+    .hasMatch(normalizePlateNumber(value));

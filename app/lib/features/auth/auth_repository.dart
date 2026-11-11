@@ -30,6 +30,7 @@ abstract interface class AuthRepository {
 
   Future<bool> verifyPhoneCode(String phone, String code);
 
+  /// 차주는 사측 심사 전이라 [AccountStatus.pending] 상태로 만들어진다.
   Future<Account> register(SignupRequest request);
 
   /// 비밀번호 재설정용 인증번호 문자를 보낸다. 가입 여부는 호출한 쪽에 알리지 않는다.
@@ -106,6 +107,10 @@ class MockAuthRepository implements AuthRepository {
       role: request.role,
       name: request.account.name.trim(),
       phone: request.phone,
+      // 차주는 사측이 서류를 대조하고 승인하기 전까지 승인 대기다. 데모에는 심사 기능이 없다.
+      status: request.role == AccountRole.driver
+          ? AccountStatus.pending
+          : AccountStatus.approved,
     );
     _add(account, password: request.account.password);
     return account;

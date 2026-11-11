@@ -12,10 +12,14 @@ import 'step_indicator.dart';
 import 'steps/account_step.dart';
 import 'steps/business_step.dart';
 import 'steps/complete_step.dart';
+import 'steps/documents_step.dart';
+import 'steps/guide_step.dart';
 import 'steps/id_card_step.dart';
-import 'steps/license_step.dart';
+import 'steps/identity_step.dart';
+import 'steps/password_step.dart';
 import 'steps/phone_step.dart';
 import 'steps/terms_step.dart';
+import 'steps/vehicle_step.dart';
 
 /// 차주/화주 회원가입 화면. 한 화면 안에서 단계가 바뀌고, 뒤로 가면 이전 단계로 돌아간다.
 class SignupFlowScreen extends ConsumerWidget {
@@ -24,10 +28,14 @@ class SignupFlowScreen extends ConsumerWidget {
   final AccountRole role;
 
   static const _titles = {
+    SignupStep.guide: '',
     SignupStep.account: '계정 정보를 입력해 주세요',
+    SignupStep.identity: '이름과 휴대폰 번호를 인증해 주세요',
     SignupStep.phone: '휴대폰 번호를 인증해 주세요',
     SignupStep.terms: '약관에 동의해 주세요',
-    SignupStep.license: '화물운송종사자격증을 인증해 주세요',
+    SignupStep.password: '비밀번호를 정해 주세요',
+    SignupStep.vehicle: '차량 정보를 입력해 주세요',
+    SignupStep.documents: '서류를 제출해 주세요',
     SignupStep.idCard: '신분증을 인증해 주세요',
     SignupStep.business: '사업자등록증을 인증해 주세요',
     SignupStep.complete: '',
@@ -58,11 +66,8 @@ class SignupFlowScreen extends ConsumerWidget {
       ref.read(signupControllerProvider(role).notifier).clearError();
     });
 
-    final complete = state.step == SignupStep.complete;
-    final stepLabels = [
-      for (final s in state.steps)
-        if (s != SignupStep.complete) s.label,
-    ];
+    final showHeader = state.step.showsInIndicator;
+    final stepLabels = [for (final s in state.indicatorSteps) s.label];
 
     return PopScope(
       // 단계가 있으면 시스템 뒤로가기도 이전 단계로 돌아간다.
@@ -95,11 +100,11 @@ class SignupFlowScreen extends ConsumerWidget {
           bottom: false,
           child: Column(
             children: [
-              if (!complete) ...[
+              if (showHeader) ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
                   child: StepIndicator(
-                      labels: stepLabels, current: state.stepIndex),
+                      labels: stepLabels, current: state.indicatorIndex),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
@@ -120,12 +125,16 @@ class SignupFlowScreen extends ConsumerWidget {
   }
 
   Widget _stepBody(SignupStep step) => switch (step) {
+        SignupStep.guide => GuideStep(key: ValueKey(step)),
         SignupStep.account => AccountStep(key: ValueKey(step), role: role),
+        SignupStep.identity => IdentityStep(key: ValueKey(step)),
         SignupStep.phone => PhoneStep(key: ValueKey(step), role: role),
         SignupStep.terms => TermsStep(key: ValueKey(step), role: role),
-        SignupStep.license => LicenseStep(key: ValueKey(step)),
+        SignupStep.password => PasswordStep(key: ValueKey(step)),
+        SignupStep.vehicle => VehicleStep(key: ValueKey(step)),
+        SignupStep.documents => DocumentsStep(key: ValueKey(step)),
         SignupStep.idCard => IdCardStep(key: ValueKey(step)),
-        SignupStep.business => BusinessStep(key: ValueKey(step), role: role),
-        SignupStep.complete => CompleteStep(key: ValueKey(step)),
+        SignupStep.business => BusinessStep(key: ValueKey(step)),
+        SignupStep.complete => CompleteStep(key: ValueKey(step), role: role),
       };
 }

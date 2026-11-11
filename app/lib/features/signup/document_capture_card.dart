@@ -12,6 +12,9 @@ class DocumentCaptureCard extends StatelessWidget {
     required this.busy,
     required this.onCapture,
     this.hint,
+    this.capturedText = '촬영 완료 · 아래 내용을 확인해 주세요',
+    this.capturedColor = AppColors.successText,
+    this.preview,
   });
 
   final String title;
@@ -20,6 +23,13 @@ class DocumentCaptureCard extends StatelessWidget {
   final bool busy;
   final VoidCallback onCapture;
   final String? hint;
+
+  /// 촬영 뒤 제목 아래에 보일 문구와 색.
+  final String capturedText;
+  final Color capturedColor;
+
+  /// 촬영한 사진 미리보기. 있으면 촬영 뒤 아이콘 자리에 보인다.
+  final Widget? preview;
 
   @override
   Widget build(BuildContext context) {
@@ -33,16 +43,23 @@ class DocumentCaptureCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: captured ? AppColors.successSoft : AppColors.surfaceMuted,
+          if (captured && preview != null)
+            ClipRRect(
               borderRadius: BorderRadius.circular(12),
+              child: SizedBox(width: 56, height: 56, child: preview),
+            )
+          else
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color:
+                    captured ? AppColors.successSoft : AppColors.surfaceMuted,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon,
+                  color: captured ? AppColors.success : Colors.grey),
             ),
-            child:
-                Icon(icon, color: captured ? AppColors.success : Colors.grey),
-          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -53,10 +70,11 @@ class DocumentCaptureCard extends StatelessWidget {
                         fontSize: 14, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 2),
                 Text(
-                  captured ? '촬영 완료 · 아래 내용을 확인해 주세요' : (hint ?? '사진을 촬영해 주세요'),
+                  captured ? capturedText : (hint ?? '사진을 촬영해 주세요'),
                   style: TextStyle(
                     fontSize: 12,
-                    color: captured ? AppColors.successText : Colors.grey,
+                    fontWeight: captured ? FontWeight.bold : FontWeight.normal,
+                    color: captured ? capturedColor : Colors.grey,
                   ),
                 ),
               ],

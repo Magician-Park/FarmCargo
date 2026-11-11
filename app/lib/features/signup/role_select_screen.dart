@@ -40,7 +40,7 @@ class RoleSelectScreen extends StatelessWidget {
               const SizedBox(height: 12),
               _RoleCard(
                 title: '화물차로 운송해요',
-                subtitle: '차주 · 오더 받고 다음 날 바로 정산받아요',
+                subtitle: '차주 · 화주가 올린 오더를 골라 운송해요',
                 icon: Icons.local_shipping_outlined,
                 iconColor: AppColors.primary,
                 onTap: () =>

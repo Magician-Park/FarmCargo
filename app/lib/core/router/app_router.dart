@@ -13,6 +13,7 @@ import '../../features/driver/detail_screen.dart';
 import '../../features/driver/driver_shell.dart';
 import '../../features/driver/jobs_screen.dart';
 import '../../features/driver/lobby_screen.dart';
+import '../../features/driver/pending_approval_screen.dart';
 import '../../features/shipper/feed_request_screen.dart';
 import '../../features/shipper/fertilizer_request_screen.dart';
 import '../../features/shipper/grain_request_screen.dart';
@@ -29,6 +30,7 @@ abstract final class AppRoutes {
   static const resetPassword = '/reset-password';
   static const driverHome = '/driver';
   static const driverJobs = '/driver/jobs';
+  static const driverPending = '/pending';
   static const shipperHome = '/shipper';
   static const grainRequest = '/shipper/request/grain';
   static const fertilizerRequest = '/shipper/request/fertilizer';
@@ -67,6 +69,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (account == null) {
         return _isPublic(location) ? null : AppRoutes.welcome;
       }
+      // 심사 중인 차주는 승인 대기 화면만 볼 수 있다(사용자 결정 2026-11-11).
+      if (account.isPending) {
+        return location == AppRoutes.driverPending
+            ? null
+            : AppRoutes.driverPending;
+      }
       // 로그인 상태에서는 자기 역할의 영역만 접근할 수 있다.
       final home = AppRoutes.homeFor(account.role);
       return location.startsWith(home) ? null : home;
@@ -83,6 +91,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.driverPending,
+        builder: (context, state) => const PendingApprovalScreen(),
       ),
       GoRoute(
         path: AppRoutes.forgotPassword,

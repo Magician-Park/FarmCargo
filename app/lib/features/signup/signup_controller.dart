@@ -9,41 +9,49 @@ import 'signup_models.dart';
 class SignupState {
   final AccountRole role;
   final SignupStep step;
-  final AccountInfo? account;
+  final String? name;
+  final String? password;
   final String? verifiedPhone;
   final Set<TermsItem> agreedTerms;
-  final FreightLicense? license;
+  final VehicleInfo? vehicle;
+  final DriverDocuments? driverDocuments;
   final IdCard? idCard;
-  final BusinessRegistration? business;
   final String? businessPhotoPath;
   final bool submitting;
   final String? error;
 
-  const SignupState({
+  SignupState({
     required this.role,
-    this.step = SignupStep.account,
-    this.account,
+    SignupStep? step,
+    this.name,
+    this.password,
     this.verifiedPhone,
     this.agreedTerms = const {},
-    this.license,
+    this.vehicle,
+    this.driverDocuments,
     this.idCard,
-    this.business,
     this.businessPhotoPath,
     this.submitting = false,
     this.error,
-  });
+  }) : step = step ?? role.signupSteps.first;
 
   List<SignupStep> get steps => role.signupSteps;
   int get stepIndex => steps.indexOf(step);
 
+  /// 상단 단계 표시에 나오는 단계 이름과 현재 위치.
+  List<SignupStep> get indicatorSteps =>
+      [for (final s in steps) if (s.showsInIndicator) s];
+  int get indicatorIndex => indicatorSteps.indexOf(step);
+
   SignupState copyWith({
     SignupStep? step,
-    AccountInfo? account,
+    String? name,
+    String? password,
     String? verifiedPhone,
     Set<TermsItem>? agreedTerms,
-    FreightLicense? license,
+    VehicleInfo? vehicle,
+    DriverDocuments? driverDocuments,
     IdCard? idCard,
-    BusinessRegistration? business,
     String? businessPhotoPath,
     bool? submitting,
     String? error,
@@ -53,13 +61,14 @@ class SignupState {
       SignupState(
         role: role,
         step: step ?? this.step,
-        account: account ?? this.account,
+        name: name ?? this.name,
+        password: password ?? this.password,
         verifiedPhone:
             clearVerifiedPhone ? null : (verifiedPhone ?? this.verifiedPhone),
         agreedTerms: agreedTerms ?? this.agreedTerms,
-        license: license ?? this.license,
+        vehicle: vehicle ?? this.vehicle,
+        driverDocuments: driverDocuments ?? this.driverDocuments,
         idCard: idCard ?? this.idCard,
-        business: business ?? this.business,
         businessPhotoPath: businessPhotoPath ?? this.businessPhotoPath,
         submitting: submitting ?? this.submitting,
         error: clearError ? null : (error ?? this.error),
@@ -89,8 +98,24 @@ class SignupController extends Notifier<SignupState> {
     return true;
   }
 
+  /// 차주 가입 조건 안내를 확인했다.
+  void confirmGuide() => _goTo(1);
+
+  /// 화주: 이름·비밀번호를 한 번에 입력한다.
   void submitAccount(AccountInfo info) {
-    state = state.copyWith(account: info);
+    state = state.copyWith(name: info.name, password: info.password);
+    _goTo(1);
+  }
+
+  /// 차주: 이름 입력과 휴대폰 인증을 마쳤다.
+  void submitIdentity(String name) {
+    state = state.copyWith(name: name);
+    _goTo(1);
+  }
+
+  /// 차주: 휴대폰 인증 다음 단계에서 비밀번호를 정한다(2026-11-05).
+  void submitPassword(String password) {
+    state = state.copyWith(password: password);
     _goTo(1);
   }
 
@@ -106,8 +131,8 @@ class SignupController extends Notifier<SignupState> {
     _goTo(1);
   }
 
-  void submitLicense(FreightLicense license) {
-    state = state.copyWith(license: license);
+  void submitVehicle(VehicleInfo vehicle) {
+    state = state.copyWith(vehicle: vehicle);
     _goTo(1);
   }
 
@@ -116,28 +141,30 @@ class SignupController extends Notifier<SignupState> {
     _goTo(1);
   }
 
-  /// 마지막 입력 단계. 서버에 가입을 요청하고 성공하면 완료 화면으로 간다.
-  /// 차주는 [business] 항목을 함께 받고, 화주는 사진([photoPath])만 받는다.
-  Future<void> submitBusiness(
-    BusinessRegistration? business, {
-    required String photoPath,
-  }) async {
-    state = state.copyWith(
-      business: business,
-      businessPhotoPath: photoPath,
-      submitting: true,
-      clearError: true,
-    );
+  /// 차주 마지막 단계. 서류 사진·세금계산서 이메일·위수탁 동의를 받아 가입을 신청한다.
+  Future<void> submitDriverDocuments(DriverDocuments documents) async {
+    state = state.copyWith(driverDocuments: documents);
+    await _register();
+  }
+
+  /// 화주 마지막 단계. 사업자등록증은 사진만 받는다.
+  Future<void> submitBusinessPhoto(String photoPath) async {
+    state = state.copyWith(businessPhotoPath: photoPath);
+    await _register();
+  }
+
+  Future<void> _register() async {
+    state = state.copyWith(submitting: true, clearError: true);
     try {
       await ref.read(authRepositoryProvider).register(SignupRequest(
             role: role,
-            account: state.account!,
+            account: AccountInfo(name: state.name!, password: state.password!),
             phone: state.verifiedPhone!,
             agreedTerms: state.agreedTerms,
-            license: state.license,
+            vehicle: state.vehicle,
+            driverDocuments: state.driverDocuments,
             idCard: state.idCard,
-            business: business,
-            businessPhotoPath: photoPath,
+            businessPhotoPath: state.businessPhotoPath,
           ));
       state = state.copyWith(submitting: false);
       _goTo(1);
@@ -145,14 +172,19 @@ class SignupController extends Notifier<SignupState> {
       // 휴대폰 번호가 아이디라 중복이면 휴대폰 인증 단계에서 다른 번호로 다시 인증한다.
       state = state.copyWith(
         submitting: false,
-        step: SignupStep.phone,
+        step: state.steps.contains(SignupStep.phone)
+            ? SignupStep.phone
+            : SignupStep.identity,
         clearVerifiedPhone: true,
         error: e.message,
       );
     } on AuthException catch (e) {
-      // 그 밖의 가입 오류는 계정 단계로 돌아가 다시 시도하게 한다.
+      // 그 밖의 가입 오류는 첫 입력 단계로 돌아가 다시 시도하게 한다.
       state = state.copyWith(
-          submitting: false, step: SignupStep.account, error: e.message);
+        submitting: false,
+        step: state.steps.firstWhere((s) => s != SignupStep.guide),
+        error: e.message,
+      );
     }
   }
 

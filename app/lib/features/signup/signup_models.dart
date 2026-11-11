@@ -1,29 +1,48 @@
 import '../auth/account_role.dart';
 
-/// 회원가입 단계. 역할마다 서류 단계가 다르다.
+/// 회원가입 단계. 역할마다 단계가 다르다.
 enum SignupStep {
+  guide('안내'),
   account('계정'),
+  identity('본인 인증'),
   phone('휴대폰'),
   terms('약관'),
-  license('자격증'),
+  password('비밀번호'),
+  vehicle('차량'),
+  documents('서류'),
   idCard('신분증'),
   business('사업자'),
   complete('완료');
 
   const SignupStep(this.label);
   final String label;
+
+  /// 상단 단계 표시에 넣지 않는 단계(안내 창과 완료 화면).
+  bool get showsInIndicator => this != guide && this != complete;
 }
 
 extension SignupSteps on AccountRole {
-  /// 가입 완료 화면을 포함한 전체 단계.
-  List<SignupStep> get signupSteps => [
-        SignupStep.account,
-        SignupStep.phone,
-        SignupStep.terms,
-        this == AccountRole.driver ? SignupStep.license : SignupStep.idCard,
-        SignupStep.business,
-        SignupStep.complete,
-      ];
+  /// 안내·완료 화면을 포함한 전체 단계.
+  /// 차주 순서는 요구사항 3절 ‘차주 회원가입 흐름’(사용자 결정 2026-11-04·05·09·11)을 따른다.
+  List<SignupStep> get signupSteps => switch (this) {
+        AccountRole.driver => const [
+            SignupStep.guide,
+            SignupStep.identity,
+            SignupStep.terms,
+            SignupStep.password,
+            SignupStep.vehicle,
+            SignupStep.documents,
+            SignupStep.complete,
+          ],
+        AccountRole.shipper => const [
+            SignupStep.account,
+            SignupStep.phone,
+            SignupStep.terms,
+            SignupStep.idCard,
+            SignupStep.business,
+            SignupStep.complete,
+          ],
+      };
 }
 
 class AccountInfo {
@@ -61,22 +80,54 @@ enum TermsItem {
   static final requiredItems = values.where((t) => t.required).toSet();
 }
 
-/// 화물운송종사자격증.
-class FreightLicense {
-  final String name;
-  final String birthDate; // yyyy-MM-dd
-  final String licenseNumber;
-  final String acquiredDate; // yyyy-MM-dd
+/// 차주 차량 종류와 톤급. 사용자가 정한 선택지로 한정한다(2026-11-04).
+enum VehicleType {
+  cargo('일반 카고(25톤)'),
+  tractor('트랙터(추레라)(25톤)'),
+  walkingDump('워킹 덤프(워킹카)(25톤)'),
+  dumpTruck('덤프트럭(25톤)'),
+  other('기타');
 
-  const FreightLicense({
-    required this.name,
-    required this.birthDate,
-    required this.licenseNumber,
-    required this.acquiredDate,
+  const VehicleType(this.label);
+  final String label;
+}
+
+/// 차주 차량 정보.
+class VehicleInfo {
+  final String plateNumber;
+  final VehicleType type;
+  final String otherType; // 기타를 고르면 직접 입력한 차종·톤급
+
+  const VehicleInfo({
+    required this.plateNumber,
+    required this.type,
+    this.otherType = '',
   });
 
-  static const empty = FreightLicense(
-      name: '', birthDate: '', licenseNumber: '', acquiredDate: '');
+  String get typeLabel => type == VehicleType.other ? otherType : type.label;
+}
+
+/// 차주가 사진으로 제출하는 서류(사용자 결정 2026-11-05: 화물운송종사자격증은 받지 않음).
+enum DriverDocument {
+  businessRegistration('사업자등록증'),
+  bankbook('통장 사본'),
+  driverLicense('운전면허증');
+
+  const DriverDocument(this.label);
+  final String label;
+}
+
+/// 차주 서류 제출 단계의 입력값.
+class DriverDocuments {
+  final Map<DriverDocument, String> photoPaths;
+  final String taxInvoiceEmail; // 전자세금계산서 전용 이메일
+  final bool consignmentAgreed; // 세금계산서 위수탁 동의
+
+  const DriverDocuments({
+    required this.photoPaths,
+    required this.taxInvoiceEmail,
+    required this.consignmentAgreed,
+  });
 }
 
 /// 주민등록증.
@@ -97,73 +148,24 @@ class IdCard {
       IdCard(name: '', residentNumber: '', address: '', issuedDate: '');
 }
 
-/// 사업자등록증.
-class BusinessRegistration {
-  final String registrationNumber; // ###-##-#####
-  final String companyName; // 상호
-  final String representativeName; // 성명
-  final String birthDate;
-  final String openedDate; // 개업 연월일
-  final String address; // 사업장 소재지
-  final String businessType; // 사업의 종류(업태/종목)
-  final String issueReason; // 발급사유
-  final String coRepresentative; // 공동사업자
-  final bool? isConsolidatedTax; // 사업자 단위 과세 적용사업자 여부. null이면 미선택
-  final String taxInvoiceEmail; // 전자세금계산서 전용 전자우편주소
-  final String issuedDate;
-  final String taxOffice; // 관할 세무서
-
-  const BusinessRegistration({
-    required this.registrationNumber,
-    required this.companyName,
-    required this.representativeName,
-    required this.birthDate,
-    required this.openedDate,
-    required this.address,
-    required this.businessType,
-    required this.issueReason,
-    required this.coRepresentative,
-    required this.isConsolidatedTax,
-    required this.taxInvoiceEmail,
-    required this.issuedDate,
-    required this.taxOffice,
-  });
-
-  static const empty = BusinessRegistration(
-    registrationNumber: '',
-    companyName: '',
-    representativeName: '',
-    birthDate: '',
-    openedDate: '',
-    address: '',
-    businessType: '',
-    issueReason: '',
-    coRepresentative: '',
-    isConsolidatedTax: null,
-    taxInvoiceEmail: '',
-    issuedDate: '',
-    taxOffice: '',
-  );
-}
-
 class SignupRequest {
   final AccountRole role;
   final AccountInfo account;
   final String phone;
   final Set<TermsItem> agreedTerms;
-  final FreightLicense? license; // 차주
+  final VehicleInfo? vehicle; // 차주
+  final DriverDocuments? driverDocuments; // 차주
   final IdCard? idCard; // 화주
-  final BusinessRegistration? business; // 차주만. 화주는 사진만 받는다
-  final String businessPhotoPath; // 사업자등록증 사진
+  final String? businessPhotoPath; // 화주 사업자등록증 사진
 
   const SignupRequest({
     required this.role,
     required this.account,
     required this.phone,
     required this.agreedTerms,
-    required this.license,
-    required this.idCard,
-    required this.business,
-    required this.businessPhotoPath,
+    this.vehicle,
+    this.driverDocuments,
+    this.idCard,
+    this.businessPhotoPath,
   });
 }

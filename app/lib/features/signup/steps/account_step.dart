@@ -28,12 +28,10 @@ class _AccountStepState extends ConsumerState<AccountStep> {
   @override
   void initState() {
     super.initState();
-    final saved = ref.read(signupControllerProvider(widget.role)).account;
-    if (saved != null) {
-      _name.text = saved.name;
-      _password.text = saved.password;
-      _confirm.text = saved.password;
-    }
+    final saved = ref.read(signupControllerProvider(widget.role));
+    _name.text = saved.name ?? '';
+    _password.text = saved.password ?? '';
+    _confirm.text = saved.password ?? '';
   }
 
   @override

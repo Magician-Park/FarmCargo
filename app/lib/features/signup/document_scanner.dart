@@ -20,12 +20,9 @@ class CameraPhotoCapture implements PhotoCapture {
 }
 
 /// 서류 사진에서 글자를 읽어 항목별 값으로 돌려준다(OCR).
+/// 지금은 화주 주민등록증에만 쓴다. 사업자등록증은 차주·화주 모두 사진만 받는다.
 abstract interface class DocumentScanner {
-  Future<FreightLicense> scanFreightLicense(String imagePath);
   Future<IdCard> scanIdCard(String imagePath);
-
-  /// 차주 사업자등록증. 화주는 사진만 받아 자동 입력을 쓰지 않는다.
-  Future<BusinessRegistration> scanBusinessRegistration(String imagePath);
 }
 
 /// 실제 인식 없이 고정된 샘플 값을 돌려주는 데모 구현.
@@ -36,17 +33,6 @@ class MockDocumentScanner implements DocumentScanner {
       Future<void>.delayed(const Duration(milliseconds: 400));
 
   @override
-  Future<FreightLicense> scanFreightLicense(String imagePath) async {
-    await _delay();
-    return const FreightLicense(
-      name: '김기사',
-      birthDate: '1975-03-15',
-      licenseNumber: '11-1234567-01',
-      acquiredDate: '2015-06-01',
-    );
-  }
-
-  @override
   Future<IdCard> scanIdCard(String imagePath) async {
     await _delay();
     return const IdCard(
@@ -54,27 +40,6 @@ class MockDocumentScanner implements DocumentScanner {
       residentNumber: '750315-1234568',
       address: '전북 김제시 죽산면 ○○로 1',
       issuedDate: '2019-05-20',
-    );
-  }
-
-  @override
-  Future<BusinessRegistration> scanBusinessRegistration(
-      String imagePath) async {
-    await _delay();
-    return const BusinessRegistration(
-      registrationNumber: '123-45-67891',
-      companyName: '김기사 운송',
-      representativeName: '김기사',
-      birthDate: '1975-03-15',
-      openedDate: '2016-03-02',
-      address: '서울특별시 강서구 ○○로 123',
-      businessType: '운수업 / 화물자동차 운송업',
-      issueReason: '신규',
-      coRepresentative: '',
-      isConsolidatedTax: false,
-      taxInvoiceEmail: 'tax@example.com',
-      issuedDate: '2024-01-10',
-      taxOffice: '강서세무서',
     );
   }
 }

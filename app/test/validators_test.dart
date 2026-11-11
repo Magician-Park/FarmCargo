@@ -11,6 +11,16 @@ void main() {
     expect(isValidPassword('Abcd1234!Abcd1234!'), isFalse); // 18자
   });
 
+  test('차량번호는 지역명이 있어도 없어도 되고 띄어쓰기는 무시한다', () {
+    expect(isValidPlateNumber('경기12가3456'), isTrue);
+    expect(isValidPlateNumber('12가3456'), isTrue);
+    expect(isValidPlateNumber('123바 4567'), isTrue);
+    expect(normalizePlateNumber('경기 12 가 3456'), '경기12가3456');
+    expect(isValidPlateNumber('12가345'), isFalse);
+    expect(isValidPlateNumber('ab가3456'), isFalse);
+    expect(isValidPlateNumber(''), isFalse);
+  });
+
   test('이메일/휴대폰 형식', () {
     expect(isValidEmail('a@b.co'), isTrue);
     expect(isValidEmail('a@b'), isFalse);
