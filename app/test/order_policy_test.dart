@@ -1,3 +1,4 @@
+import 'package:farm_cargo/features/orders/driver_alert.dart';
 import 'package:farm_cargo/features/orders/order_policy.dart';
 import 'package:farm_cargo/features/orders/order_repository.dart';
 import 'package:farm_cargo/features/orders/trip.dart';
@@ -120,6 +121,49 @@ void main() {
       now = DateTime(2026, 11, 13, 9); // 24시간 뒤
       expect((await repo.fetchSanction()).isSuspended(now), isFalse);
       await repo.acceptOrder('order-6');
+    });
+  });
+
+  group('알림·경고 내역', () {
+    test('조건 변경·경고·배차 해제·증빙 결과가 알림으로 쌓이고 모두 읽음으로 바꿀 수 있다', () async {
+      final repo = MockOrderRepository(now: () => thursday9);
+      await repo.acceptOrder('order-1');
+      await repo.acceptOrder('order-4'); // 상차 전 → 경고로 풀릴 배차
+      await repo.acceptOrder('order-5');
+      await repo.uploadLoadingProof('order-5', '/l.jpg');
+      await repo.uploadUnloadingProof(
+          'order-5', '/u.jpg', UnloadingProofKind.weighTicket);
+      await repo.simulateShipperResponse('order-5', confirmed: true);
+      await repo.simulateConditionChange('order-1', location: false);
+      await repo.respondToChange('order-1', accept: false);
+
+      final alerts = await repo.fetchAlerts();
+      final types = alerts.map((a) => a.type).toSet();
+      expect(types, {
+        DriverAlertType.proofConfirmed,
+        DriverAlertType.conditionChanged,
+        DriverAlertType.warning,
+        DriverAlertType.released,
+      });
+      expect(alerts.where((a) => a.type == DriverAlertType.released).single.orderId,
+          'order-4');
+      expect(alerts.every((a) => !a.read), isTrue);
+      await repo.markAlertsRead();
+      expect((await repo.fetchAlerts()).every((a) => a.read), isTrue);
+
+      final sanction = await repo.fetchSanction();
+      expect(sanction.warnings.single.reason, contains('물량'));
+      expect(sanction.resetAt, DateTime(2027, 11, 12, 9));
+    });
+
+    test('증빙 아니오도 알림으로 온다', () async {
+      final repo = MockOrderRepository(now: () => thursday9);
+      await repo.acceptOrder('order-1');
+      await repo.uploadLoadingProof('order-1', '/l.jpg');
+      await repo.uploadUnloadingProof(
+          'order-1', '/u.jpg', UnloadingProofKind.weighTicket);
+      await repo.simulateShipperResponse('order-1', confirmed: false);
+      expect((await repo.fetchAlerts()).single.type, DriverAlertType.proofRejected);
     });
   });
 }

@@ -1,4 +1,5 @@
 import '../../core/clock.dart';
+import 'driver_alert.dart';
 import 'order.dart';
 
 /// 배차 취소 마감(D04).
@@ -53,13 +54,24 @@ DateTime? suspensionEnd(int warningCount, DateTime suspendedAt) =>
 /// 차주 제재 상태.
 class DriverSanction {
   const DriverSanction({
-    this.warningCount = 0,
+    this.warnings = const [],
     this.suspendedUntil,
     this.permanentReview = false,
   });
 
+  /// 지금 유효한 경고(오래된 것부터).
+  final List<WarningEntry> warnings;
+
   /// 지금 유효한 경고 수(최초 경고 1년 뒤 전체 초기화).
-  final int warningCount;
+  int get warningCount => warnings.length;
+
+  /// 경고가 모두 초기화되는 시각(최초 경고 1년 뒤). 경고가 없으면 null.
+  DateTime? get resetAt {
+    if (warnings.isEmpty) return null;
+    final first = warnings.first.at;
+    return DateTime(
+        first.year + 1, first.month, first.day, first.hour, first.minute);
+  }
 
   /// 오더 수락이 막히는 끝 시각. 정지 중이 아니면 null.
   final DateTime? suspendedUntil;

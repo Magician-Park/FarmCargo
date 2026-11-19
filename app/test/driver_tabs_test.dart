@@ -426,4 +426,43 @@ void main() {
     await tester.scrollUntilVisible(find.text('전북 김제 → 경기 평택'), -100);
     expect(find.text('전북 김제 → 경기 평택'), findsOneWidget);
   });
+
+  testWidgets('알림: 홈 종 아이콘에 안 읽은 수가 보이고, 열면 읽음 처리되며 경고 알림은 경고 내역으로 간다', (tester) async {
+    final container = await loginDriver(tester);
+    expect(find.byTooltip('알림'), findsOneWidget); // 아직 알림 없음
+
+    await openAcceptedTrip(tester, container, 'order-1', '대두 · 국산');
+    await tester.scrollUntilVisible(find.text('화주: 물량 변경'), 100);
+    await tapText(tester, '화주: 물량 변경');
+    await tester.scrollUntilVisible(find.text('화주가 조건을 바꿨어요'), -100);
+    await tapText(tester, '거절');
+    await tapText(tester, '거절하기');
+
+    await openDriverTab(tester, '홈');
+    expect(find.byTooltip('알림, 안 읽은 알림 2개'), findsOneWidget);
+    await tester.tap(find.byTooltip('알림, 안 읽은 알림 2개'));
+    await tester.pumpAndSettle();
+    expect(find.text('화주가 조건을 바꿨어요'), findsOneWidget);
+    expect(find.text('경고 1회가 기록됐어요'), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is Semantics && w.properties.label == '새 알림'),
+        findsNWidgets(2)); // 이번에 새로 온 알림 표시
+
+    await tester.tap(find.text('경고 1회가 기록됐어요'));
+    await tester.pumpAndSettle();
+    expect(find.text('경고·정지 내역'), findsOneWidget);
+    expect(find.textContaining('물량'), findsWidgets);
+    expect(find.textContaining('11월 13일(금) 09:00까지'), findsOneWidget);
+
+    await openDriverTab(tester, '홈');
+    expect(find.byTooltip('알림'), findsOneWidget); // 모두 읽음
+  });
+
+  testWidgets('설정 > 경고·정지 내역: 경고가 없으면 수락 가능 안내와 기준을 보여 준다', (tester) async {
+    await loginDriver(tester);
+    await openDriverTab(tester, '설정');
+    await tapText(tester, '경고·정지 내역');
+    expect(find.text('지금은 오더를 수락할 수 있어요.'), findsOneWidget);
+    expect(find.text('받은 경고가 없어요.'), findsOneWidget);
+    expect(find.textContaining('최초 경고 1년 뒤'), findsOneWidget);
+  });
 }

@@ -9,6 +9,7 @@ import '../../core/utils/format.dart';
 import '../../core/widgets/async_value_view.dart';
 import '../auth/auth_provider.dart';
 import '../orders/orders_providers.dart';
+import 'alerts_screen.dart';
 import 'order_card.dart';
 
 /// 차주 홈. 인사·오늘 일정 요약과 추천 맞춤 오더를 보여 준다.
@@ -38,11 +39,18 @@ class LobbyScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('차주 홈',
-                    style: TextStyle(
-                        color: AppColors.accentMint,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text('차주 홈',
+                          style: TextStyle(
+                              color: AppColors.accentMint,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold)),
+                    ),
+                    const AlertBell(color: Colors.white),
+                  ],
+                ),
                 const SizedBox(height: 10),
                 Text('${account?.name ?? ''}님,',
                     style: const TextStyle(

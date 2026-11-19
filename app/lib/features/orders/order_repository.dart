@@ -1,5 +1,6 @@
 import '../../core/clock.dart';
 import '../../core/location/location_service.dart';
+import 'driver_alert.dart';
 import 'order.dart';
 import 'order_policy.dart';
 import 'trip.dart';
@@ -62,6 +63,12 @@ abstract interface class OrderRepository {
   /// 조건 변경에 답한다(D04). 수락하면 바뀐 조건으로 운행하고,
   /// 거절하면 배차가 풀린다. 패널티 없는 거절이 아니면 경고 1회가 되어 오더 수락이 정지된다.
   Future<void> respondToChange(String orderId, {required bool accept});
+
+  /// 내 알림 목록(최근 순).
+  Future<List<DriverAlert>> fetchAlerts();
+
+  /// 알림을 모두 읽음으로 바꾼다.
+  Future<void> markAlertsRead();
 }
 
 /// 서버 연동 전까지 쓰는 샘플 데이터. 화주 이름·주소·단가·위치는 모두 가상 값이다.
@@ -81,7 +88,9 @@ class MockOrderRepository implements OrderRepository {
   final _trips = <String, TripProgress>{};
   final _records = <TripRecord>[];
   final _cancellations = <DateTime>[];
-  final _warnings = <DateTime>[];
+  final _warnings = <WarningEntry>[];
+  final _alerts = <DriverAlert>[];
+  var _nextAlertId = 1;
   final _pendingChanges = <String, (ConditionChange, Order)>{};
 
   List<Order> get _available =>
@@ -130,26 +139,56 @@ class MockOrderRepository implements OrderRepository {
   Future<DriverSanction> fetchSanction() async {
     final now = _now();
     // 최초 경고 뒤 1년이 지나면 경고 전체를 초기화한다(D14).
-    if (_warnings.isNotEmpty) {
-      final first = _warnings.first;
-      final resetAt = DateTime(first.year + 1, first.month, first.day,
-          first.hour, first.minute);
-      if (!now.isBefore(resetAt)) _warnings.clear();
-    }
+    final resetAt = DriverSanction(warnings: _warnings).resetAt;
+    if (resetAt != null && !now.isBefore(resetAt)) _warnings.clear();
     final count = _warnings.length;
     if (count == 0) return const DriverSanction();
-    final end = suspensionEnd(count, _warnings.last);
+    final end = suspensionEnd(count, _warnings.last.at);
     return DriverSanction(
-        warningCount: count,
+        warnings: List.unmodifiable(_warnings),
         suspendedUntil: end,
         permanentReview: end == null);
   }
 
+  void _notify(DriverAlertType type, String title, String body,
+      {String? orderId}) {
+    _alerts.add(DriverAlert(
+      id: 'alert-${_nextAlertId++}',
+      type: type,
+      title: title,
+      body: body,
+      createdAt: _now(),
+      orderId: orderId,
+    ));
+  }
+
+  @override
+  Future<List<DriverAlert>> fetchAlerts() async =>
+      [..._alerts]..sort((a, b) => b.createdAt.compareTo(a.createdAt) != 0
+          ? b.createdAt.compareTo(a.createdAt)
+          : b.id.compareTo(a.id));
+
+  @override
+  Future<void> markAlertsRead() async {
+    for (var i = 0; i < _alerts.length; i++) {
+      _alerts[i] = _alerts[i].markRead();
+    }
+  }
+
   /// 경고 1회를 기록한다. 정지되면 아직 상차하지 않은 배차는 확정을 해제한다(D14).
-  void _addWarning() {
-    _warnings.add(_now());
+  Future<void> _addWarning(String reason) async {
+    _warnings.add(WarningEntry(at: _now(), reason: reason));
+    final sanction = await fetchSanction();
+    _notify(DriverAlertType.warning, '경고 ${sanction.warningCount}회가 기록됐어요',
+        '$reason. ${sanction.message()}');
     for (final id in [..._acceptedIds]) {
-      if (_trips[id]?.status == TripStatus.assigned) _release(id);
+      if (_trips[id]?.status == TripStatus.assigned) {
+        final order = (await fetchOrder(id))!;
+        _release(id);
+        _notify(DriverAlertType.released, '배차 확정이 해제됐어요',
+            '오더 수락 정지로 ${order.originRegion} → ${order.destinationRegion} 배차가 풀려 다른 차주에게 다시 배차돼요.',
+            orderId: id);
+      }
     }
   }
 
@@ -197,7 +236,9 @@ class MockOrderRepository implements OrderRepository {
     _orders[_orders.indexWhere((o) => o.id == orderId)] = updated;
     if (accept) return;
     _release(orderId);
-    if (!change.refusableWithoutPenalty) _addWarning();
+    if (!change.refusableWithoutPenalty) {
+      await _addWarning('화주의 조건 변경(${change.changes.map((c) => c.label).join('·')})을 거절함');
+    }
   }
 
   /// 시연용: 화주 앱이 없어 화주의 조건 변경을 대신 만든다.
@@ -241,6 +282,12 @@ class MockOrderRepository implements OrderRepository {
             order.copyWith(quantity: '벌크 20톤', weightKg: 20000),
           );
     _pendingChanges[orderId] = (change, updated);
+    _notify(
+        DriverAlertType.conditionChanged,
+        '화주가 조건을 바꿨어요',
+        '${order.originRegion} → ${order.destinationRegion}: '
+            '${change.changes.map((c) => '${c.label} ${c.after}').join(', ')}. 운행 화면에서 수락하거나 거절해 주세요.',
+        orderId: orderId);
   }
 
   @override
@@ -298,8 +345,17 @@ class MockOrderRepository implements OrderRepository {
     _trips[orderId] = trip.copyWith(
         status: confirmed ? TripStatus.completed : TripStatus.disputed,
         confirmedAt: _now());
-    if (!confirmed) return;
     final order = (await fetchOrder(orderId))!;
+    final route = '${order.originRegion} → ${order.destinationRegion}';
+    if (!confirmed) {
+      _notify(DriverAlertType.proofRejected, '화주가 하차 증빙에 ‘아니오’라고 답했어요',
+          '$route: 고객센터가 확인하고 있어요. 안내를 기다려 주세요.',
+          orderId: orderId);
+      return;
+    }
+    _notify(DriverAlertType.proofConfirmed, '화주가 하차 증빙을 확인했어요',
+        '$route 운송이 끝났어요. 운행 기록에서 볼 수 있어요.',
+        orderId: orderId);
     _records.add(TripRecord(
       orderId: orderId,
       date: dateOnly(_now()),

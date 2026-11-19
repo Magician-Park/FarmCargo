@@ -76,6 +76,11 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => _notReady(context, '회원 가입 서류 변경'),
           ),
           _Tile(
+            icon: Icons.gpp_maybe_outlined,
+            label: '경고·정지 내역',
+            onTap: () => context.push(AppRoutes.driverSanctions),
+          ),
+          _Tile(
             icon: Icons.route,
             label: '선호 구간 설정',
             onTap: () => context.push(AppRoutes.driverPreferredRoutes),

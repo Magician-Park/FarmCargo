@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/clock.dart';
 import '../auth/auth_provider.dart';
+import 'driver_alert.dart';
 import 'order.dart';
 import 'order_policy.dart';
 import 'order_repository.dart';
@@ -48,6 +49,7 @@ final tripProvider = FutureProvider.family<TripProgress?, String>(
     (ref, id) => ref.watch(orderRepositoryProvider).fetchTrip(id));
 
 void _refreshTrip(WidgetRef ref, String orderId) {
+  ref.invalidate(alertsProvider);
   ref.invalidate(tripProvider(orderId));
   ref.invalidate(myOrdersProvider);
   ref.invalidate(tripRecordsProvider);
@@ -123,4 +125,19 @@ Future<void> simulateConditionChange(
   if (repository is! MockOrderRepository) return;
   await repository.simulateConditionChange(orderId, location: location);
   ref.invalidate(pendingChangeProvider(orderId));
+  ref.invalidate(alertsProvider);
+}
+
+/// 내 알림 목록.
+final alertsProvider = FutureProvider<List<DriverAlert>>(
+    (ref) => ref.watch(orderRepositoryProvider).fetchAlerts());
+
+/// 안 읽은 알림 수(홈의 종 아이콘 표시).
+final unreadAlertCountProvider = Provider<int>((ref) =>
+    ref.watch(alertsProvider).value?.where((a) => !a.read).length ?? 0);
+
+/// 알림을 모두 읽음으로 바꾼다.
+Future<void> markAlertsRead(WidgetRef ref) async {
+  await ref.read(orderRepositoryProvider).markAlertsRead();
+  ref.invalidate(alertsProvider);
 }

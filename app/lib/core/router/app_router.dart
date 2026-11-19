@@ -8,12 +8,14 @@ import '../../features/auth/login_screen.dart';
 import '../../features/auth/reset_password_screen.dart';
 import '../../features/onboarding/permissions_screen.dart';
 import '../../features/onboarding/welcome_screen.dart';
+import '../../features/driver/alerts_screen.dart';
 import '../../features/driver/detail_screen.dart';
 import '../../features/driver/driver_shell.dart';
 import '../../features/driver/jobs_screen.dart';
 import '../../features/driver/lobby_screen.dart';
 import '../../features/driver/my_orders_screen.dart';
 import '../../features/driver/settings_screen.dart';
+import '../../features/driver/sanction_screen.dart';
 import '../../features/driver/settlement_screen.dart';
 import '../../features/driver/trip_screen.dart';
 import '../../features/driver/pending_approval_screen.dart';
@@ -33,6 +35,8 @@ abstract final class AppRoutes {
   static const driverSettlement = '/driver/settlement';
   static const driverSettings = '/driver/settings';
   static const driverPreferredRoutes = '/driver/settings/preferred-routes';
+  static const driverSanctions = '/driver/settings/sanctions';
+  static const driverAlerts = '/driver/alerts';
   static const driverPending = '/pending';
 
   static String resetPasswordLink(String token) =>
@@ -153,6 +157,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                   path: 'preferred-routes',
                   builder: (context, state) => const PreferredRoutesScreen(),
                 ),
+                GoRoute(
+                  path: 'sanctions',
+                  builder: (context, state) => const SanctionScreen(),
+                ),
               ],
             ),
           ]),
@@ -163,6 +171,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '${AppRoutes.driverHome}/orders/:id',
         builder: (context, state) =>
             DetailScreen(orderId: state.pathParameters['id']!),
+      ),
+      // 알림 목록(D02). 하단 탭을 가린다.
+      GoRoute(
+        path: AppRoutes.driverAlerts,
+        builder: (context, state) => const AlertsScreen(),
       ),
       // 운행 진행·증빙(D05). 상세처럼 하단 탭을 가린다.
       GoRoute(

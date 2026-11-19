@@ -143,13 +143,25 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
               ),
             ),
             if (sanction != null && sanction.isSuspended(now))
-              Container(
-                width: double.infinity,
+              Material(
                 color: AppColors.warningBg,
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-                child: Text(sanction.message(),
-                    style: const TextStyle(
-                        fontSize: 13, color: AppColors.warningText)),
+                child: InkWell(
+                  onTap: () => context.go(AppRoutes.driverSanctions),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(sanction.message(),
+                              style: const TextStyle(
+                                  fontSize: 13, color: AppColors.warningText)),
+                        ),
+                        const Icon(Icons.chevron_right,
+                            color: AppColors.warningText),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             Expanded(
               child: AsyncValueView(
