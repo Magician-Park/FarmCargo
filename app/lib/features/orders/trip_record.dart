@@ -9,6 +9,7 @@ class TripRecord {
   final String quantity;
   final int fare; // 운송비(원, 부가세 별도)
   final int? rating; // 화주가 준 별점 1~5. 아직 평가 전이면 null(D17)
+  final DateTime? ratedAt; // 별점을 받은 시각. 이 달의 랭킹에 들어간다
 
   const TripRecord({
     required this.orderId,
@@ -19,5 +20,18 @@ class TripRecord {
     required this.quantity,
     required this.fare,
     this.rating,
+    this.ratedAt,
   });
+
+  TripRecord rated(int stars, DateTime at) => TripRecord(
+        orderId: orderId,
+        date: date,
+        originRegion: originRegion,
+        destinationRegion: destinationRegion,
+        itemLabel: itemLabel,
+        quantity: quantity,
+        fare: fare,
+        rating: stars,
+        ratedAt: at,
+      );
 }

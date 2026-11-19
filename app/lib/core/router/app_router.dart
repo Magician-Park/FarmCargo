@@ -16,6 +16,8 @@ import '../../features/driver/lobby_screen.dart';
 import '../../features/driver/my_orders_screen.dart';
 import '../../features/driver/settings_screen.dart';
 import '../../features/driver/sanction_screen.dart';
+import '../../features/driver/ranking_screen.dart';
+import '../../features/driver/settlement_detail_screen.dart';
 import '../../features/driver/settlement_screen.dart';
 import '../../features/driver/trip_screen.dart';
 import '../../features/driver/pending_approval_screen.dart';
@@ -33,6 +35,9 @@ abstract final class AppRoutes {
   static const driverJobs = '/driver/jobs';
   static const driverMyOrders = '/driver/my-orders';
   static const driverSettlement = '/driver/settlement';
+  static const driverRanking = '/driver/settlement/ranking';
+  static String driverSettlementDetail(String orderId) =>
+      '/driver/settlement/item/$orderId';
   static const driverSettings = '/driver/settings';
   static const driverPreferredRoutes = '/driver/settings/preferred-routes';
   static const driverSanctions = '/driver/settings/sanctions';
@@ -146,6 +151,17 @@ final routerProvider = Provider<GoRouter>((ref) {
             GoRoute(
               path: AppRoutes.driverSettlement,
               builder: (context, state) => const SettlementScreen(),
+              routes: [
+                GoRoute(
+                  path: 'ranking',
+                  builder: (context, state) => const RankingScreen(),
+                ),
+                GoRoute(
+                  path: 'item/:orderId',
+                  builder: (context, state) => SettlementDetailScreen(
+                      orderId: state.pathParameters['orderId']!),
+                ),
+              ],
             ),
           ]),
           StatefulShellBranch(routes: [

@@ -6,6 +6,7 @@ import 'driver_alert.dart';
 import 'order.dart';
 import 'order_policy.dart';
 import 'order_repository.dart';
+import 'settlement.dart';
 import 'trip.dart';
 import 'trip_record.dart';
 
@@ -53,6 +54,8 @@ void _refreshTrip(WidgetRef ref, String orderId) {
   ref.invalidate(tripProvider(orderId));
   ref.invalidate(myOrdersProvider);
   ref.invalidate(tripRecordsProvider);
+  ref.invalidate(settlementsProvider);
+  ref.invalidate(rankingProvider);
 }
 
 /// 상차 계근표를 올린다. 실패하면 [TripActionException].
@@ -140,4 +143,31 @@ final unreadAlertCountProvider = Provider<int>((ref) =>
 Future<void> markAlertsRead(WidgetRef ref) async {
   await ref.read(orderRepositoryProvider).markAlertsRead();
   ref.invalidate(alertsProvider);
+}
+
+/// 정산 내역(D09).
+final settlementsProvider = FutureProvider<List<SettlementItem>>(
+    (ref) => ref.watch(orderRepositoryProvider).fetchSettlements());
+
+/// 이번 달 별점 랭킹(D17).
+final rankingProvider = FutureProvider<MonthlyRanking>(
+    (ref) => ref.watch(orderRepositoryProvider).fetchRanking());
+
+/// 시연용: 화주의 별점을 대신 준다. 샘플 저장소일 때만 동작한다. 실패하면 [TripActionException].
+Future<void> simulateShipperRating(
+    WidgetRef ref, String orderId, int stars) async {
+  final repository = ref.read(orderRepositoryProvider);
+  if (repository is! MockOrderRepository) return;
+  await repository.simulateShipperRating(orderId, stars);
+  ref.invalidate(tripRecordsProvider);
+  ref.invalidate(settlementsProvider);
+  ref.invalidate(rankingProvider);
+}
+
+/// 시연용: 화주의 운송비 정산(입금)을 대신한다. 샘플 저장소일 때만 동작한다.
+Future<void> simulateShipperPayment(WidgetRef ref, String orderId) async {
+  final repository = ref.read(orderRepositoryProvider);
+  if (repository is! MockOrderRepository) return;
+  await repository.simulateShipperPayment(orderId);
+  ref.invalidate(settlementsProvider);
 }

@@ -3,6 +3,7 @@ import '../../core/location/location_service.dart';
 import 'driver_alert.dart';
 import 'order.dart';
 import 'order_policy.dart';
+import 'settlement.dart';
 import 'trip.dart';
 import 'trip_record.dart';
 
@@ -69,6 +70,12 @@ abstract interface class OrderRepository {
 
   /// 알림을 모두 읽음으로 바꾼다.
   Future<void> markAlertsRead();
+
+  /// 운송 완료·지급 보류 건의 정산(최근 순). 금액·수수료율 확정은 서버가 한다(D09·D17).
+  Future<List<SettlementItem>> fetchSettlements();
+
+  /// 이번 달 별점 랭킹(D17).
+  Future<MonthlyRanking> fetchRanking();
 }
 
 /// 서버 연동 전까지 쓰는 샘플 데이터. 화주 이름·주소·단가·위치는 모두 가상 값이다.
@@ -92,6 +99,13 @@ class MockOrderRepository implements OrderRepository {
   final _alerts = <DriverAlert>[];
   var _nextAlertId = 1;
   final _pendingChanges = <String, (ConditionChange, Order)>{};
+  final _heldRecords = <TripRecord>[];
+  final _shipperPaidOn = <String, DateTime>{};
+
+  /// 시연용: 같은 달에 별점을 받은 다른 차주들의 별 개수(가상 값).
+  static const sampleOthersStars = [
+    12, 10, 9, 8, 7, 6, 6, 5, 5, 4, 4, 3, 3, 3, 2, 2, 1, 1, 1, //
+  ];
 
   List<Order> get _available =>
       [for (final o in _orders) if (!_acceptedIds.contains(o.id)) o];
@@ -348,6 +362,7 @@ class MockOrderRepository implements OrderRepository {
     final order = (await fetchOrder(orderId))!;
     final route = '${order.originRegion} → ${order.destinationRegion}';
     if (!confirmed) {
+      _heldRecords.add(_recordOf(order));
       _notify(DriverAlertType.proofRejected, '화주가 하차 증빙에 ‘아니오’라고 답했어요',
           '$route: 고객센터가 확인하고 있어요. 안내를 기다려 주세요.',
           orderId: orderId);
@@ -356,15 +371,84 @@ class MockOrderRepository implements OrderRepository {
     _notify(DriverAlertType.proofConfirmed, '화주가 하차 증빙을 확인했어요',
         '$route 운송이 끝났어요. 운행 기록에서 볼 수 있어요.',
         orderId: orderId);
-    _records.add(TripRecord(
-      orderId: orderId,
-      date: dateOnly(_now()),
-      originRegion: order.originRegion,
-      destinationRegion: order.destinationRegion,
-      itemLabel: order.itemLabel,
-      quantity: order.quantity,
-      fare: order.estimatedFare,
-    ));
+    _records.add(_recordOf(order));
+  }
+
+  TripRecord _recordOf(Order order) => TripRecord(
+        orderId: order.id,
+        date: dateOnly(_now()),
+        originRegion: order.originRegion,
+        destinationRegion: order.destinationRegion,
+        itemLabel: order.itemLabel,
+        quantity: order.quantity,
+        fare: order.estimatedFare,
+      );
+
+  MonthlyRanking _rankingOf(DateTime month) {
+    final stars = _records
+        .where((r) =>
+            r.ratedAt != null &&
+            r.ratedAt!.year == month.year &&
+            r.ratedAt!.month == month.month)
+        .fold<int>(0, (sum, r) => sum + r.rating!);
+    return MonthlyRanking(
+        month: DateTime(month.year, month.month),
+        myStars: stars,
+        othersStars: sampleOthersStars);
+  }
+
+  @override
+  Future<MonthlyRanking> fetchRanking() async => _rankingOf(_now());
+
+  @override
+  Future<List<SettlementItem>> fetchSettlements() async {
+    final now = _now();
+    final today = dateOnly(now);
+    SettlementItem item(TripRecord r, {bool held = false}) {
+      final ranking = _rankingOf(r.date);
+      final paidOn = _shipperPaidOn[r.orderId];
+      final payoutOn = paidOn == null ? null : payoutDateFor(paidOn);
+      return SettlementItem(
+        record: r,
+        status: held
+            ? SettlementStatus.held
+            : payoutOn == null
+                ? SettlementStatus.awaitingShipper
+                : today.isBefore(payoutOn)
+                    ? SettlementStatus.scheduled
+                    : SettlementStatus.paid,
+        feePerMille: ranking.feePerMille,
+        rateFinal: !now.isBefore(nextRankingReset(ranking.month)),
+        shipperPaidOn: held ? null : paidOn,
+        payoutOn: held ? null : payoutOn,
+      );
+    }
+
+    return [
+      for (final r in _records) item(r),
+      for (final r in _heldRecords) item(r, held: true),
+    ]..sort((a, b) => b.record.date.compareTo(a.record.date));
+  }
+
+  /// 시연용: 화주 앱이 없어 화주의 별점(1~5개)을 대신 준다. 운송 완료 건에 한 번만.
+  Future<void> simulateShipperRating(String orderId, int stars) async {
+    if (stars < 1 || stars > 5) {
+      throw const TripActionException('별점은 1~5개예요.');
+    }
+    final i = _records.indexWhere((r) => r.orderId == orderId);
+    if (i < 0) throw const TripActionException('운송이 끝난 오더에만 별점을 줄 수 있어요.');
+    if (_records[i].rating != null) {
+      throw const TripActionException('이미 별점을 받은 오더예요.');
+    }
+    _records[i] = _records[i].rated(stars, _now());
+  }
+
+  /// 시연용: 화주가 운송비를 정산(입금)한 것으로 한다. 오늘이 화주 정산일이 된다.
+  Future<void> simulateShipperPayment(String orderId) async {
+    if (!_records.any((r) => r.orderId == orderId)) {
+      throw const TripActionException('운송이 끝난 오더만 정산할 수 있어요.');
+    }
+    _shipperPaidOn.putIfAbsent(orderId, () => dateOnly(_now()));
   }
 
   @override

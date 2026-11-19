@@ -1,6 +1,10 @@
 import 'package:farm_cargo/core/router/app_router.dart';
 import 'package:farm_cargo/features/auth/auth_provider.dart';
 import 'package:farm_cargo/features/driver/my_orders_screen.dart';
+import 'package:farm_cargo/features/driver/settlement_screen.dart';
+import 'package:farm_cargo/features/orders/order_repository.dart';
+import 'package:farm_cargo/features/orders/orders_providers.dart';
+import 'package:farm_cargo/features/orders/trip.dart';
 import 'package:farm_cargo/features/orders/trip_record.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -464,5 +468,41 @@ void main() {
     expect(find.text('지금은 오더를 수락할 수 있어요.'), findsOneWidget);
     expect(find.text('받은 경고가 없어요.'), findsOneWidget);
     expect(find.textContaining('최초 경고 1년 뒤'), findsOneWidget);
+  });
+
+  testWidgets('정산: 운송 완료 건이 보이고, 상세에서 금액·지급일을, 별점·랭킹에서 순위를 본다', (tester) async {
+    final container = await loginDriver(tester);
+    final repo = container.read(orderRepositoryProvider) as MockOrderRepository;
+    await repo.acceptOrder('order-1');
+    await repo.uploadLoadingProof('order-1', '/l.jpg');
+    await repo.uploadUnloadingProof(
+        'order-1', '/u.jpg', UnloadingProofKind.weighTicket);
+    await repo.simulateShipperResponse('order-1', confirmed: true);
+
+    await openDriverTab(tester, '정산');
+    expect(find.text('이번 달 별 0개 · 예상 수수료율 4%'), findsOneWidget);
+    expect(find.text('화주 정산 대기'), findsWidgets);
+    await tester.tap(find.byType(SettlementCard));
+    await tester.pumpAndSettle();
+    expect(find.text('정산 상세'), findsOneWidget);
+    expect(find.text('수수료(예상 4%)'), findsOneWidget);
+    expect(find.text('아직 정산 전'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('화주: 운송비 정산'), 100);
+    await tapText(tester, '화주: 운송비 정산');
+    await tester.scrollUntilVisible(find.text('지급일'), -100);
+    expect(find.text('11월 20일(금)'), findsOneWidget); // 22일(일) → 그 전 영업일
+    await tester.scrollUntilVisible(find.text('지급 예정'), -100);
+    expect(find.text('지급 예정'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+    await tapText(tester, '이번 달 별 0개 · 예상 수수료율 4%');
+    expect(find.text('아직 이번 달 별점을 받지 않아 랭킹에 들지 않았어요.'), findsOneWidget);
+    await tester.scrollUntilVisible(find.byTooltip('화주: 별 4개'), 100);
+    await tester.tap(find.byTooltip('화주: 별 4개'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('4개'), -100);
+    expect(find.text('랭킹 차주 20명 중 10위'), findsOneWidget);
+    expect(find.byTooltip('화주: 별 4개'), findsNothing); // 한 번만
   });
 }
