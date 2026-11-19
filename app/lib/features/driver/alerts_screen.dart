@@ -42,6 +42,10 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
       return;
     }
     if (id == null) return;
+    if (alert.type == DriverAlertType.inquiryAnswered) {
+      context.push(AppRoutes.driverInquiry(id));
+      return;
+    }
     final trip = await ref.read(tripProvider(id).future);
     if (!mounted) return;
     context.push(
@@ -94,6 +98,7 @@ class _AlertTile extends StatelessWidget {
         DriverAlertType.proofRejected => Icons.report_gmailerrorred_outlined,
         DriverAlertType.warning => Icons.warning_amber_rounded,
         DriverAlertType.released => Icons.link_off,
+        DriverAlertType.inquiryAnswered => Icons.mark_chat_read_outlined,
       };
 
   bool get _warn =>

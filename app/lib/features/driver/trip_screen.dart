@@ -14,6 +14,7 @@ import '../orders/trip.dart';
 import '../signup/document_capture_card.dart';
 import '../signup/photo_capture.dart';
 import '../signup/photo_preview.dart';
+import 'inquiry_screen.dart';
 import 'trip_changes.dart';
 
 /// 운행 진행·운송 증빙(D05). 수락한 오더를 상차 계근표 → 하차 증빙 → 화주 확인 → 운송 완료 순으로 진행한다.
@@ -74,6 +75,8 @@ class _TripBody extends StatelessWidget {
         _Summary(order: order, status: trip.status),
         const SizedBox(height: 16),
         ConditionChangeCard(orderId: order.id),
+        if (trip.status != TripStatus.completed)
+          InquiryEntry(orderId: order.id),
         _StageTile(
           number: 1,
           title: '배차 확정',

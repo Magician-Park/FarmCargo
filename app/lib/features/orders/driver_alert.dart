@@ -4,7 +4,8 @@ enum DriverAlertType {
   proofConfirmed('증빙 확인'),
   proofRejected('증빙 확인 거부'),
   warning('경고·정지'),
-  released('배차 해제');
+  released('배차 해제'),
+  inquiryAnswered('화주 답변');
 
   const DriverAlertType(this.label);
   final String label;

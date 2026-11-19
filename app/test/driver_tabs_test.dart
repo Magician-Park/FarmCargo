@@ -352,6 +352,7 @@ void main() {
     await tester.scrollUntilVisible(find.text('화주: 아니오'), 100);
     await tester.tap(find.text('화주: 아니오'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('고객센터 확인 중'), -100);
     expect(find.text('고객센터 확인 중'), findsOneWidget);
     expect(find.textContaining('고객센터가 확인하고 있어요'), findsOneWidget);
     expect(find.text('화주: 예'), findsNothing);
@@ -504,5 +505,43 @@ void main() {
     await tester.scrollUntilVisible(find.text('4개'), -100);
     expect(find.text('랭킹 차주 20명 중 10위'), findsOneWidget);
     expect(find.byTooltip('화주: 별 4개'), findsNothing); // 한 번만
+  });
+
+  testWidgets('화주에게 전달: 운행 화면에서 글을 보내고, 화주 답이 오면 알림을 눌러 답을 본다', (tester) async {
+    final container = await loginDriver(tester);
+    await openAcceptedTrip(tester, container, 'order-1', '대두 · 국산');
+    await tapText(tester, '화주에게 전달');
+    expect(find.text('아직 보낸 글이 없어요.'), findsOneWidget);
+
+    await tapText(tester, '고객센터로 보내기');
+    expect(find.text('화주에게 전달할 내용을 써 주세요.'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), '제 번호는 010-1111-2222예요');
+    await tapText(tester, '고객센터로 보내기');
+    expect(find.textContaining('연락처는 적을 수 없어요'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), '');
+    await tapText(tester, '높이 제한이 있나요?');
+    await tapText(tester, '고객센터로 보내기');
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('고객센터가 화주에게 전달 중'), 100,
+        scrollable: find.byType(Scrollable).first);
+    expect(find.text('높이 제한이 있나요?'), findsWidgets);
+
+    await tester.scrollUntilVisible(find.text('고객센터: 화주 답 보내기'), 100,
+        scrollable: find.byType(Scrollable).first);
+    await tapText(tester, '고객센터: 화주 답 보내기');
+    await tester.scrollUntilVisible(find.text('답변 도착'), -100,
+        scrollable: find.byType(Scrollable).first);
+    expect(find.textContaining('(시연용 답변)'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+    expect(find.text('보낸 글 1건 · 답 기다리는 중 0건'), findsOneWidget);
+
+    container.read(routerProvider).go(AppRoutes.driverAlerts);
+    await tester.pumpAndSettle();
+    await tapText(tester, '화주 답변이 왔어요');
+    expect(find.text('답변 도착'), findsOneWidget);
   });
 }

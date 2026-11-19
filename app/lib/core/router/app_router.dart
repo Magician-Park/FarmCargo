@@ -10,6 +10,7 @@ import '../../features/onboarding/permissions_screen.dart';
 import '../../features/onboarding/welcome_screen.dart';
 import '../../features/driver/alerts_screen.dart';
 import '../../features/driver/detail_screen.dart';
+import '../../features/driver/inquiry_screen.dart';
 import '../../features/driver/driver_shell.dart';
 import '../../features/driver/jobs_screen.dart';
 import '../../features/driver/lobby_screen.dart';
@@ -48,6 +49,8 @@ abstract final class AppRoutes {
       '$resetPassword?token=${Uri.encodeQueryComponent(token)}';
   static String driverOrder(String id) => '$driverHome/orders/$id';
   static String driverTrip(String orderId) => '$driverHome/trips/$orderId';
+  static String driverInquiry(String orderId) =>
+      '$driverHome/trips/$orderId/inquiry';
 }
 
 /// 로그인하지 않아도 볼 수 있는 경로.
@@ -198,6 +201,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '${AppRoutes.driverHome}/trips/:id',
         builder: (context, state) =>
             TripScreen(orderId: state.pathParameters['id']!),
+        routes: [
+          // ‘화주에게 전달’(D06)
+          GoRoute(
+            path: 'inquiry',
+            builder: (context, state) =>
+                InquiryScreen(orderId: state.pathParameters['id']!),
+          ),
+        ],
       ),
     ],
   );

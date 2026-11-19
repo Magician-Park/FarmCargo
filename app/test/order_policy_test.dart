@@ -1,4 +1,5 @@
 import 'package:farm_cargo/features/orders/driver_alert.dart';
+import 'package:farm_cargo/features/orders/inquiry.dart';
 import 'package:farm_cargo/features/orders/order_policy.dart';
 import 'package:farm_cargo/features/orders/order_repository.dart';
 import 'package:farm_cargo/features/orders/settlement.dart';
@@ -264,6 +265,46 @@ void main() {
       expect(items.where((s) => s.status == SettlementStatus.held).single.record.orderId,
           'order-3');
       expect(items.every((s) => s.feePerMille == top10FeePerMille), isTrue);
+    });
+  });
+
+  group('화주에게 전달(D06)', () {
+    test('빈 글·너무 긴 글·전화번호가 든 글은 보낼 수 없다', () {
+      expect(validateInquiry('  '), isNotNull);
+      expect(validateInquiry('가' * (inquiryMaxLength + 1)), isNotNull);
+      expect(validateInquiry('제 번호 010-1234-5678로 연락 주세요'), contains('연락처'));
+      expect(validateInquiry('01012345678'), contains('연락처'));
+      expect(validateInquiry('높이 제한 3.5m 이상인가요? 10톤 차예요.'), isNull);
+    });
+
+    test('운행 중인 오더에만 보내고, 답이 오면 알림이 온다', () async {
+      final repo = MockOrderRepository(now: () => thursday9);
+      expect(() => repo.sendInquiry('order-1', '바로 내릴 수 있나요?'),
+          throwsA(isA<TripActionException>())); // 수락 전
+      await repo.acceptOrder('order-1');
+      await repo.sendInquiry('order-1', '  바로 내릴 수 있나요?  ');
+      expect(() => repo.sendInquiry('order-1', '010 1234 5678'),
+          throwsA(isA<TripActionException>()));
+      final sent = (await repo.fetchInquiries('order-1')).single;
+      expect(sent.message, '바로 내릴 수 있나요?');
+      expect(sent.answered, isFalse);
+      expect(await repo.fetchInquiries('order-2'), isEmpty);
+
+      await repo.simulateInquiryAnswer(sent.id, '네, 바로 내릴 수 있어요.');
+      final answered = (await repo.fetchInquiries('order-1')).single;
+      expect(answered.answer, '네, 바로 내릴 수 있어요.');
+      final alert = (await repo.fetchAlerts()).single;
+      expect(alert.type, DriverAlertType.inquiryAnswered);
+      expect(alert.orderId, 'order-1');
+      expect(() => repo.simulateInquiryAnswer(sent.id, '또'),
+          throwsA(isA<TripActionException>()));
+
+      await repo.uploadLoadingProof('order-1', '/l.jpg');
+      await repo.uploadUnloadingProof(
+          'order-1', '/u.jpg', UnloadingProofKind.weighTicket);
+      await repo.simulateShipperResponse('order-1', confirmed: true);
+      expect(() => repo.sendInquiry('order-1', '하나 더요'),
+          throwsA(isA<TripActionException>())); // 운송 완료 뒤
     });
   });
 }

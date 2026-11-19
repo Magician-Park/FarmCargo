@@ -1,6 +1,7 @@
 import '../../core/clock.dart';
 import '../../core/location/location_service.dart';
 import 'driver_alert.dart';
+import 'inquiry.dart';
 import 'order.dart';
 import 'order_policy.dart';
 import 'settlement.dart';
@@ -76,6 +77,13 @@ abstract interface class OrderRepository {
 
   /// 이번 달 별점 랭킹(D17).
   Future<MonthlyRanking> fetchRanking();
+
+  /// 이 오더에 보낸 ‘화주에게 전달’ 글(최근 순, D06).
+  Future<List<ShipperInquiry>> fetchInquiries(String orderId);
+
+  /// ‘화주에게 전달’ 글을 보낸다. 고객센터가 화주에게 전달한다.
+  /// 내가 운행 중인(운송 완료 전) 오더에만 보낼 수 있다. 실패하면 [TripActionException].
+  Future<void> sendInquiry(String orderId, String message);
 }
 
 /// 서버 연동 전까지 쓰는 샘플 데이터. 화주 이름·주소·단가·위치는 모두 가상 값이다.
@@ -100,6 +108,7 @@ class MockOrderRepository implements OrderRepository {
   var _nextAlertId = 1;
   final _pendingChanges = <String, (ConditionChange, Order)>{};
   final _heldRecords = <TripRecord>[];
+  final _inquiries = <ShipperInquiry>[];
   final _shipperPaidOn = <String, DateTime>{};
 
   /// 시연용: 같은 달에 별점을 받은 다른 차주들의 별 개수(가상 값).
@@ -428,6 +437,42 @@ class MockOrderRepository implements OrderRepository {
       for (final r in _records) item(r),
       for (final r in _heldRecords) item(r, held: true),
     ]..sort((a, b) => b.record.date.compareTo(a.record.date));
+  }
+
+  @override
+  Future<List<ShipperInquiry>> fetchInquiries(String orderId) async => [
+        for (final q in _inquiries.reversed)
+          if (q.orderId == orderId) q
+      ];
+
+  @override
+  Future<void> sendInquiry(String orderId, String message) async {
+    final trip = _tripOrThrow(orderId);
+    if (trip.status == TripStatus.completed) {
+      throw const TripActionException('운송이 끝난 오더에는 보낼 수 없어요. 고객센터로 전화해 주세요.');
+    }
+    final problem = validateInquiry(message);
+    if (problem != null) throw TripActionException(problem);
+    _inquiries.add(ShipperInquiry(
+      id: 'inquiry-${_inquiries.length + 1}',
+      orderId: orderId,
+      message: message.trim(),
+      sentAt: _now(),
+    ));
+  }
+
+  /// 시연용: 고객센터가 화주에게 받은 답을 보낸 것으로 한다. 실제로는 고객센터가 입력한다.
+  Future<void> simulateInquiryAnswer(String inquiryId, String answer) async {
+    final i = _inquiries.indexWhere((q) => q.id == inquiryId);
+    if (i < 0 || _inquiries[i].answered) {
+      throw const TripActionException('답을 기다리는 글이 아니에요.');
+    }
+    final q = _inquiries[i];
+    _inquiries[i] = q.withAnswer(answer, _now());
+    final order = (await fetchOrder(q.orderId))!;
+    _notify(DriverAlertType.inquiryAnswered, '화주 답변이 왔어요',
+        '${order.originRegion} → ${order.destinationRegion}: $answer',
+        orderId: q.orderId);
   }
 
   /// 시연용: 화주 앱이 없어 화주의 별점(1~5개)을 대신 준다. 운송 완료 건에 한 번만.

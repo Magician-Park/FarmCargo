@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/clock.dart';
 import '../auth/auth_provider.dart';
 import 'driver_alert.dart';
+import 'inquiry.dart';
 import 'order.dart';
 import 'order_policy.dart';
 import 'order_repository.dart';
@@ -170,4 +171,24 @@ Future<void> simulateShipperPayment(WidgetRef ref, String orderId) async {
   if (repository is! MockOrderRepository) return;
   await repository.simulateShipperPayment(orderId);
   ref.invalidate(settlementsProvider);
+}
+
+/// 이 오더의 ‘화주에게 전달’ 글(D06).
+final inquiriesProvider = FutureProvider.family<List<ShipperInquiry>, String>(
+    (ref, id) => ref.watch(orderRepositoryProvider).fetchInquiries(id));
+
+/// ‘화주에게 전달’ 글을 보낸다. 실패하면 [TripActionException].
+Future<void> sendInquiry(WidgetRef ref, String orderId, String message) async {
+  await ref.read(orderRepositoryProvider).sendInquiry(orderId, message);
+  ref.invalidate(inquiriesProvider(orderId));
+}
+
+/// 시연용: 고객센터가 화주 답을 보낸 것으로 한다. 샘플 저장소일 때만 동작한다.
+Future<void> simulateInquiryAnswer(
+    WidgetRef ref, String orderId, String inquiryId, String answer) async {
+  final repository = ref.read(orderRepositoryProvider);
+  if (repository is! MockOrderRepository) return;
+  await repository.simulateInquiryAnswer(inquiryId, answer);
+  ref.invalidate(inquiriesProvider(orderId));
+  ref.invalidate(alertsProvider);
 }
