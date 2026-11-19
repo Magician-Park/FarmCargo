@@ -14,10 +14,10 @@
 
 - **최종 목표는 Android·iOS 스토어에 출시하는 앱이다.** 스토어 출시 조건이 까다로우므로 베타 테스트가 끝날 때까지는 **Flutter Web으로 배포해 브라우저에서 사용·테스트**한다.
 - **웹과 앱은 같은 Flutter 코드(`app/`)로 만든다.** 베타 종료 후 같은 코드를 Android·iOS 앱으로 빌드해 출시한다. HTML 프로토타입을 Flutter 앱으로 자동 변환할 수 있다고 전제하지 않는다.
-- **화주 앱은 차주 앱과 별도 앱으로 만든다**(사용자 결정 2026-11-11). 지금 `app/`에 있는 화주 화면은 샘플이며, 분리 시점·폴더 구조·공통 코드 공유 방식·앱 ID는 미정이다.
+- **화주 앱은 차주 앱과 별도 앱으로 만든다**(사용자 결정 2026-11-11). **`app/`은 차주 전용 앱이다**(2026-11-19). 그때까지 `app/`에 있던 화주 샘플 화면(화주 홈, 곡물·비료·사료 운송 요청, 화주 가입 단계, 역할 선택)은 `archive/shipper_app_sample/`에 보관했고, 차주 앱에서 화주 계정은 로그인할 수 없다. 화주 앱의 폴더 구조·공통 코드 공유 방식·앱 ID는 미정이다.
 - HTML·CSS·JavaScript 데모(`app-demo.html`, `farm-cargo-mockups.html`)는 설계·시연 프로토타입으로 유지한다. 제품 기능의 기준 코드는 `app/lib/`다. 새 제품 기능을 HTML 데모에만 만들지 않는다.
 - **웹에서 되는 것이 앱에서도 된다고 보장하지 않는다.** 카메라·사진·위치·푸시 알림·권한·파일·보안 저장소·딥링크는 플랫폼마다 구현과 정책이 다르다. 이런 기능은 웹 검증과 별개로 Android·iOS 실기기에서 검증하고, 하지 못했다면 보고에 명시한다.
-- 웹 전용·앱 전용 코드는 인터페이스 뒤에 모아 둔다(현재 예: `PhotoCapture`, `DocumentScanner`, `AuthRepository`). `kIsWeb` 분기를 화면 코드 곳곳에 흩뿌리지 않는다.
+- 웹 전용·앱 전용 코드는 인터페이스 뒤에 모아 둔다(현재 예: `PhotoCapture`, `photoPreviewProvider`, `LocationService`, `AuthRepository`). `kIsWeb` 분기를 화면 코드 곳곳에 흩뿌리지 않는다.
 - 웹 베타 중에도 가능한 환경에서 Android 빌드가 깨지지 않는지 정기적으로 확인한다. iOS 플랫폼은 아직 생성하지 않았다.
 - **웹 베타 배포 위치는 GitHub Pages다**(사용자 결정, 2026-11-03). 주소는 `https://magician-park.github.io/FarmCargo/`(저장소 공개 상태 기준)다. 정적 호스팅이라 서버·DB를 제공하지 않으며, 지금 앱은 샘플 데이터(`Mock*Repository`)로만 동작한다. 공개 배포이므로 배포는 `.github/workflows/deploy-web.yml`을 사용자가 수동 실행하며, 자동 배포로 바꾸려면 먼저 사용자 확인을 받는다. 공개 사이트와 저장소에는 비밀키·실제 개인정보를 두지 않는다.
 - 앱 ID(현재 임시값 `com.farmcargo.app`), 서명 키, 개인정보 처리방침, 스토어 심사·테스트 요건은 **미정**이다. 임시값을 확정으로 취급하지 않는다. 스토어 정책은 바뀔 수 있으므로 출시 시점에 공식 문서로 확인한다.
@@ -28,7 +28,8 @@
 
 | 경로 | 현재 역할 |
 |---|---|
-| `app/lib/`, `app/test/` | **제품 Flutter 앱.** 웹 베타와 Android·iOS 출시의 공통 코드. 제품 기능의 우선 수정 대상 |
+| `app/lib/`, `app/test/` | **제품 Flutter 앱(차주 전용).** 웹 베타와 Android·iOS 출시의 공통 코드. 제품 기능의 우선 수정 대상 |
+| `archive/shipper_app_sample/` | 차주 앱에서 뺀 화주 샘플 화면 보관(2026-11-19). 빌드·테스트 대상이 아니며 화주 앱을 만들 때 참고. 빠진 화주 화면 목록은 그 폴더의 `README.md` |
 | `farm-cargo-mockups.html` | 27개 핵심 화면의 전체 설계 보드(권한 안내·로그인·회원가입·비밀번호 재설정 14개 포함). 관련 흐름이 바뀌면 함께 대조 |
 | `manifest.json`, `sw.js`, 아이콘 | HTML 프로토타입의 PWA 자원. Flutter Web은 `app/web/`의 `index.html`·`manifest.json`을 따로 쓴다 |
 | `index.html`, `workspace.css`, `workspace.js` | 개발 프롬프트와 데모를 나란히 보는 로컬 워크스페이스. 제품 화면과 구분 |
@@ -127,7 +128,7 @@ flutter build web --release --no-web-resources-cdn --base-href /FarmCargo/
 ```
 
 - 2026-11-03 클라우드 환경(Flutter 3.47.8)에서 `flutter analyze` 이슈 0건, `flutter test` 38개 통과, `flutter build web --release --no-web-resources-cdn` 성공을 확인했다. 빌드한 웹을 Chromium으로 열어 권한 안내 → 로비 화면 이동까지 오류 없이 동작함을 확인했다. 이 환경에는 Android SDK가 없어 Android 빌드·실기기는 확인하지 못했다.
-- 2026-11-12 사용자 PC(Windows, Flutter 3.47.9)에서 `flutter analyze` 이슈 0건, `flutter test` 59개 통과, 웹 빌드 성공, Android 디버그 APK 빌드(`flutter build apk --debug`, 차주 가입 변경 시점) 성공을 확인했다. 실기기 설치·실행은 확인하지 못했다. 이 PC는 사용자 폴더 경로에 한글이 있어 `flutter test`가 셰이더 컴파일 중 멈춘다. 패키지 저장 위치와 임시 폴더를 영문 경로로 바꿔 실행한다(예: Git Bash에서 `export PUB_CACHE='E:\pub_cache' TEMP='E:\tmp_flutter' TMP='E:\tmp_flutter'`).
+- 2026-11-12 사용자 PC(Windows, Flutter 3.47.9)에서 `flutter analyze` 이슈 0건, `flutter test` 51개 통과(2026-11-19 화주 화면 보관 뒤), 웹 빌드 성공, Android 디버그 APK 빌드(`flutter build apk --debug`, 차주 가입 변경 시점) 성공을 확인했다. 실기기 설치·실행은 확인하지 못했다. 이 PC는 사용자 폴더 경로에 한글이 있어 `flutter test`가 셰이더 컴파일 중 멈춘다. 패키지 저장 위치와 임시 폴더를 영문 경로로 바꿔 실행한다(예: Git Bash에서 `export PUB_CACHE='E:\pub_cache' TEMP='E:\tmp_flutter' TMP='E:\tmp_flutter'`).
 - `--no-web-resources-cdn`은 렌더링 엔진(CanvasKit)을 구글 CDN이 아니라 배포 파일에서 받게 한다. 기본값은 구글 CDN(`gstatic.com`)에 의존한다. GitHub Pages 배포 워크플로는 이 옵션을 쓴다.
 - GitHub Pages는 프로젝트 사이트라 `/FarmCargo/` 아래에서 서비스된다. 그래서 배포용 빌드에는 `--base-href /FarmCargo/`가 필요하다. 이 설정으로 빌드한 결과를 `/FarmCargo/` 경로로 로컬에서 서비스해, 모든 요청이 정상 응답하고 `#/welcome` 이동과 `#/reset-password?token=...` 주소 직접 진입·새로고침이 동작함을 Chromium으로 확인했다(2026-11-03).
 - `deploy-web.yml`은 YAML 문법만 확인했고 GitHub Actions에서 실행해 보지 못했다. 배포 전 저장소 설정에서 Pages의 Source를 `GitHub Actions`로 지정해야 하며, 2026-11-03 확인 시점에는 Pages가 켜져 있지 않았다.

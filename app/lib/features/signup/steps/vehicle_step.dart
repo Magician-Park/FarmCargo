@@ -5,7 +5,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/labeled_text_field.dart';
-import '../../auth/account_role.dart';
 import '../signup_controller.dart';
 import '../signup_models.dart';
 
@@ -18,10 +17,8 @@ class VehicleStep extends ConsumerStatefulWidget {
 }
 
 class _VehicleStepState extends ConsumerState<VehicleStep> {
-  static const _role = AccountRole.driver;
-
   late final VehicleInfo? _saved =
-      ref.read(signupControllerProvider(_role)).vehicle;
+      ref.read(signupControllerProvider).vehicle;
   late final _plate = TextEditingController(text: _saved?.plateNumber ?? '');
   late final _other = TextEditingController(text: _saved?.otherType ?? '');
   late final _all = Listenable.merge([_plate, _other]);
@@ -40,7 +37,7 @@ class _VehicleStepState extends ConsumerState<VehicleStep> {
       (_type != VehicleType.other || _other.text.trim().isNotEmpty);
 
   void _next() {
-    ref.read(signupControllerProvider(_role).notifier).submitVehicle(
+    ref.read(signupControllerProvider.notifier).submitVehicle(
           VehicleInfo(
             plateNumber: normalizePlateNumber(_plate.text),
             type: _type!,

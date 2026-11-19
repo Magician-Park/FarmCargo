@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/labeled_text_field.dart';
-import '../../auth/account_role.dart';
 import '../../auth/auth_provider.dart';
 import '../../auth/phone_verification.dart';
 import '../signup_controller.dart';
@@ -17,10 +16,8 @@ class IdentityStep extends ConsumerStatefulWidget {
 }
 
 class _IdentityStepState extends ConsumerState<IdentityStep> {
-  static const _role = AccountRole.driver;
-
   late final _name = TextEditingController(
-      text: ref.read(signupControllerProvider(_role)).name ?? '');
+      text: ref.read(signupControllerProvider).name ?? '');
 
   @override
   void dispose() {
@@ -30,8 +27,8 @@ class _IdentityStepState extends ConsumerState<IdentityStep> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = ref.read(signupControllerProvider(_role).notifier);
-    final verified = ref.watch(signupControllerProvider(_role)).verifiedPhone;
+    final controller = ref.read(signupControllerProvider.notifier);
+    final verified = ref.watch(signupControllerProvider).verifiedPhone;
     final repository = ref.read(authRepositoryProvider);
 
     return Column(

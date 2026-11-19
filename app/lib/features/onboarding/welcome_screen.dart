@@ -38,7 +38,7 @@ class WelcomeScreen extends StatelessWidget {
                       style:
                           TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  const Text('농사짐, 이제 앱으로 부르세요',
+                  const Text('농업 화물 오더, 앱으로 골라 운송하세요',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: AppColors.textMuted)),
                   const SizedBox(height: 48),

@@ -1,6 +1,6 @@
 import 'package:farm_cargo/app.dart';
 import 'package:farm_cargo/core/clock.dart';
-import 'package:farm_cargo/features/signup/document_scanner.dart';
+import 'package:farm_cargo/features/signup/photo_capture.dart';
 import 'package:farm_cargo/features/signup/photo_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -66,25 +66,8 @@ Future<void> goToLogin(WidgetTester tester) async {
   await tapText(tester, '로그인');
 }
 
-Future<void> fillAccount(WidgetTester tester, {String name = '이신규'}) async {
-  await enterAt(tester, 0, name);
-  await enterAt(tester, 1, 'Abcd123!');
-  await enterAt(tester, 2, 'Abcd123!');
-}
-
-Future<void> verifyPhone(WidgetTester tester, String phone) async {
-  await enterAt(tester, 0, phone);
-  await tapText(tester, '인증번호 받기');
-  await enterAt(tester, 1, '123456');
-  await tapText(tester, '인증번호 확인');
-}
-
 Future<void> agreeAllTerms(WidgetTester tester) async {
   await tapText(tester, '약관 전체동의');
-}
-
-Future<void> captureDocument(WidgetTester tester) async {
-  await tapText(tester, '촬영');
 }
 
 /// 차주 가입: 안내 확인 → 이름·휴대폰 인증 → 약관 → 비밀번호 → 차량까지 마친다.

@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/auth/account_role.dart';
 import '../../features/auth/auth_provider.dart';
 import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
@@ -18,11 +17,6 @@ import '../../features/driver/settings_screen.dart';
 import '../../features/driver/settlement_screen.dart';
 import '../../features/driver/pending_approval_screen.dart';
 import '../../features/driver/preferred_routes_screen.dart';
-import '../../features/shipper/feed_request_screen.dart';
-import '../../features/shipper/fertilizer_request_screen.dart';
-import '../../features/shipper/grain_request_screen.dart';
-import '../../features/shipper/shipper_home_screen.dart';
-import '../../features/signup/role_select_screen.dart';
 import '../../features/signup/signup_flow_screen.dart';
 
 abstract final class AppRoutes {
@@ -39,19 +33,10 @@ abstract final class AppRoutes {
   static const driverSettings = '/driver/settings';
   static const driverPreferredRoutes = '/driver/settings/preferred-routes';
   static const driverPending = '/pending';
-  static const shipperHome = '/shipper';
-  static const grainRequest = '/shipper/request/grain';
-  static const fertilizerRequest = '/shipper/request/fertilizer';
-  static const feedRequest = '/shipper/request/feed';
 
   static String resetPasswordLink(String token) =>
       '$resetPassword?token=${Uri.encodeQueryComponent(token)}';
-  static String signupFlow(AccountRole role) => '$signup/${role.name}';
   static String driverOrder(String id) => '$driverHome/orders/$id';
-  static String homeFor(AccountRole role) => switch (role) {
-        AccountRole.driver => driverHome,
-        AccountRole.shipper => shipperHome,
-      };
 }
 
 /// 로그인하지 않아도 볼 수 있는 경로.
@@ -84,8 +69,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             : AppRoutes.driverPending;
       }
       // 로그인 상태에서는 자기 역할의 영역만 접근할 수 있다.
-      final home = AppRoutes.homeFor(account.role);
-      return location.startsWith(home) ? null : home;
+      // 차주 전용 앱: 로그인하면 차주 영역만 쓴다.
+      return location.startsWith(AppRoutes.driverHome)
+          ? null
+          : AppRoutes.driverHome;
     },
     routes: [
       GoRoute(
@@ -116,19 +103,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        // 차주 전용 앱이라 역할 선택 없이 바로 차주 가입으로 간다.
         path: AppRoutes.signup,
-        builder: (context, state) => const RoleSelectScreen(),
+        builder: (context, state) => const SignupFlowScreen(),
         routes: [
+          // 예전 주소(/signup/driver 등)는 가입 첫 화면으로 보낸다.
           GoRoute(
             path: ':role',
-            redirect: (context, state) =>
-                AccountRole.values.asNameMap()[state.pathParameters['role']] ==
-                        null
-                    ? AppRoutes.signup
-                    : null,
-            builder: (context, state) => SignupFlowScreen(
-              role: AccountRole.values.byName(state.pathParameters['role']!),
-            ),
+            redirect: (context, state) => AppRoutes.signup,
           ),
         ],
       ),
@@ -179,24 +161,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '${AppRoutes.driverHome}/orders/:id',
         builder: (context, state) =>
             DetailScreen(orderId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: AppRoutes.shipperHome,
-        builder: (context, state) => const ShipperHomeScreen(),
-        routes: [
-          GoRoute(
-            path: 'request/grain',
-            builder: (context, state) => const GrainRequestScreen(),
-          ),
-          GoRoute(
-            path: 'request/fertilizer',
-            builder: (context, state) => const FertilizerRequestScreen(),
-          ),
-          GoRoute(
-            path: 'request/feed',
-            builder: (context, state) => const FeedRequestScreen(),
-          ),
-        ],
       ),
     ],
   );

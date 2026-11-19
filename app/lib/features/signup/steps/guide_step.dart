@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/section_card.dart';
-import '../../auth/account_role.dart';
 import '../signup_controller.dart';
 import '../signup_models.dart';
 
@@ -54,7 +53,7 @@ class GuideStep extends ConsumerWidget {
         BottomActionBar(
           label: '확인했어요',
           onPressed: () => ref
-              .read(signupControllerProvider(AccountRole.driver).notifier)
+              .read(signupControllerProvider.notifier)
               .confirmGuide(),
         ),
       ],

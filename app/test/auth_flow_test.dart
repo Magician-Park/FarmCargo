@@ -54,7 +54,7 @@ void main() {
     expect(find.text('회원가입'), findsOneWidget);
   });
 
-  testWidgets('화주는 화주 홈으로 가고, 번호 입력칸에는 숫자만 들어간다', (tester) async {
+  testWidgets('화주 계정은 차주 앱에 로그인할 수 없고, 번호 입력칸에는 숫자만 들어간다', (tester) async {
     await pumpApp(tester);
     await goToLogin(tester);
 
@@ -63,8 +63,8 @@ void main() {
     expect(find.text('01033334444'), findsOneWidget);
     await enterAt(tester, 1, 'Passw0rd!');
     await tapText(tester, '로그인');
-    expect(find.text('화주 홈'), findsOneWidget);
-    expect(find.text('박농부님, 안녕하세요'), findsOneWidget);
+    expect(find.text('화주 계정은 화주용 앱에서 이용해 주세요.'), findsOneWidget);
+    expect(find.text('차주 홈'), findsNothing);
   });
 
   testWidgets('가입되지 않은 번호나 형식이 틀린 번호는 로그인할 수 없다', (tester) async {
@@ -89,7 +89,7 @@ void main() {
     expect(find.text('로그인'), findsOneWidget);
   });
 
-  testWidgets('차주는 화주 영역으로 갈 수 없다', (tester) async {
+  testWidgets('예전 화주 주소로 가도 차주 홈에 머문다', (tester) async {
     final container = await pumpApp(tester);
     await container
         .read(authProvider.notifier)
@@ -97,10 +97,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('차주 홈'), findsOneWidget);
 
-    container.read(routerProvider).go(AppRoutes.shipperHome);
+    container.read(routerProvider).go('/shipper/request/grain');
     await tester.pumpAndSettle();
     expect(find.text('차주 홈'), findsOneWidget);
-    expect(find.text('화주 홈'), findsNothing);
   });
 
   testWidgets('퇴비 오더 상세에는 이력 경고가 표시된다', (tester) async {

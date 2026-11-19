@@ -6,9 +6,8 @@ import '../../../core/utils/validators.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/demo_notice.dart';
 import '../../../core/widgets/labeled_text_field.dart';
-import '../../auth/account_role.dart';
 import '../document_capture_card.dart';
-import '../document_scanner.dart';
+import '../photo_capture.dart';
 import '../photo_preview.dart';
 import '../signup_controller.dart';
 import '../signup_models.dart';
@@ -23,10 +22,8 @@ class DocumentsStep extends ConsumerStatefulWidget {
 }
 
 class _DocumentsStepState extends ConsumerState<DocumentsStep> {
-  static const _role = AccountRole.driver;
-
   late final DriverDocuments? _saved =
-      ref.read(signupControllerProvider(_role)).driverDocuments;
+      ref.read(signupControllerProvider).driverDocuments;
   late final Map<DriverDocument, String> _photos = {...?_saved?.photoPaths};
   late final _email =
       TextEditingController(text: _saved?.taxInvoiceEmail ?? '');
@@ -50,7 +47,7 @@ class _DocumentsStepState extends ConsumerState<DocumentsStep> {
       _agreed;
 
   void _submit() {
-    ref.read(signupControllerProvider(_role).notifier).submitDriverDocuments(
+    ref.read(signupControllerProvider.notifier).submitDriverDocuments(
           DriverDocuments(
             photoPaths: Map.of(_photos),
             taxInvoiceEmail: _email.text.trim(),
@@ -78,7 +75,7 @@ class _DocumentsStepState extends ConsumerState<DocumentsStep> {
 
   @override
   Widget build(BuildContext context) {
-    final submitting = ref.watch(signupControllerProvider(_role)).submitting;
+    final submitting = ref.watch(signupControllerProvider).submitting;
     final preview = ref.watch(photoPreviewProvider);
 
     return Column(

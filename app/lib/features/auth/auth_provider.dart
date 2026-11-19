@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'account.dart';
+import 'account_role.dart';
 import 'auth_repository.dart';
 
 final authRepositoryProvider =
@@ -11,10 +12,15 @@ class AuthNotifier extends Notifier<Account?> {
   @override
   Account? build() => null;
 
+  /// 차주 전용 앱이라 화주 계정은 로그인시키지 않는다(화주 앱은 별도, 2026-11-19).
   Future<void> signIn({required String phone, required String password}) async {
-    state = await ref
+    final account = await ref
         .read(authRepositoryProvider)
         .signIn(phone: phone, password: password);
+    if (account.role != AccountRole.driver) {
+      throw const AuthException('화주 계정은 화주용 앱에서 이용해 주세요.');
+    }
+    state = account;
   }
 
   void logout() => state = null;

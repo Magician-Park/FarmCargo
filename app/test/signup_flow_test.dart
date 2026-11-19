@@ -4,10 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'helpers.dart';
 
-Future<void> startSignup(WidgetTester tester, String roleCard) async {
+/// 권한 안내 → 로비 → 회원가입. 차주 전용 앱이라 역할 선택 없이 바로 차주 가입이다.
+Future<void> startSignup(WidgetTester tester) async {
   await tapText(tester, '확인');
   await tapText(tester, '회원가입');
-  await tapText(tester, roleCard);
 }
 
 void main() {
@@ -15,7 +15,7 @@ void main() {
   testWidgets('차주 회원가입: 안내부터 서류까지 마치면 가입 신청되고, 로그인하면 승인 대기 화면만 보인다',
       (tester) async {
     await pumpApp(tester);
-    await startSignup(tester, '화물차로 운송해요');
+    await startSignup(tester);
 
     // 1. 가입 조건 안내
     expect(
@@ -98,7 +98,7 @@ void main() {
 
   testWidgets('심사 중인 차주는 다른 차주 화면으로 갈 수 없고 로그아웃할 수 있다', (tester) async {
     final container = await pumpApp(tester);
-    await startSignup(tester, '화물차로 운송해요');
+    await startSignup(tester);
     await driverSignupUntilDocuments(tester, phone: '01077776666');
     await fillDriverDocuments(tester);
     await tapText(tester, '가입 신청');
@@ -112,7 +112,7 @@ void main() {
       AppRoutes.driverHome,
       AppRoutes.driverJobs,
       AppRoutes.driverOrder('order-1'),
-      AppRoutes.shipperHome,
+      '/shipper', // 화주 화면은 이 앱에 없다
     ]) {
       container.read(routerProvider).go(path);
       await tester.pumpAndSettle();
@@ -126,7 +126,7 @@ void main() {
   testWidgets('차주 가입 중 이미 가입된 번호면 본인 인증 단계로 돌아가 다른 번호로 다시 인증한다',
       (tester) async {
     await pumpApp(tester);
-    await startSignup(tester, '화물차로 운송해요');
+    await startSignup(tester);
     await driverSignupUntilDocuments(tester, phone: '01011112222'); // 데모 차주 번호
     await fillDriverDocuments(tester);
     await tapText(tester, '가입 신청');
@@ -150,102 +150,47 @@ void main() {
     expect(find.text('가입 신청이 접수되었어요'), findsOneWidget);
   });
 
-  testWidgets('화주 회원가입: 주민등록증을 입력하고 사업자등록증은 사진만 제출해 가입한다', (tester) async {
+  testWidgets('뒤로가기는 이전 단계로 가고 입력값이 유지되며, 첫 단계에서는 로비로 간다', (tester) async {
     await pumpApp(tester);
-    await startSignup(tester, '짐을 보내요');
-
-    await fillAccount(tester, name: '최화주');
+    await startSignup(tester);
+    await tapText(tester, '확인했어요');
+    await enterAt(tester, 0, '이신규');
+    await enterAt(tester, 1, '01044443333');
+    await tapText(tester, '인증번호 받기');
+    await enterAt(tester, 2, '123456');
+    await tapText(tester, '인증번호 확인');
     await tapText(tester, '다음');
-    await verifyPhone(tester, '01055556666');
-    await tapText(tester, '다음');
-    await agreeAllTerms(tester);
-    await tapText(tester, '다음');
-
-    // 신분증
-    expect(find.text('주민등록증'), findsOneWidget);
-    await captureDocument(tester);
-    expect(find.text('750315-1234568'), findsOneWidget);
-    expect(bottomButtonEnabled(tester, '다음'), isTrue);
-    await enterAt(tester, 1, '7503151234567'); // 검증번호가 틀린 번호
-    expect(bottomButtonEnabled(tester, '다음'), isFalse);
-    await enterAt(tester, 1, '7503151234568');
-    await tapText(tester, '다음');
-
-    // 사업자등록증: 화주는 사진만 받고 입력은 시키지 않는다
-    expect(bottomButtonEnabled(tester, '가입 완료'), isFalse);
-    await captureDocument(tester);
-    expect(find.text('관할 세무서'), findsNothing);
-    expect(find.byType(TextField), findsNothing);
-    expect(find.textContaining('따로 입력할 내용은 없어요'), findsOneWidget);
-    expect(bottomButtonEnabled(tester, '가입 완료'), isTrue);
-    await tapText(tester, '가입 완료');
-    expect(find.text('회원가입이 완료되었어요'), findsOneWidget);
-  });
-
-  testWidgets('이미 가입된 휴대폰 번호면 휴대폰 인증 단계로 돌아가 다른 번호로 다시 인증한다', (tester) async {
-    await pumpApp(tester);
-    await startSignup(tester, '짐을 보내요');
-
-    await fillAccount(tester);
-    await tapText(tester, '다음');
-    await verifyPhone(tester, '01011112222'); // 데모 차주 계정의 번호
-    await tapText(tester, '다음');
-    await agreeAllTerms(tester);
-    await tapText(tester, '다음');
-    await captureDocument(tester);
-    await tapText(tester, '다음');
-    await captureDocument(tester);
-    await tapText(tester, '가입 완료');
-
-    expect(find.text('이미 가입된 휴대폰 번호예요.'), findsOneWidget);
-    expect(find.text('휴대폰 번호를 인증해 주세요'), findsOneWidget);
-    expect(find.text('휴대폰 인증이 완료되었어요'), findsNothing);
-
-    // 다른 번호로 다시 인증하면 이어서 가입할 수 있다
-    await verifyPhone(tester, '01055550000');
-    await tapText(tester, '다음');
-    await tapText(tester, '다음'); // 약관(유지됨)
-    await tapText(tester, '다음'); // 신분증(유지됨)
-    await tapText(tester, '가입 완료');
-    expect(find.text('회원가입이 완료되었어요'), findsOneWidget);
-  });
-
-  testWidgets('뒤로가기는 이전 단계로 가고 입력값이 유지되며, 첫 단계에서는 역할 선택으로 간다', (tester) async {
-    await pumpApp(tester);
-    await startSignup(tester, '짐을 보내요');
-
-    await fillAccount(tester);
-    await tapText(tester, '다음');
-    expect(find.text('휴대폰 번호를 인증해 주세요'), findsOneWidget);
+    expect(find.text('약관에 동의해 주세요'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
-    expect(find.text('계정 정보를 입력해 주세요'), findsOneWidget);
     expect(find.text('이신규'), findsOneWidget); // 입력값 유지
+    expect(find.text('휴대폰 인증이 완료되었어요'), findsOneWidget);
 
-    // 시스템 뒤로가기도 동일하게 동작
-    await tapText(tester, '다음');
+    // 시스템 뒤로가기도 이전 단계로 간다
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.text('계정 정보를 입력해 주세요'), findsOneWidget);
+    expect(find.text('가입 전에 확인해 주세요'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
-    expect(find.text('어떻게 이용하시나요?'), findsOneWidget);
+    expect(find.text('회원가입'), findsOneWidget); // 로비
   });
 
   testWidgets('로그인 화면의 회원이 아니신가요 버튼으로 회원가입에 갈 수 있다', (tester) async {
     await pumpApp(tester);
     await goToLogin(tester);
     await tapText(tester, '혹시 회원이 아니신가요?');
-    expect(find.text('어떻게 이용하시나요?'), findsOneWidget);
+    expect(find.text('가입 전에 확인해 주세요'), findsOneWidget);
   });
 
-  testWidgets('잘못된 역할 경로는 역할 선택으로 돌려보낸다', (tester) async {
+  testWidgets('예전 역할별 가입 주소는 차주 가입 첫 화면으로 보낸다', (tester) async {
     final container = await pumpApp(tester);
-    container.read(routerProvider).go('/signup/admin');
-    await tester.pumpAndSettle();
-    expect(find.text('어떻게 이용하시나요?'), findsOneWidget);
+    for (final path in ['/signup/shipper', '/signup/driver', '/signup/admin']) {
+      container.read(routerProvider).go(path);
+      await tester.pumpAndSettle();
+      expect(find.text('가입 전에 확인해 주세요'), findsOneWidget, reason: path);
+    }
   });
 }
 
@@ -256,7 +201,7 @@ void smallScreenTests() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await pumpApp(tester);
-    await startSignup(tester, '화물차로 운송해요');
+    await startSignup(tester);
 
     tester.view.viewInsets = const FakeViewPadding(bottom: 260);
     addTearDown(tester.view.resetViewInsets);

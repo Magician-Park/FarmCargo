@@ -58,6 +58,7 @@ class MockAuthRepository implements AuthRepository {
           vehicleLabel: '일반 카고(25톤)'),
       password: 'Passw0rd!',
     );
+    // 화주 데모 계정: 차주 앱에서 화주 로그인이 막히는지 확인하는 용도.
     _add(
       const Account(
           id: 'demo-shipper',
@@ -112,7 +113,7 @@ class MockAuthRepository implements AuthRepository {
       status: request.role == AccountRole.driver
           ? AccountStatus.pending
           : AccountStatus.approved,
-      vehicleLabel: request.vehicle?.typeLabel,
+      vehicleLabel: request.vehicle.typeLabel,
     );
     _add(account, password: request.account.password);
     return account;

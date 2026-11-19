@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/labeled_text_field.dart';
-import '../../auth/account_role.dart';
 import '../signup_controller.dart';
 
 /// 차주 비밀번호·비밀번호 확인. 휴대폰 인증 다음 단계다(2026-11-05).
@@ -16,10 +15,8 @@ class PasswordStep extends ConsumerStatefulWidget {
 }
 
 class _PasswordStepState extends ConsumerState<PasswordStep> {
-  static const _role = AccountRole.driver;
-
   late final _password = TextEditingController(
-      text: ref.read(signupControllerProvider(_role)).password ?? '');
+      text: ref.read(signupControllerProvider).password ?? '');
   late final _confirm = TextEditingController(text: _password.text);
   late final _all = Listenable.merge([_password, _confirm]);
 
@@ -72,7 +69,7 @@ class _PasswordStepState extends ConsumerState<PasswordStep> {
             label: '다음',
             onPressed: _valid
                 ? () => ref
-                    .read(signupControllerProvider(_role).notifier)
+                    .read(signupControllerProvider.notifier)
                     .submitPassword(_password.text)
                 : null,
           ),

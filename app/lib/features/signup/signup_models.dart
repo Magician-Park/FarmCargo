@@ -1,17 +1,14 @@
 import '../auth/account_role.dart';
 
-/// 회원가입 단계. 역할마다 단계가 다르다.
+/// 차주 회원가입 단계. 순서는 요구사항 3절 ‘차주 회원가입 흐름’(사용자 결정 2026-11-04·05·09·11).
+/// 화주 가입 단계는 화주 앱과 함께 다시 만든다(archive/shipper_app_sample 참고).
 enum SignupStep {
   guide('안내'),
-  account('계정'),
   identity('본인 인증'),
-  phone('휴대폰'),
   terms('약관'),
   password('비밀번호'),
   vehicle('차량'),
   documents('서류'),
-  idCard('신분증'),
-  business('사업자'),
   complete('완료');
 
   const SignupStep(this.label);
@@ -19,30 +16,6 @@ enum SignupStep {
 
   /// 상단 단계 표시에 넣지 않는 단계(안내 창과 완료 화면).
   bool get showsInIndicator => this != guide && this != complete;
-}
-
-extension SignupSteps on AccountRole {
-  /// 안내·완료 화면을 포함한 전체 단계.
-  /// 차주 순서는 요구사항 3절 ‘차주 회원가입 흐름’(사용자 결정 2026-11-04·05·09·11)을 따른다.
-  List<SignupStep> get signupSteps => switch (this) {
-        AccountRole.driver => const [
-            SignupStep.guide,
-            SignupStep.identity,
-            SignupStep.terms,
-            SignupStep.password,
-            SignupStep.vehicle,
-            SignupStep.documents,
-            SignupStep.complete,
-          ],
-        AccountRole.shipper => const [
-            SignupStep.account,
-            SignupStep.phone,
-            SignupStep.terms,
-            SignupStep.idCard,
-            SignupStep.business,
-            SignupStep.complete,
-          ],
-      };
 }
 
 class AccountInfo {
@@ -130,42 +103,20 @@ class DriverDocuments {
   });
 }
 
-/// 주민등록증.
-class IdCard {
-  final String name;
-  final String residentNumber; // ######-#######
-  final String address;
-  final String issuedDate; // yyyy-MM-dd
-
-  const IdCard({
-    required this.name,
-    required this.residentNumber,
-    required this.address,
-    required this.issuedDate,
-  });
-
-  static const empty =
-      IdCard(name: '', residentNumber: '', address: '', issuedDate: '');
-}
-
 class SignupRequest {
   final AccountRole role;
   final AccountInfo account;
   final String phone;
   final Set<TermsItem> agreedTerms;
-  final VehicleInfo? vehicle; // 차주
-  final DriverDocuments? driverDocuments; // 차주
-  final IdCard? idCard; // 화주
-  final String? businessPhotoPath; // 화주 사업자등록증 사진
+  final VehicleInfo vehicle;
+  final DriverDocuments driverDocuments;
 
   const SignupRequest({
     required this.role,
     required this.account,
     required this.phone,
     required this.agreedTerms,
-    this.vehicle,
-    this.driverDocuments,
-    this.idCard,
-    this.businessPhotoPath,
+    required this.vehicle,
+    required this.driverDocuments,
   });
 }

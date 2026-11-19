@@ -3,15 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
-import '../../auth/account_role.dart';
 import '../signup_controller.dart';
 import '../signup_models.dart';
 
 /// 약관 동의. 필수 항목을 모두 체크해야 다음으로 넘어갈 수 있다.
 class TermsStep extends ConsumerStatefulWidget {
-  const TermsStep({super.key, required this.role});
-
-  final AccountRole role;
+  const TermsStep({super.key});
 
   @override
   ConsumerState<TermsStep> createState() => _TermsStepState();
@@ -19,7 +16,7 @@ class TermsStep extends ConsumerStatefulWidget {
 
 class _TermsStepState extends ConsumerState<TermsStep> {
   late final Set<TermsItem> _agreed = {
-    ...ref.read(signupControllerProvider(widget.role)).agreedTerms,
+    ...ref.read(signupControllerProvider).agreedTerms,
   };
 
   bool get _all => _agreed.length == TermsItem.values.length;
@@ -106,7 +103,7 @@ class _TermsStepState extends ConsumerState<TermsStep> {
           label: '다음',
           onPressed: _requiredDone
               ? () => ref
-                  .read(signupControllerProvider(widget.role).notifier)
+                  .read(signupControllerProvider.notifier)
                   .submitTerms(Set.of(_agreed))
               : null,
         ),
