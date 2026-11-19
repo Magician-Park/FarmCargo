@@ -54,8 +54,8 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
   @override
   Widget build(BuildContext context) {
     final order = ref.watch(orderProvider(orderId));
-    final mine = ref.watch(myOrdersProvider).value ?? const [];
-    final accepted = mine.any((o) => o.id == orderId);
+    // 운행 기록이 있으면 내가 수락한 오더다(운송이 끝난 오더 포함).
+    final accepted = ref.watch(tripProvider(orderId)).value != null;
 
     return Scaffold(
       appBar: AppBar(
@@ -88,10 +88,14 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                   ),
-                  onPressed: accepted || _accepting ? null : _accept,
+                  onPressed: accepted
+                      ? () => context.push(AppRoutes.driverTrip(orderId))
+                      : _accepting
+                          ? null
+                          : _accept,
                   child: Text(
                     accepted
-                        ? '내가 수락한 오더예요'
+                        ? '운행 화면으로'
                         : order.value!.isCompost
                             ? '이력 기록 동의하고 수락하기'
                             : '이 오더 수락하기',

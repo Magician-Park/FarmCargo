@@ -13,6 +13,7 @@ class OrderCard extends StatelessWidget {
     required this.today,
     required this.onTap,
     this.distanceFromMeKm,
+    this.statusLabel,
   });
 
   final Order order;
@@ -21,6 +22,9 @@ class OrderCard extends StatelessWidget {
 
   /// 내 위치에서 상차지까지 직선거리. 위치를 모르면 null.
   final double? distanceFromMeKm;
+
+  /// 내 오더에서 보여 줄 운행 상태(예: ‘운송 중’). 오더 찾기에서는 null.
+  final String? statusLabel;
 
   static const _small = TextStyle(color: AppColors.textMuted, fontSize: 12);
 
@@ -44,6 +48,14 @@ class OrderCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (statusLabel != null) ...[
+                Text(statusLabel!,
+                    style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary)),
+                const SizedBox(height: 8),
+              ],
               // 상·하차 시간과 배지
               Row(
                 children: [

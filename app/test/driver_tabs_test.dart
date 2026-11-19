@@ -68,10 +68,11 @@ void main() {
     expect(find.text('소맥피 · 외국산'), findsOneWidget);
     expect(find.text('오늘(11월 12일(목)) 상차할 운송 건은 1건이에요'), findsOneWidget);
 
-    // 다시 열면 수락 버튼 대신 안내가 보인다
+    // 내 오더의 오더를 누르면 운행 화면으로 간다
+    expect(find.text('상차 전'), findsOneWidget);
     await tester.tap(find.text('소맥피 · 외국산'));
     await tester.pumpAndSettle();
-    expect(find.text('내가 수락한 오더예요'), findsOneWidget);
+    expect(find.text('상차 계근표 올리기'), findsWidgets);
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
 
@@ -283,5 +284,70 @@ void main() {
         of: find.byType(NavigationBar), matching: find.text('홈')));
     await tester.pumpAndSettle();
     expect(find.text('추천 맞춤 오더'), findsOneWidget);
+  });
+
+  testWidgets('운행: 상차 계근표 → 하차 증빙 → 화주 확인(시연) → 운송 완료 → 운행 기록', (tester) async {
+    await loginDriver(tester);
+    await openDriverTab(tester, '오더 찾기');
+    await tester.tap(find.text('소맥피 · 외국산'));
+    await tester.pumpAndSettle();
+    await tapText(tester, '이 오더 수락하기');
+    await tester.tap(find.text('소맥피 · 외국산'));
+    await tester.pumpAndSettle();
+
+    // 2단계: 상차 계근표. 사진을 찍기 전에는 올릴 수 없다
+    expect(bottomButtonEnabled(tester, '상차 계근표 올리기'), isFalse);
+    await tapText(tester, '촬영');
+    expect(find.byKey(const ValueKey('preview:/fake/photo.jpg')), findsOneWidget);
+    await tapText(tester, '상차 계근표 올리기');
+    expect(find.text('운송 중'), findsOneWidget);
+    expect(find.text('상차 계근표 올림'), findsOneWidget);
+
+    // 3단계: 하차 증빙. 계근표가 없으면 공장 직원 서명으로 바꿀 수 있다
+    await tester.tap(find.text('공장 직원 서명'));
+    await tester.pumpAndSettle();
+    expect(find.text('직원이 서명한 종이를 촬영해 주세요'), findsOneWidget);
+    await tapText(tester, '촬영');
+    await tapText(tester, '하차 증빙 보내기');
+    expect(find.textContaining('화주가 하차 증빙을 확인하고 있어요'), findsOneWidget);
+    expect(find.text('공장 직원 서명 올림'), findsOneWidget);
+    expect(find.textContaining('1시간 10분'), findsOneWidget);
+
+    // 시연용 화주 응답: 예 → 운송 완료
+    await tester.scrollUntilVisible(find.text('화주: 예'), 100);
+    await tapText(tester, '화주: 예');
+    expect(find.text('운송 완료'), findsWidgets);
+    expect(find.text('화주: 예'), findsNothing);
+
+    // 내 오더에서는 빠지고 운행 기록에 생긴다
+    await tester.scrollUntilVisible(find.text('내 오더로 가기'), 100);
+    await tapText(tester, '내 오더로 가기');
+    expect(find.textContaining('아직 수락한 오더가 없어요'), findsOneWidget);
+    await tester.tap(find.text('운행 기록'));
+    await tester.pumpAndSettle();
+    expect(find.text('검색 결과 1건'), findsOneWidget);
+    expect(find.text('인천 서구 → 충남 당진'), findsOneWidget);
+    expect(find.text('300,000원'), findsOneWidget);
+    expect(find.text('별점 대기'), findsOneWidget);
+  });
+
+  testWidgets('운행: 화주가 아니오라고 하면 고객센터 확인 중이 된다', (tester) async {
+    await loginDriver(tester);
+    await openDriverTab(tester, '오더 찾기');
+    await tester.tap(find.text('소맥피 · 외국산'));
+    await tester.pumpAndSettle();
+    await tapText(tester, '이 오더 수락하기');
+    await tester.tap(find.text('소맥피 · 외국산'));
+    await tester.pumpAndSettle();
+    await tapText(tester, '촬영');
+    await tapText(tester, '상차 계근표 올리기');
+    await tapText(tester, '촬영');
+    await tapText(tester, '하차 증빙 보내기');
+    await tester.scrollUntilVisible(find.text('화주: 아니오'), 100);
+    await tester.tap(find.text('화주: 아니오'));
+    await tester.pumpAndSettle();
+    expect(find.text('고객센터 확인 중'), findsOneWidget);
+    expect(find.textContaining('고객센터가 확인하고 있어요'), findsOneWidget);
+    expect(find.text('화주: 예'), findsNothing);
   });
 }

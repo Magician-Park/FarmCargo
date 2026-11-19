@@ -1,6 +1,7 @@
 import '../../core/clock.dart';
 import '../../core/location/location_service.dart';
 import 'order.dart';
+import 'trip.dart';
 import 'trip_record.dart';
 
 /// 오더를 수락할 수 없을 때. [message]는 화면에 그대로 보여 준다.
@@ -27,11 +28,22 @@ abstract interface class OrderRepository {
   /// 이미 선택된 오더이거나 상차일 기준 하루 3건을 넘으면 [OrderAcceptException](D03).
   Future<void> acceptOrder(String id);
 
-  /// 내가 수락한 오더(‘내 오더’). 상차가 빠른 순.
+  /// 내가 수락하고 아직 운송이 끝나지 않은 오더(‘내 오더’). 상차가 빠른 순.
   Future<List<Order>> fetchMyOrders();
 
   /// 운송 종료가 확인된 운행 기록. 최근 순.
   Future<List<TripRecord>> fetchTripRecords();
+
+  /// 내가 수락한 오더의 운행 진행 상태. 내 오더가 아니면 null.
+  Future<TripProgress?> fetchTrip(String orderId);
+
+  /// 상차 계근표 사진을 올린다. 화주 확인 없이 사진만 저장한다(D05).
+  Future<void> uploadLoadingProof(String orderId, String photoPath);
+
+  /// 하차 계근표(없으면 공장 직원 서명) 사진을 올리고 화주에게 확인을 요청한다(D05).
+  /// 화주가 30분 안에 답하지 않으면 다시 알리고, 1시간 10분 무응답이면 고객센터에 알리는 일은 서버가 한다.
+  Future<void> uploadUnloadingProof(
+      String orderId, String photoPath, UnloadingProofKind kind);
 }
 
 /// 서버 연동 전까지 쓰는 샘플 데이터. 화주 이름·주소·단가·위치는 모두 가상 값이다.
@@ -40,12 +52,16 @@ abstract interface class OrderRepository {
 class MockOrderRepository implements OrderRepository {
   /// [orders]를 주면 샘플 대신 그 목록을 쓴다(테스트용).
   MockOrderRepository({DateTime Function()? now, List<Order>? orders})
-      : _orders = orders ?? _sampleOrders(dateOnly((now ?? DateTime.now)()));
+      : _now = now ?? DateTime.now,
+        _orders = orders ?? _sampleOrders(dateOnly((now ?? DateTime.now)()));
 
   static const dailyAcceptLimit = 3;
 
   final List<Order> _orders;
+  final DateTime Function() _now;
   final _acceptedIds = <String>[];
+  final _trips = <String, TripProgress>{};
+  final _records = <TripRecord>[];
 
   List<Order> get _available =>
       [for (final o in _orders) if (!_acceptedIds.contains(o.id)) o];
@@ -71,25 +87,95 @@ class MockOrderRepository implements OrderRepository {
     if (order == null || _acceptedIds.contains(id)) {
       throw const OrderAcceptException('이미 다른 차주가 선택했거나 없는 오더예요.');
     }
-    final mine = await fetchMyOrders();
-    final sameDay = mine
-        .where((o) => daysBetween(o.loading.date, order.loading.date) == 0)
+    // 운송이 끝난 오더도 그날 수락한 건수에 들어간다.
+    final sameDay = _orders
+        .where((o) =>
+            _acceptedIds.contains(o.id) &&
+            daysBetween(o.loading.date, order.loading.date) == 0)
         .length;
     if (sameDay >= dailyAcceptLimit) {
       throw const OrderAcceptException(
           '같은 상차일에는 하루 최대 $dailyAcceptLimit건까지 수락할 수 있어요.');
     }
     _acceptedIds.add(id);
+    _trips[id] = TripProgress(orderId: id);
   }
 
-  /// 운송 완료(증빙) 처리가 아직 없어 데모에서는 늘 비어 있다.
   @override
-  Future<List<TripRecord>> fetchTripRecords() async => const [];
+  Future<List<TripRecord>> fetchTripRecords() async =>
+      [..._records]..sort((a, b) => b.date.compareTo(a.date));
+
+  @override
+  Future<TripProgress?> fetchTrip(String orderId) async => _trips[orderId];
+
+  TripProgress _tripOrThrow(String orderId) {
+    final trip = _trips[orderId];
+    if (trip == null) {
+      throw const TripActionException('내가 수락한 오더가 아니에요.');
+    }
+    return trip;
+  }
+
+  @override
+  Future<void> uploadLoadingProof(String orderId, String photoPath) async {
+    final trip = _tripOrThrow(orderId);
+    if (trip.status != TripStatus.assigned) {
+      throw const TripActionException('이미 상차 계근표를 올렸어요.');
+    }
+    _trips[orderId] = trip.copyWith(
+        status: TripStatus.inTransit,
+        loadingProofPath: photoPath,
+        loadedAt: _now());
+  }
+
+  @override
+  Future<void> uploadUnloadingProof(
+      String orderId, String photoPath, UnloadingProofKind kind) async {
+    final trip = _tripOrThrow(orderId);
+    if (trip.status == TripStatus.assigned) {
+      throw const TripActionException('상차 계근표를 먼저 올려 주세요.');
+    }
+    if (trip.status != TripStatus.inTransit) {
+      throw const TripActionException('이미 하차 증빙을 보냈어요.');
+    }
+    _trips[orderId] = trip.copyWith(
+        status: TripStatus.awaitingConfirmation,
+        unloadingProofPath: photoPath,
+        unloadingProofKind: kind,
+        unloadingSubmittedAt: _now());
+  }
+
+  /// 시연용: 화주 앱이 없어 화주의 예/아니오 응답을 대신한다. 실제 서버 연결 뒤에는 쓰지 않는다.
+  /// ‘예’면 운송 완료로 바꾸고 운행 기록을 만든다(별점은 화주가 나중에 줌). ‘아니오’면 고객센터 확인 중.
+  Future<void> simulateShipperResponse(String orderId,
+      {required bool confirmed}) async {
+    final trip = _tripOrThrow(orderId);
+    if (trip.status != TripStatus.awaitingConfirmation) {
+      throw const TripActionException('화주 확인을 기다리는 운행이 아니에요.');
+    }
+    _trips[orderId] = trip.copyWith(
+        status: confirmed ? TripStatus.completed : TripStatus.disputed,
+        confirmedAt: _now());
+    if (!confirmed) return;
+    final order = (await fetchOrder(orderId))!;
+    _records.add(TripRecord(
+      orderId: orderId,
+      date: dateOnly(_now()),
+      originRegion: order.originRegion,
+      destinationRegion: order.destinationRegion,
+      itemLabel: order.itemLabel,
+      quantity: order.quantity,
+      fare: order.estimatedFare,
+    ));
+  }
 
   @override
   Future<List<Order>> fetchMyOrders() async {
     final mine = [
-      for (final o in _orders) if (_acceptedIds.contains(o.id)) o,
+      for (final o in _orders)
+        if (_acceptedIds.contains(o.id) &&
+            _trips[o.id]?.status != TripStatus.completed)
+          o,
     ];
     mine.sort((a, b) => a.loading.date.compareTo(b.loading.date));
     return mine;

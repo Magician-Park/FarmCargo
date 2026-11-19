@@ -2,6 +2,7 @@ import 'package:farm_cargo/core/location/location_service.dart';
 import 'package:farm_cargo/features/driver/order_search.dart';
 import 'package:farm_cargo/features/orders/order.dart';
 import 'package:farm_cargo/features/orders/order_repository.dart';
+import 'package:farm_cargo/features/orders/trip.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final _now = DateTime(2026, 11, 12, 9); // 목요일
@@ -143,6 +144,70 @@ void main() {
       expect(sorted(OrderSort.latest).first, 'order-3'); // 가장 최근에 올림
       expect(sorted(OrderSort.highestFare).take(3),
           ['order-5', 'order-4', 'order-3']); // 43만, 35만, 30만(kg당 예상)
+    });
+  });
+
+  group('운행·증빙(D05)', () {
+    test('상차 계근표 → 하차 증빙 → 화주 예 → 운송 완료와 운행 기록', () async {
+      final repository = MockOrderRepository(now: () => _now);
+      expect(await repository.fetchTrip('order-3'), isNull); // 수락 전
+      await repository.acceptOrder('order-3');
+      expect((await repository.fetchTrip('order-3'))!.status, TripStatus.assigned);
+
+      // 상차 계근표 없이 하차 증빙은 못 올린다
+      await expectLater(
+          repository.uploadUnloadingProof(
+              'order-3', '/p.jpg', UnloadingProofKind.weighTicket),
+          throwsA(isA<TripActionException>()));
+      await repository.uploadLoadingProof('order-3', '/load.jpg');
+      expect((await repository.fetchTrip('order-3'))!.status, TripStatus.inTransit);
+      await expectLater(repository.uploadLoadingProof('order-3', '/again.jpg'),
+          throwsA(isA<TripActionException>()));
+
+      await repository.uploadUnloadingProof(
+          'order-3', '/unload.jpg', UnloadingProofKind.staffSignature);
+      final waiting = (await repository.fetchTrip('order-3'))!;
+      expect(waiting.status, TripStatus.awaitingConfirmation);
+      expect(waiting.unloadingProofKind, UnloadingProofKind.staffSignature);
+
+      await repository.simulateShipperResponse('order-3', confirmed: true);
+      expect((await repository.fetchTrip('order-3'))!.status, TripStatus.completed);
+      expect(await repository.fetchMyOrders(), isEmpty); // 내 오더에서 빠짐
+      final records = await repository.fetchTripRecords();
+      expect(records.single.fare, 300000);
+      expect(records.single.rating, isNull);
+    });
+
+    test('화주가 아니오라고 하면 고객센터 확인 중이 되고 운행 기록은 생기지 않는다', () async {
+      final repository = MockOrderRepository(now: () => _now);
+      await repository.acceptOrder('order-1');
+      await repository.uploadLoadingProof('order-1', '/l.jpg');
+      await repository.uploadUnloadingProof(
+          'order-1', '/u.jpg', UnloadingProofKind.weighTicket);
+      await repository.simulateShipperResponse('order-1', confirmed: false);
+      expect((await repository.fetchTrip('order-1'))!.status, TripStatus.disputed);
+      expect(await repository.fetchTripRecords(), isEmpty);
+    });
+
+    test('수락하지 않은 오더에는 증빙을 올릴 수 없다', () async {
+      final repository = MockOrderRepository(now: () => _now);
+      await expectLater(repository.uploadLoadingProof('order-2', '/x.jpg'),
+          throwsA(isA<TripActionException>()));
+    });
+
+    test('운송이 끝난 오더도 그날 수락 건수(하루 3건)에 들어간다', () async {
+      final repository = MockOrderRepository(orders: [
+        for (var i = 1; i <= 4; i++) _order('a$i'),
+      ]);
+      await repository.acceptOrder('a1');
+      await repository.uploadLoadingProof('a1', '/l.jpg');
+      await repository.uploadUnloadingProof(
+          'a1', '/u.jpg', UnloadingProofKind.weighTicket);
+      await repository.simulateShipperResponse('a1', confirmed: true);
+      await repository.acceptOrder('a2');
+      await repository.acceptOrder('a3');
+      await expectLater(
+          repository.acceptOrder('a4'), throwsA(isA<OrderAcceptException>()));
     });
   });
 }

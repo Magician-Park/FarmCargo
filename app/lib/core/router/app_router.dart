@@ -15,6 +15,7 @@ import '../../features/driver/lobby_screen.dart';
 import '../../features/driver/my_orders_screen.dart';
 import '../../features/driver/settings_screen.dart';
 import '../../features/driver/settlement_screen.dart';
+import '../../features/driver/trip_screen.dart';
 import '../../features/driver/pending_approval_screen.dart';
 import '../../features/driver/preferred_routes_screen.dart';
 import '../../features/signup/signup_flow_screen.dart';
@@ -37,6 +38,7 @@ abstract final class AppRoutes {
   static String resetPasswordLink(String token) =>
       '$resetPassword?token=${Uri.encodeQueryComponent(token)}';
   static String driverOrder(String id) => '$driverHome/orders/$id';
+  static String driverTrip(String orderId) => '$driverHome/trips/$orderId';
 }
 
 /// 로그인하지 않아도 볼 수 있는 경로.
@@ -161,6 +163,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '${AppRoutes.driverHome}/orders/:id',
         builder: (context, state) =>
             DetailScreen(orderId: state.pathParameters['id']!),
+      ),
+      // 운행 진행·증빙(D05). 상세처럼 하단 탭을 가린다.
+      GoRoute(
+        path: '${AppRoutes.driverHome}/trips/:id',
+        builder: (context, state) =>
+            TripScreen(orderId: state.pathParameters['id']!),
       ),
     ],
   );

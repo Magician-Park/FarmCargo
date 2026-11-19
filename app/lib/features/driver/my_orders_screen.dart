@@ -82,10 +82,13 @@ class _OrderHistory extends ConsumerWidget {
               )
             else
               for (final o in orders) ...[
+                // 수락한 오더는 운행 화면으로 바로 간다.
                 OrderCard(
                   order: o,
                   today: today,
-                  onTap: () => context.push(AppRoutes.driverOrder(o.id)),
+                  statusLabel:
+                      ref.watch(tripProvider(o.id)).value?.status.label,
+                  onTap: () => context.push(AppRoutes.driverTrip(o.id)),
                 ),
                 const SizedBox(height: 12),
               ],
