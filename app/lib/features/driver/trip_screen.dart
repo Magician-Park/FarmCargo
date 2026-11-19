@@ -14,6 +14,7 @@ import '../orders/trip.dart';
 import '../signup/document_capture_card.dart';
 import '../signup/photo_capture.dart';
 import '../signup/photo_preview.dart';
+import 'trip_changes.dart';
 
 /// 운행 진행·운송 증빙(D05). 수락한 오더를 상차 계근표 → 하차 증빙 → 화주 확인 → 운송 완료 순으로 진행한다.
 class TripScreen extends ConsumerWidget {
@@ -72,6 +73,7 @@ class _TripBody extends StatelessWidget {
       children: [
         _Summary(order: order, status: trip.status),
         const SizedBox(height: 16),
+        ConditionChangeCard(orderId: order.id),
         _StageTile(
           number: 1,
           title: '배차 확정',
@@ -124,6 +126,11 @@ class _TripBody extends StatelessWidget {
           '증빙 사진은 운송이 끝난 날부터 3개월 뒤 완전히 삭제돼요.',
           style: TextStyle(fontSize: 12, color: AppColors.textMuted),
         ),
+        if (trip.status == TripStatus.assigned)
+          CancelSection(order: order, trip: trip),
+        if (trip.status == TripStatus.assigned ||
+            trip.status == TripStatus.inTransit)
+          ConditionChangeDemo(orderId: order.id),
       ],
     );
   }

@@ -1,3 +1,4 @@
+import 'package:farm_cargo/core/router/app_router.dart';
 import 'package:farm_cargo/features/auth/auth_provider.dart';
 import 'package:farm_cargo/features/driver/my_orders_screen.dart';
 import 'package:farm_cargo/features/orders/trip_record.dart';
@@ -300,6 +301,7 @@ void main() {
     await tapText(tester, '촬영');
     expect(find.byKey(const ValueKey('preview:/fake/photo.jpg')), findsOneWidget);
     await tapText(tester, '상차 계근표 올리기');
+    await tester.scrollUntilVisible(find.text('운송 중'), -100);
     expect(find.text('운송 중'), findsOneWidget);
     expect(find.text('상차 계근표 올림'), findsOneWidget);
 
@@ -349,5 +351,79 @@ void main() {
     expect(find.text('고객센터 확인 중'), findsOneWidget);
     expect(find.textContaining('고객센터가 확인하고 있어요'), findsOneWidget);
     expect(find.text('화주: 예'), findsNothing);
+  });
+
+  /// 오더 상세로 바로 가서 수락한 뒤, 내 오더에서 운행 화면을 연다.
+  Future<void> openAcceptedTrip(WidgetTester tester, ProviderContainer container,
+      String orderId, String itemLabel) async {
+    container.read(routerProvider).push(AppRoutes.driverOrder(orderId));
+    await tester.pumpAndSettle();
+    await tapText(tester, '이 오더 수락하기');
+    await tester.tap(find.text(itemLabel));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('배차 취소: 마감 안내, 사유 필수, 취소하면 오더 찾기로 돌아간다', (tester) async {
+    final container = await loginDriver(tester);
+    await openAcceptedTrip(tester, container, 'order-1', '대두 · 국산'); // 내일 상차 → 오늘 15시 마감
+
+    await tester.scrollUntilVisible(find.text('배차 취소'), 100);
+    expect(find.text('취소 마감: 11월 12일(목) 15:00까지'), findsOneWidget);
+    await tapText(tester, '배차 취소');
+    expect(find.text('배차를 취소할까요?'), findsOneWidget);
+    final cancelButton = find.widgetWithText(TextButton, '취소하기');
+    expect(tester.widget<TextButton>(cancelButton).onPressed, isNull); // 사유 전
+    await tester.enterText(find.byType(TextField), '차량 고장');
+    await tester.pump();
+    await tester.tap(cancelButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('오더 내역'), findsOneWidget);
+    expect(find.textContaining('아직 수락한 오더가 없어요'), findsOneWidget);
+    await openDriverTab(tester, '오더 찾기');
+    expect(find.text('올라온 오더 6건'), findsOneWidget);
+  });
+
+  testWidgets('당일 배차는 오전 9시가 지나면 취소할 수 없다', (tester) async {
+    final container = await loginDriver(tester); // 지금 = 목요일 오전 9시
+    await openAcceptedTrip(tester, container, 'order-3', '소맥피 · 외국산'); // 오늘 상차
+    await tester.scrollUntilVisible(find.text('배차 취소'), 100);
+    expect(find.textContaining('이 지나 취소할 수 없어요'), findsOneWidget);
+    final button = find.ancestor(
+        of: find.text('배차 취소'), matching: find.byType(OutlinedButton));
+    expect(tester.widget<OutlinedButton>(button).onPressed, isNull);
+  });
+
+  testWidgets('조건 변경: 물량 변경을 거절하면 경고 1회와 수락 정지 안내가 보인다', (tester) async {
+    final container = await loginDriver(tester);
+    await openAcceptedTrip(tester, container, 'order-1', '대두 · 국산');
+    await tester.scrollUntilVisible(find.text('화주: 물량 변경'), 100);
+    await tapText(tester, '화주: 물량 변경');
+    await tester.scrollUntilVisible(find.text('화주가 조건을 바꿨어요'), -100);
+    expect(find.text('→ 벌크 20톤'), findsOneWidget);
+    expect(find.text('이 변경을 거절하면 경고 1회로 기록돼요.'), findsOneWidget);
+
+    await tapText(tester, '거절');
+    expect(find.textContaining('경고 1회로 기록되고'), findsOneWidget);
+    await tapText(tester, '거절하기');
+    expect(find.text('오더 내역'), findsOneWidget);
+
+    await openDriverTab(tester, '오더 찾기');
+    expect(find.textContaining('경고 1회로 11월 13일(금) 09:00까지 오더를 수락할 수 없어요.'),
+        findsOneWidget);
+  });
+
+  testWidgets('조건 변경: 하차지 변경은 수락하면 바뀐 하차지로 운행한다', (tester) async {
+    final container = await loginDriver(tester);
+    await openAcceptedTrip(tester, container, 'order-1', '대두 · 국산');
+    await tester.scrollUntilVisible(find.text('화주: 하차지 변경'), 100);
+    await tapText(tester, '화주: 하차지 변경');
+    await tester.scrollUntilVisible(find.text('화주가 조건을 바꿨어요'), -100);
+    expect(find.text('상/하차지·차종이 바뀐 경우라 거절해도 패널티가 없어요.'), findsOneWidget);
+    expect(find.textContaining('화주 메시지:'), findsOneWidget);
+    await tapText(tester, '바뀐 조건으로 운행');
+    expect(find.text('화주가 조건을 바꿨어요'), findsNothing);
+    await tester.scrollUntilVisible(find.text('전북 김제 → 경기 평택'), -100);
+    expect(find.text('전북 김제 → 경기 평택'), findsOneWidget);
   });
 }

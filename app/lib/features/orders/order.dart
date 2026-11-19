@@ -72,6 +72,40 @@ class Order {
     this.isCompost = false,
   });
 
+  /// 화주가 수락 뒤 고칠 수 있는 항목만 바꾼 사본(시간은 바꿀 수 없음, D04).
+  Order copyWith({
+    String? item,
+    OriginCountry? originCountry,
+    String? origin,
+    String? destination,
+    String? originRegion,
+    String? destinationRegion,
+    String? quantity,
+    int? weightKg,
+    List<String>? vehicleTypes,
+  }) =>
+      Order(
+        id: id,
+        item: item ?? this.item,
+        originCountry: originCountry ?? this.originCountry,
+        shipperName: shipperName,
+        origin: origin ?? this.origin,
+        destination: destination ?? this.destination,
+        originRegion: originRegion ?? this.originRegion,
+        destinationRegion: destinationRegion ?? this.destinationRegion,
+        originPoint: originPoint,
+        quantity: quantity ?? this.quantity,
+        weightKg: weightKg ?? this.weightKg,
+        vehicleTypes: vehicleTypes ?? this.vehicleTypes,
+        loading: loading,
+        unloading: unloading,
+        priceUnit: priceUnit,
+        unitPrice: unitPrice,
+        distanceKm: distanceKm,
+        registeredAt: registeredAt,
+        isCompost: isCompost,
+      );
+
   String get distanceLabel => '${distanceKm}km';
   String get itemLabel => '$item · ${originCountry.label}';
   String get vehicleLabel => vehicleTypes.join('·');

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/clock.dart';
 import '../auth/auth_provider.dart';
 import 'order.dart';
+import 'order_policy.dart';
 import 'order_repository.dart';
 import 'trip.dart';
 import 'trip_record.dart';
@@ -35,6 +36,7 @@ final tripRecordsProvider = FutureProvider<List<TripRecord>>(
 /// 오더를 수락하고 목록들을 새로 불러온다. 실패하면 [OrderAcceptException].
 Future<void> acceptOrder(WidgetRef ref, String id) async {
   await ref.read(orderRepositoryProvider).acceptOrder(id);
+  ref.invalidate(sanctionProvider);
   ref.invalidate(jobPostsProvider);
   ref.invalidate(recommendedOrdersProvider);
   ref.invalidate(myOrdersProvider);
@@ -79,3 +81,46 @@ Future<void> simulateShipperResponse(
 /// 시연용 화주 응답 버튼을 보여 줄지(샘플 저장소일 때만).
 final isDemoRepositoryProvider = Provider<bool>(
     (ref) => ref.watch(orderRepositoryProvider) is MockOrderRepository);
+
+/// 내 경고·정지 상태(D14).
+final sanctionProvider = FutureProvider<DriverSanction>(
+    (ref) => ref.watch(orderRepositoryProvider).fetchSanction());
+
+/// 오늘 이미 취소한 건수.
+final cancellationsTodayProvider = FutureProvider<int>(
+    (ref) => ref.watch(orderRepositoryProvider).cancellationsToday());
+
+/// 화주가 보낸, 아직 답하지 않은 조건 변경.
+final pendingChangeProvider = FutureProvider.family<ConditionChange?, String>(
+    (ref, id) => ref.watch(orderRepositoryProvider).fetchPendingChange(id));
+
+void _refreshAll(WidgetRef ref, String orderId) {
+  _refreshTrip(ref, orderId);
+  ref.invalidate(orderProvider(orderId));
+  ref.invalidate(pendingChangeProvider(orderId));
+  ref.invalidate(jobPostsProvider);
+  ref.invalidate(recommendedOrdersProvider);
+  ref.invalidate(sanctionProvider);
+  ref.invalidate(cancellationsTodayProvider);
+}
+
+/// 배차를 취소한다. 실패하면 [TripActionException].
+Future<void> cancelOrder(WidgetRef ref, String orderId, String reason) async {
+  await ref.read(orderRepositoryProvider).cancelOrder(orderId, reason);
+  _refreshAll(ref, orderId);
+}
+
+/// 조건 변경에 답한다. 실패하면 [TripActionException].
+Future<void> respondToChange(WidgetRef ref, String orderId, bool accept) async {
+  await ref.read(orderRepositoryProvider).respondToChange(orderId, accept: accept);
+  _refreshAll(ref, orderId);
+}
+
+/// 시연용: 화주의 조건 변경을 대신 만든다. 샘플 저장소일 때만 동작한다.
+Future<void> simulateConditionChange(
+    WidgetRef ref, String orderId, bool location) async {
+  final repository = ref.read(orderRepositoryProvider);
+  if (repository is! MockOrderRepository) return;
+  await repository.simulateConditionChange(orderId, location: location);
+  ref.invalidate(pendingChangeProvider(orderId));
+}

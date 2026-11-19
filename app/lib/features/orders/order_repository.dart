@@ -1,6 +1,7 @@
 import '../../core/clock.dart';
 import '../../core/location/location_service.dart';
 import 'order.dart';
+import 'order_policy.dart';
 import 'trip.dart';
 import 'trip_record.dart';
 
@@ -44,6 +45,23 @@ abstract interface class OrderRepository {
   /// 화주가 30분 안에 답하지 않으면 다시 알리고, 1시간 10분 무응답이면 고객센터에 알리는 일은 서버가 한다.
   Future<void> uploadUnloadingProof(
       String orderId, String photoPath, UnloadingProofKind kind);
+
+  /// 내 경고·정지 상태(D14). 정지 중이면 오더를 수락할 수 없다.
+  Future<DriverSanction> fetchSanction();
+
+  /// 오늘(취소한 날 기준) 이미 취소한 건수. 3건째부터 과도한 취소다(D14).
+  Future<int> cancellationsToday();
+
+  /// 배차를 취소한다(D04). 상차 전이고 취소 마감 전이어야 하며 사유가 필요하다.
+  /// 취소한 오더는 오더 찾기에 다시 올라간다. 경고 부여는 고객센터·관리자가 판단한다.
+  Future<void> cancelOrder(String orderId, String reason);
+
+  /// 화주가 보낸 조건 변경 중 아직 답하지 않은 것. 없으면 null.
+  Future<ConditionChange?> fetchPendingChange(String orderId);
+
+  /// 조건 변경에 답한다(D04). 수락하면 바뀐 조건으로 운행하고,
+  /// 거절하면 배차가 풀린다. 패널티 없는 거절이 아니면 경고 1회가 되어 오더 수락이 정지된다.
+  Future<void> respondToChange(String orderId, {required bool accept});
 }
 
 /// 서버 연동 전까지 쓰는 샘플 데이터. 화주 이름·주소·단가·위치는 모두 가상 값이다.
@@ -62,6 +80,9 @@ class MockOrderRepository implements OrderRepository {
   final _acceptedIds = <String>[];
   final _trips = <String, TripProgress>{};
   final _records = <TripRecord>[];
+  final _cancellations = <DateTime>[];
+  final _warnings = <DateTime>[];
+  final _pendingChanges = <String, (ConditionChange, Order)>{};
 
   List<Order> get _available =>
       [for (final o in _orders) if (!_acceptedIds.contains(o.id)) o];
@@ -83,6 +104,10 @@ class MockOrderRepository implements OrderRepository {
 
   @override
   Future<void> acceptOrder(String id) async {
+    final sanction = await fetchSanction();
+    if (sanction.isSuspended(_now())) {
+      throw OrderAcceptException(sanction.message());
+    }
     final order = await fetchOrder(id);
     if (order == null || _acceptedIds.contains(id)) {
       throw const OrderAcceptException('이미 다른 차주가 선택했거나 없는 오더예요.');
@@ -98,7 +123,124 @@ class MockOrderRepository implements OrderRepository {
           '같은 상차일에는 하루 최대 $dailyAcceptLimit건까지 수락할 수 있어요.');
     }
     _acceptedIds.add(id);
-    _trips[id] = TripProgress(orderId: id);
+    _trips[id] = TripProgress(orderId: id, acceptedAt: _now());
+  }
+
+  @override
+  Future<DriverSanction> fetchSanction() async {
+    final now = _now();
+    // 최초 경고 뒤 1년이 지나면 경고 전체를 초기화한다(D14).
+    if (_warnings.isNotEmpty) {
+      final first = _warnings.first;
+      final resetAt = DateTime(first.year + 1, first.month, first.day,
+          first.hour, first.minute);
+      if (!now.isBefore(resetAt)) _warnings.clear();
+    }
+    final count = _warnings.length;
+    if (count == 0) return const DriverSanction();
+    final end = suspensionEnd(count, _warnings.last);
+    return DriverSanction(
+        warningCount: count,
+        suspendedUntil: end,
+        permanentReview: end == null);
+  }
+
+  /// 경고 1회를 기록한다. 정지되면 아직 상차하지 않은 배차는 확정을 해제한다(D14).
+  void _addWarning() {
+    _warnings.add(_now());
+    for (final id in [..._acceptedIds]) {
+      if (_trips[id]?.status == TripStatus.assigned) _release(id);
+    }
+  }
+
+  /// 배차를 풀어 오더 찾기에 다시 올린다.
+  void _release(String id) {
+    _acceptedIds.remove(id);
+    _trips.remove(id);
+    _pendingChanges.remove(id);
+  }
+
+  @override
+  Future<int> cancellationsToday() async =>
+      _cancellations.where((c) => daysBetween(c, _now()) == 0).length;
+
+  @override
+  Future<void> cancelOrder(String orderId, String reason) async {
+    final trip = _tripOrThrow(orderId);
+    if (trip.status != TripStatus.assigned) {
+      throw const TripActionException('상차를 시작한 뒤에는 취소할 수 없어요. 고객센터로 문의해 주세요.');
+    }
+    final deadline = cancelDeadline((await fetchOrder(orderId))!, trip.acceptedAt);
+    if (!_now().isBefore(deadline)) {
+      throw TripActionException(
+          '취소 마감(${formatDeadline(deadline)})이 지나 취소할 수 없어요. 고객센터로 문의해 주세요.');
+    }
+    if (reason.trim().isEmpty) {
+      throw const TripActionException('취소 사유를 적어 주세요.');
+    }
+    _release(orderId);
+    _cancellations.add(_now());
+  }
+
+  @override
+  Future<ConditionChange?> fetchPendingChange(String orderId) async =>
+      _pendingChanges[orderId]?.$1;
+
+  @override
+  Future<void> respondToChange(String orderId, {required bool accept}) async {
+    final pending = _pendingChanges.remove(orderId);
+    if (pending == null) {
+      throw const TripActionException('답할 조건 변경이 없어요.');
+    }
+    final (change, updated) = pending;
+    // 화주가 바꾼 조건은 거절해도 그대로 남는다(거절하면 배차만 풀린다).
+    _orders[_orders.indexWhere((o) => o.id == orderId)] = updated;
+    if (accept) return;
+    _release(orderId);
+    if (!change.refusableWithoutPenalty) _addWarning();
+  }
+
+  /// 시연용: 화주 앱이 없어 화주의 조건 변경을 대신 만든다.
+  /// [location]이 true면 하차지를 바꾸고(거절해도 패널티 없음), false면 물량을 바꾼다(거절하면 경고).
+  Future<void> simulateConditionChange(String orderId,
+      {required bool location}) async {
+    final trip = _tripOrThrow(orderId);
+    if (trip.status != TripStatus.assigned &&
+        trip.status != TripStatus.inTransit) {
+      throw const TripActionException('하차 증빙을 보낸 뒤에는 조건을 바꿀 수 없어요.');
+    }
+    if (_pendingChanges.containsKey(orderId)) {
+      throw const TripActionException('이미 답하지 않은 조건 변경이 있어요.');
+    }
+    final order = (await fetchOrder(orderId))!;
+    final (ConditionChange change, Order updated) = location
+        ? (
+            ConditionChange(
+              orderId: orderId,
+              changes: [
+                FieldChange('하차지', order.destination,
+                    '경기 평택시 포승읍 한들로 7 한들사료 창고'),
+              ],
+              locationChanged: true,
+              vehicleTypeChanged: false,
+              requestedAt: _now(),
+              message: '하차지가 바뀌어 죄송합니다. 운송비는 그대로예요.',
+            ),
+            order.copyWith(
+                destination: '경기 평택시 포승읍 한들로 7 한들사료 창고',
+                destinationRegion: '경기 평택'),
+          )
+        : (
+            ConditionChange(
+              orderId: orderId,
+              changes: [FieldChange('물량', order.quantity, '벌크 20톤')],
+              locationChanged: false,
+              vehicleTypeChanged: false,
+              requestedAt: _now(),
+            ),
+            order.copyWith(quantity: '벌크 20톤', weightKg: 20000),
+          );
+    _pendingChanges[orderId] = (change, updated);
   }
 
   @override

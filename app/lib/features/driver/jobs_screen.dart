@@ -37,6 +37,8 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
     final location = ref.watch(currentLocationProvider).value;
     final today = ref.watch(clockProvider)();
     final preferred = ref.watch(preferredRoutesProvider);
+    final sanction = ref.watch(sanctionProvider).value;
+    final now = ref.watch(clockProvider)();
 
     return Scaffold(
       appBar: AppBar(
@@ -140,6 +142,15 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
                 ],
               ),
             ),
+            if (sanction != null && sanction.isSuspended(now))
+              Container(
+                width: double.infinity,
+                color: AppColors.warningBg,
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                child: Text(sanction.message(),
+                    style: const TextStyle(
+                        fontSize: 13, color: AppColors.warningText)),
+              ),
             Expanded(
               child: AsyncValueView(
                 value: posts,

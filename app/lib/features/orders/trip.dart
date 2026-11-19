@@ -20,10 +20,41 @@ enum UnloadingProofKind {
   final String label;
 }
 
+/// 화주가 수락 뒤 바꾼 항목 하나(바꾸기 전 → 바꾼 뒤).
+class FieldChange {
+  const FieldChange(this.label, this.before, this.after);
+  final String label;
+  final String before;
+  final String after;
+}
+
+/// 화주의 조건 변경 요청(D04). 차주가 수락하거나 거절한다.
+class ConditionChange {
+  const ConditionChange({
+    required this.orderId,
+    required this.changes,
+    required this.locationChanged,
+    required this.vehicleTypeChanged,
+    required this.requestedAt,
+    this.message,
+  });
+
+  final String orderId;
+  final List<FieldChange> changes;
+  final bool locationChanged; // 상/하차지를 바꿈
+  final bool vehicleTypeChanged; // 차종을 잘못 입력해 바꿈
+  final DateTime requestedAt;
+  final String? message; // 화주가 따로 보낸 변경 사유·양해 메시지
+
+  /// 거절해도 패널티가 없는지(D04): 상/하차지를 바꿨거나(사유 메시지를 보냈어도) 차종을 잘못 입력한 경우.
+  bool get refusableWithoutPenalty => locationChanged || vehicleTypeChanged;
+}
+
 /// 한 오더의 운행 진행 기록.
 class TripProgress {
   final String orderId;
   final TripStatus status;
+  final DateTime acceptedAt; // 배차일(수락한 시각). 취소 마감 계산에 쓴다
   final String? loadingProofPath; // 상차 계근표 사진
   final DateTime? loadedAt;
   final String? unloadingProofPath; // 하차 계근표 또는 서명 사진
@@ -33,6 +64,7 @@ class TripProgress {
 
   const TripProgress({
     required this.orderId,
+    required this.acceptedAt,
     this.status = TripStatus.assigned,
     this.loadingProofPath,
     this.loadedAt,
@@ -53,6 +85,7 @@ class TripProgress {
   }) =>
       TripProgress(
         orderId: orderId,
+        acceptedAt: acceptedAt,
         status: status ?? this.status,
         loadingProofPath: loadingProofPath ?? this.loadingProofPath,
         loadedAt: loadedAt ?? this.loadedAt,
